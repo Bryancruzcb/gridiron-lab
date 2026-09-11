@@ -67,6 +67,12 @@ Open [http://localhost:8080](http://localhost:8080).
 
 ## CI
 
-GitHub Actions on `main` and PRs: `npm ci` → `npm run typecheck`.
+GitHub Actions on `main` and PRs:
 
-`npm test` is **not** in CI. It still runs 8 failing Grok og-image scaffold tests. Don’t gate the holdout on those.
+1. Restore `~/.npm` from the lockfile hash (save even if a later step fails).
+2. `npm ci` — fails if `package-lock.json` is out of date. After `npm install`, commit the lockfile.
+3. `npm run routes:generate` — rebuilds `src/routeTree.gen.ts` from `src/routes/` so a new page cannot typecheck-fail because Vite never ran.
+4. `npm run typecheck`
+
+`npm test` is **not** in CI. It still runs 8 failing Grok og-image scaffold tests.
+

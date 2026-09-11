@@ -14,7 +14,16 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
-      # npm ci requires package-lock.json in sync with package.json
+      - uses: actions/cache/restore@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: npm ci
+      # Save even if typecheck fails, so the next run is not a cold install.
+      - uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      - run: npm run routes:generate
       - run: npm run typecheck
