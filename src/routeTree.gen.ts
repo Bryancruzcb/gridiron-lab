@@ -15,6 +15,7 @@ import { Route as LiveRouteImport } from './routes/live'
 import { Route as OptimizerRouteImport } from './routes/optimizer'
 import { Route as PlayCallingRouteImport } from './routes/play-calling'
 import { Route as QbRouteImport } from './routes/qb'
+import { Route as StudyRouteImport } from './routes/study'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const QbRoute = QbRouteImport.update({
   path: '/qb',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudyRoute = StudyRouteImport.update({
+  id: '/study',
+  path: '/study',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
   '/qb': typeof QbRoute
+  '/study': typeof StudyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
   '/qb': typeof QbRoute
+  '/study': typeof StudyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,12 +79,15 @@ export interface FileRoutesById {
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
   '/qb': typeof QbRoute
+  '/study': typeof StudyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/guide' | '/live' | '/optimizer' | '/play-calling' | '/qb'
+  fullPaths:
+    '/' | '/guide' | '/live' | '/optimizer' | '/play-calling' | '/qb' | '/study'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/guide' | '/live' | '/optimizer' | '/play-calling' | '/qb'
+  to:
+    '/' | '/guide' | '/live' | '/optimizer' | '/play-calling' | '/qb' | '/study'
   id:
     | '__root__'
     | '/'
@@ -85,6 +96,7 @@ export interface FileRouteTypes {
     | '/optimizer'
     | '/play-calling'
     | '/qb'
+    | '/study'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +106,7 @@ export interface RootRouteChildren {
   OptimizerRoute: typeof OptimizerRoute
   PlayCallingRoute: typeof PlayCallingRoute
   QbRoute: typeof QbRoute
+  StudyRoute: typeof StudyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,6 +153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QbRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/study': {
+      id: '/study'
+      path: '/study'
+      fullPath: '/study'
+      preLoaderRoute: typeof StudyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -150,6 +170,7 @@ const rootRouteChildren: RootRouteChildren = {
   OptimizerRoute: OptimizerRoute,
   PlayCallingRoute: PlayCallingRoute,
   QbRoute: QbRoute,
+  StudyRoute: StudyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
