@@ -3,6 +3,8 @@ import { useMemo, useState, useEffect, type ReactNode } from "react";
 import {
   CartesianGrid,
   Cell,
+  LabelList,
+  ReferenceLine,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -20,12 +22,13 @@ import { StatTip } from "@/components/StatTip";
 import { Segmented } from "@/components/ui/segmented";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { axisProps, CHART, tooltipStyle } from "@/components/charts/theme";
+import { axisProps, CHART } from "@/components/charts/theme";
 import type { QbFile, QbSeason, SplitStats } from "@/data/types";
 import { teamNick } from "@/lib/nfl";
 import { getSeasonLabs } from "@/lib/live/functions";
 import type { SeasonLabs } from "@/lib/live/types";
 import {
+  playFloor,
   splitKey,
   splitLabel,
   statsFor,
@@ -79,8 +82,8 @@ function QbLab() {
   }, [allQbs]);
 
   useEffect(() => {
-    setMinPlays(season >= 2026 ? 10 : 200);
-  }, [season]);
+    setMinPlays(playFloor(season, down, dist, sit).def);
+  }, [season, down, dist, sit]);
 
   useEffect(() => {
     const floor = season >= 2026 ? 10 : 250;
@@ -93,6 +96,7 @@ function QbLab() {
 
   const key = splitKey(down, dist, sit);
   const label = splitLabel(down, dist, sit);
+  const floor = playFloor(season, down, dist, sit);
 
   const rows = useMemo(() => {
     const out: { qb: QbSeason; stats: SplitStats }[] = [];
@@ -109,6 +113,7 @@ function QbLab() {
   const scatter = rows.map((r, i) => ({
     id: r.qb.id,
     name: r.qb.name,
+    tag: pinned.includes(r.qb.id) ? (r.qb.name.split(" ").pop() ?? r.qb.name) : "",
     team: r.qb.team,
     epa: r.stats.epa ?? 0,
     cpoe: r.stats.cpoe ?? 0,
@@ -138,9 +143,8 @@ function QbLab() {
             QB comparison
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Dropback EPA, CPOE, and pressure rate from nflfastR play-by-play. 2026 updates when
-            nflverse posts — usually the morning after. Filter the same way a scout would: down,
-            distance, red zone, two-minute, or the pocket.
+            Each quarterback is one row and one dot. Filter by down — 3rd-and-long is a different
+            player than 1st-and-10. 2026 updates the morning after nflverse posts.
           </p>
         </header>
 
@@ -214,72 +218,109 @@ function QbLab() {
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
               <span className="text-[11px] tracking-[0.14em] text-subtle uppercase">
-                Min dropbacks {minPlays}
+                Min dropbacks in this slice · {minPlays}
               </span>
               <Slider
-                min={season >= 2026 ? 5 : 80}
-                max={season >= 2026 ? 80 : 400}
-                step={season >= 2026 ? 5 : 10}
-                value={[minPlays]}
-                onValueChange={(v) => setMinPlays(v[0] ?? 200)}
+                min={floor.min}
+                max={floor.max}
+                step={floor.step}
+                value={[Math.min(floor.max, Math.max(floor.min, minPlays))]}
+                onValueChange={(v) => setMinPlays(v[0] ?? floor.def)}
                 className="sm:max-w-xs"
               />
             </div>
+            <p className="text-xs text-muted">
+              {down === "4"
+                ? "4th-down dropbacks are rare (usually under 30 a year). The min resets when you change down."
+                : down === "3"
+                  ? "Starters throw ~80–180 times on 3rd down in a full season — not 200+."
+                  : sit !== "all"
+                    ? "Situation splits are smaller samples. The min drops automatically."
+                    : "Overall dropbacks. Tighten this to hide backups."}
+            </p>
           </div>
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
+            <div className="mb-3">
               <h2 className="font-display text-xl uppercase tracking-[0.06em]">EPA vs CPOE</h2>
-              <p className="text-xs text-subtle">Bubble = dropbacks. Click a point to pin.</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted">
+                Each dot is one quarterback. Right = more accurate than expected. Up = more EPA per
+                dropback. Bigger = more plays. Tap a dot to pin.
+              </p>
             </div>
-            <div className="h-[320px] sm:h-[380px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <ScatterChart margin={{ top: 12, right: 12, bottom: 20, left: 8 }}>
-                  <CartesianGrid stroke={CHART.grid} />
-                  <XAxis
-                    type="number"
-                    dataKey="cpoe"
-                    tickCount={5}
-                    domain={["dataMin - 1", "dataMax + 1"]}
-                    {...axisProps}
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="epa"
-                    tickCount={5}
-                    width={52}
-                    domain={["dataMin - 0.04", "dataMax + 0.04"]}
-                    {...axisProps}
-                  />
-                  <ZAxis type="number" dataKey="plays" range={[36, 160]} />
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    cursor={{ stroke: CHART.paper, strokeDasharray: "3 3" }}
-                    formatter={(value, name) => {
-                      const n = typeof value === "number" ? value : Number(value);
-                      if (name === "epa") return [formatEpa(n), "EPA/play"];
-                      if (name === "cpoe") return [formatCpoe(n), "CPOE"];
-                      if (name === "plays") return [n, "Dropbacks"];
-                      return [value, String(name)];
-                    }}
-                    labelFormatter={(_, payload) => {
-                      const row = payload?.[0]?.payload as { name?: string } | undefined;
-                      return row?.name ?? "";
-                    }}
-                  />
-                  <Scatter data={scatter} onClick={(d: { id?: string }) => d?.id && togglePin(d.id)}>
-                    {scatter.map((s) => (
-                      <Cell key={s.id} fill={s.fill} />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="mt-1 text-center font-mono text-[10px] tracking-wide text-subtle uppercase">
-              CPOE → &nbsp;&nbsp; EPA/play ↑
-            </p>
+            {rows.length === 0 ? (
+              <div className="flex h-[280px] flex-col items-center justify-center rounded-md bg-elevated px-6 text-center">
+                <p className="font-display text-2xl uppercase tracking-[0.04em]">No QBs at this cut</p>
+                <p className="mt-2 max-w-sm text-sm text-muted">
+                  Nobody has {minPlays}+ dropbacks on {label.toLowerCase()}. The data is there — the
+                  sample-size gate is too high for this slice.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setMinPlays(floor.def)}
+                  className="mt-4 h-11 rounded-md bg-accent px-4 text-sm font-medium text-accent-fg"
+                >
+                  Drop min to {floor.def}
+                </button>
+              </div>
+            ) : (
+              <div className="rounded-md bg-elevated p-2 sm:p-3">
+                <div className="h-[300px] sm:h-[360px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 18, right: 12, bottom: 8, left: 4 }}>
+                      <CartesianGrid stroke="rgba(241,240,234,0.16)" />
+                      <ReferenceLine x={0} stroke="rgba(241,240,234,0.28)" />
+                      <ReferenceLine y={0} stroke="rgba(241,240,234,0.28)" />
+                      <XAxis
+                        type="number"
+                        dataKey="cpoe"
+                        tickCount={5}
+                        domain={["dataMin - 1", "dataMax + 1"]}
+                        name="CPOE"
+                        {...axisProps}
+                        tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                        tickFormatter={(v: number) => (v > 0 ? `+${v.toFixed(0)}` : v.toFixed(0))}
+                      />
+                      <YAxis
+                        type="number"
+                        dataKey="epa"
+                        tickCount={5}
+                        width={48}
+                        domain={["dataMin - 0.04", "dataMax + 0.04"]}
+                        name="EPA"
+                        {...axisProps}
+                        tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                        tickFormatter={(v: number) => {
+                          const n = Math.abs(v) < 0.005 ? 0 : v;
+                          return n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2);
+                        }}
+                      />
+                      <ZAxis type="number" dataKey="plays" range={[40, 140]} />
+                      <Tooltip
+                        cursor={{ stroke: CHART.paper, strokeDasharray: "3 3" }}
+                        content={<QbDotTip />}
+                      />
+                      <Scatter data={scatter} onClick={(d: { id?: string }) => d?.id && togglePin(d.id)}>
+                        {scatter.map((s) => (
+                          <Cell key={s.id} fill={s.fill} stroke="#0A0B0D" strokeWidth={1} />
+                        ))}
+                        <LabelList
+                          dataKey="tag"
+                          position="top"
+                          offset={8}
+                          style={{ fill: "#F1F0EA", fontSize: 10 }}
+                        />
+                      </Scatter>
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="mt-1 text-center font-mono text-[10px] tracking-wide text-muted uppercase">
+                  CPOE → more accurate &nbsp;&nbsp; EPA/play ↑ more efficient
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
@@ -389,6 +430,13 @@ function QbLab() {
                 </tr>
               </thead>
               <tbody>
+                {rows.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="px-4 py-10 text-center text-sm text-muted">
+                      No quarterbacks pass the min on {label.toLowerCase()}. Drop the slider.
+                    </td>
+                  </tr>
+                )}
                 {rows.map((r) => {
                   const active = pinned.includes(r.qb.id);
                   return (
@@ -479,6 +527,33 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
     <div className="flex flex-col gap-2">
       <span className="text-[11px] font-medium tracking-[0.14em] text-subtle uppercase">{label}</span>
       {children}
+    </div>
+  );
+}
+
+function QbDotTip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{
+    payload: { name: string; team: string; epa: number; cpoe: number; plays: number };
+  }>;
+}) {
+  if (!active || !payload?.[0]) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
+      <p className="font-medium">{d.name}</p>
+      <p className="text-xs text-muted">{teamNick(d.team)}</p>
+      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
+        <dt className="text-muted">CPOE</dt>
+        <dd>{formatCpoe(d.cpoe)}</dd>
+        <dt className="text-muted">EPA/play</dt>
+        <dd>{formatEpa(d.epa)}</dd>
+        <dt className="text-muted">Dropbacks</dt>
+        <dd>{d.plays}</dd>
+      </dl>
     </div>
   );
 }

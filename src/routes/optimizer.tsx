@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
 import { getWeekPpr } from "@/lib/live/functions";
 import type { WeekPpr } from "@/lib/live/types";
@@ -137,9 +138,8 @@ function OptimizerLab() {
             Fantasy optimizer
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            DraftKings-style roster: 1 QB, 2 RB, 3 WR, 1 TE, 1 FLEX, 1 D/ST, $50,000 cap. Build on
-            2025 pace, then score it against this week’s live PPR — or solve the hindsight lineup
-            once games go final.
+            $50k DraftKings roster. Lock a guy you want, bench one you don’t, then solve. Hindsight
+            swaps projections for this week’s actual PPR once games go final.
           </p>
         </header>
 
@@ -175,6 +175,9 @@ function OptimizerLab() {
                 className="sm:max-w-[220px]"
               />
             </div>
+            <p className="px-4 pb-2 text-xs text-muted">
+              Salary is the DraftKings price. Pts/$1k is value. Lock forces him in; bench keeps him out.
+            </p>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[620px] text-left text-sm">
                 <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
@@ -187,9 +190,15 @@ function OptimizerLab() {
                     <th className="px-2 py-2 text-right font-medium">
                       <StatTip metric="actual" />
                     </th>
-                    <th className="px-2 py-2 text-right font-medium">Salary</th>
-                    <th className="px-2 py-2 text-right font-medium">Val</th>
-                    <th className="px-3 py-2 text-right font-medium"> </th>
+                    <th className="px-2 py-2 text-right font-medium">
+                      <StatTip metric="salary" />
+                    </th>
+                    <th className="px-2 py-2 text-right font-medium">
+                      <StatTip metric="val" />
+                    </th>
+                    <th className="px-3 py-2 text-right font-medium">
+                      <span className="text-[10px] tracking-wide text-subtle uppercase">Lock / bench</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -234,34 +243,48 @@ function OptimizerLab() {
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex justify-end gap-1">
-                            <button
-                              type="button"
-                              aria-label={isL ? "Unlock" : "Lock"}
-                              onClick={() => {
-                                toggle(locked, p.id, setLocked);
-                                if (!isL) setExcluded((e) => e.filter((x) => x !== p.id));
-                              }}
-                              className={cn(
-                                "grid size-9 place-items-center rounded-sm",
-                                isL ? "bg-sage/20 text-sage" : "text-subtle hover:bg-elevated hover:text-fg",
-                              )}
-                            >
-                              <Lock className="size-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label={isX ? "Include" : "Exclude"}
-                              onClick={() => {
-                                toggle(excluded, p.id, setExcluded);
-                                if (!isX) setLocked((e) => e.filter((x) => x !== p.id));
-                              }}
-                              className={cn(
-                                "grid size-9 place-items-center rounded-sm",
-                                isX ? "bg-rust/20 text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
-                              )}
-                            >
-                              <Ban className="size-3.5" />
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={isL ? "Unlock" : "Lock into lineup"}
+                                  onClick={() => {
+                                    toggle(locked, p.id, setLocked);
+                                    if (!isL) setExcluded((e) => e.filter((x) => x !== p.id));
+                                  }}
+                                  className={cn(
+                                    "grid size-9 place-items-center rounded-sm",
+                                    isL ? "bg-sage/20 text-sage" : "text-subtle hover:bg-elevated hover:text-fg",
+                                  )}
+                                >
+                                  <Lock className="size-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {isL ? "Locked — always in the lineup" : "Lock: force this player into the lineup"}
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={isX ? "Include" : "Bench / exclude"}
+                                  onClick={() => {
+                                    toggle(excluded, p.id, setExcluded);
+                                    if (!isX) setLocked((e) => e.filter((x) => x !== p.id));
+                                  }}
+                                  className={cn(
+                                    "grid size-9 place-items-center rounded-sm",
+                                    isX ? "bg-rust/20 text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
+                                  )}
+                                >
+                                  <Ban className="size-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {isX ? "Benched — tap to put back in the pool" : "Bench: never pick this player"}
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>
@@ -341,7 +364,7 @@ function OptimizerLab() {
             {alt && (
               <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
                 <h2 className="font-display text-lg uppercase tracking-[0.06em]">Value greedy</h2>
-                <p className="mt-1 text-xs text-subtle">Points-per-salary heuristic — a baseline, not the IP.</p>
+                <p className="mt-1 text-xs text-subtle">Cheaper-points heuristic, not the full solve.</p>
                 <p className="mt-2 font-mono text-sm">{alt.proj.toFixed(1)} pts</p>
               </div>
             )}
@@ -349,22 +372,11 @@ function OptimizerLab() {
         </div>
 
         <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <MethodNote title="The integer program">
-            <p className="font-mono text-[12px] leading-relaxed text-fg/90">
-              max Σ proj<sub>i</sub> x<sub>i</sub>
-              <br />
-              s.t. Σ salary<sub>i</sub> x<sub>i</sub> ≤ 50000
-              <br />
-              Σ x<sub>QB</sub> = 1, Σ x<sub>RB</sub> ≥ 2, Σ x<sub>WR</sub> ≥ 3, Σ x<sub>TE</sub> ≥ 1, Σ
-              x<sub>DST</sub> = 1
-              <br />
-              Σ x<sub>RB+WR+TE</sub> = 7, x<sub>i</sub> ∈ {"{0,1}"}
-            </p>
+          <MethodNote title="How the solver works">
             <p>
-              FLEX is the extra RB/WR/TE. Locking a player sets x<sub>i</sub> = 1; excluding sets it
-              to 0. We seed a projection-greedy roster that keeps enough cap for a legal rest of
-              roster, then hill-climb swaps — the same model you would hand to PuLP, running
-              instantly in the browser. “Solve on actuals” swaps the objective for this week’s PPR.
+              One QB, two RBs, three WRs, a TE, a FLEX (extra RB/WR/TE), and a D/ST, max $50,000.
+              Lock pins a player in; bench (the slash icon) keeps them out. Pts/$1k is projected
+              points per thousand dollars of salary.
             </p>
           </MethodNote>
           <MethodNote title="Portfolio angle">

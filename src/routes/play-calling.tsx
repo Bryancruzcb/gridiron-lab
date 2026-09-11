@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
   Cell,
   ResponsiveContainer,
@@ -118,10 +116,11 @@ function PlayLab() {
 
   const heat = selectedTeam
     ? DOWNS.map((d) => {
-        const row: Record<string, string | number> = { down: `${d}` };
+        const row: Record<string, string | number | null> = { down: `${d}` };
         for (const dist of DISTS) {
           const s = selectedTeam.splits[`down${d}_${dist}`];
-          row[dist] = s?.passRate != null ? Math.round(s.passRate * 100) : 0;
+          row[dist] = s && s.plays > 0 && s.passRate != null ? Math.round(s.passRate * 100) : null;
+          row[`${dist}Plays`] = s?.plays ?? 0;
         }
         return row;
       })
@@ -140,8 +139,8 @@ function PlayLab() {
             Play-calling
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Staff tendencies from every regular-season snap. 2026 is live through the last nflverse
-            dump. Click a bar — the down × distance heatmap is the scouting artifact.
+            Rank every staff, then tap a team for the down × distance heatmap. The list stays the
+            same height at 4 teams or 32 — it just scrolls.
           </p>
         </header>
 
@@ -199,36 +198,19 @@ function PlayLab() {
                 <h2 className="font-display text-xl uppercase tracking-[0.06em]">
                   <StatTip metric="fourthGo">4th-down go rate</StatTip>
                 </h2>
-                <p className="mt-1 text-xs text-subtle">Tap a team code or a bar. Heatmap opens beside this.</p>
-                <div className="mt-4 h-[420px] sm:h-[480px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={fourth} layout="vertical" margin={{ left: 8, right: 12, top: 4, bottom: 4 }}>
-                      <CartesianGrid stroke={CHART.grid} horizontal={false} />
-                      <XAxis type="number" unit="%" {...axisProps} />
-                      <YAxis type="category" dataKey="team" width={36} {...axisProps} />
-                      <Tooltip
-                        contentStyle={tooltipStyle}
-                        formatter={(v, name) => [
-                          `${Number(v).toFixed(1)}%`,
-                          name === "go" ? "Go rate" : "Convert",
-                        ]}
-                      />
-                      <Bar
-                        dataKey="go"
-                        radius={2}
-                        onClick={(d: unknown) => pickTeam(teamFromClick(d))}
-                      >
-                        {fourth.map((t) => (
-                          <Cell
-                            key={t.team}
-                            fill={selected === t.team ? CHART.sage : CHART.paper}
-                            cursor="pointer"
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <p className="mt-1 text-xs text-muted">
+                  {teams.length} teams, ranked. Tap a row for the heatmap
+                  {teams.length > 8 ? " — scroll for the rest." : "."}
+                </p>
+                <RankBars
+                  rows={fourth.map((t) => ({
+                    team: t.team,
+                    value: t.go,
+                    selected: selected === t.team,
+                  }))}
+                  format={(v) => `${v.toFixed(0)}%`}
+                  onPick={pickTeam}
+                />
               </>
             )}
             {metric === "second" && (
@@ -236,31 +218,19 @@ function PlayLab() {
                 <h2 className="font-display text-xl uppercase tracking-[0.06em]">
                   <StatTip metric="secondShort">2nd-and-short pass rate</StatTip>
                 </h2>
-                <p className="mt-1 text-xs text-subtle">
-                  Share of called passes when to-go is 1–3 yards. Click a bar.
+                <p className="mt-1 text-xs text-muted">
+                  Pass calls on 2nd-and-1 to 3. {teams.length} teams, ranked
+                  {teams.length > 8 ? " — scroll for the rest." : "."}
                 </p>
-                <div className="mt-4 h-[420px] sm:h-[480px]">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={second} layout="vertical" margin={{ left: 8, right: 12, top: 4, bottom: 4 }}>
-                      <CartesianGrid stroke={CHART.grid} horizontal={false} />
-                      <XAxis type="number" unit="%" {...axisProps} />
-                      <YAxis type="category" dataKey="team" width={36} {...axisProps} />
-                      <Tooltip
-                        contentStyle={tooltipStyle}
-                        formatter={(v) => [`${Number(v).toFixed(1)}%`, "Pass rate"]}
-                      />
-                      <Bar dataKey="pass" radius={2} onClick={(d) => pickTeam(teamFromClick(d))}>
-                        {second.map((t) => (
-                          <Cell
-                            key={t.team}
-                            fill={selected === t.team ? CHART.sage : CHART.paper}
-                            cursor="pointer"
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <RankBars
+                  rows={second.map((t) => ({
+                    team: t.team,
+                    value: t.pass,
+                    selected: selected === t.team,
+                  }))}
+                  format={(v) => `${v.toFixed(0)}%`}
+                  onPick={pickTeam}
+                />
               </>
             )}
             {metric === "proe" && (
@@ -291,21 +261,6 @@ function PlayLab() {
                 </div>
               </>
             )}
-            <div className="mt-4 flex flex-wrap gap-1">
-              {teams.map((t) => (
-                <button
-                  key={t.team}
-                  type="button"
-                  onClick={() => pickTeam(t.team)}
-                  className={cn(
-                    "h-9 min-w-11 rounded-sm px-2.5 font-mono text-xs",
-                    selected === t.team ? "bg-sage/20 text-sage" : "bg-elevated text-muted hover:text-fg",
-                  )}
-                >
-                  {t.team}
-                </button>
-              ))}
-            </div>
           </div>
 
           <div
@@ -342,6 +297,7 @@ function PlayLab() {
                 <p className="mt-6 text-[11px] tracking-[0.14em] text-subtle uppercase">
                   Pass rate by down × distance
                 </p>
+                <p className="mt-1 text-xs text-muted">Dash means no plays in that bucket yet.</p>
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full min-w-[280px] text-center text-sm">
                     <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
@@ -357,11 +313,23 @@ function PlayLab() {
                         <tr key={String(row.down)} className="border-t border-border">
                           <td className="px-2 py-3 text-left text-muted">{row.down}</td>
                           {DISTS.map((d) => {
-                            const v = Number(row[d] ?? 0);
+                            const raw = row[d];
+                            const v = typeof raw === "number" ? raw : null;
+                            const plays = Number(row[`${d}Plays`] ?? 0);
+                            if (v == null) {
+                              return (
+                                <td key={d} className="px-2 py-3">
+                                  <span className="inline-flex min-h-11 min-w-[3.5rem] items-center justify-center font-mono text-subtle">
+                                    —
+                                  </span>
+                                </td>
+                              );
+                            }
                             const bg = `color-mix(in oklab, var(--color-sage) ${v}%, transparent)`;
                             return (
                               <td key={d} className="px-2 py-3">
                                 <span
+                                  title={`${plays} play${plays === 1 ? "" : "s"}`}
                                   className={cn(
                                     "inline-flex min-h-11 min-w-[3.5rem] items-center justify-center rounded-sm px-2 font-mono tabular-nums",
                                     v > 55 ? "text-fg" : "text-muted",
@@ -383,8 +351,8 @@ function PlayLab() {
               <div className="flex min-h-[280px] flex-col justify-center">
                 <p className="font-display text-2xl uppercase tracking-[0.04em]">Heatmap</p>
                 <p className="mt-3 text-sm leading-relaxed text-muted">
-                  Click any bar (or a PROE dot) to pin a staff here. Down × distance pass rate is the
-                  thing you would paste into a pre-scout.
+                  Tap a ranked row to pin a staff here. Down × distance pass rate is the pre-scout
+                  artifact. A dash in the grid means that bucket has no plays yet.
                 </p>
               </div>
             )}
@@ -411,6 +379,47 @@ function PlayLab() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function RankBars({
+  rows,
+  format,
+  onPick,
+}: {
+  rows: { team: string; value: number; selected: boolean }[];
+  format: (v: number) => string;
+  onPick: (team: string) => void;
+}) {
+  const max = Math.max(...rows.map((r) => r.value), 1);
+  return (
+    <ol className="mt-3 max-h-[min(70dvh,32rem)] space-y-0.5 overflow-y-auto overscroll-contain pr-1">
+      {rows.map((r, i) => (
+        <li key={r.team}>
+          <button
+            type="button"
+            onClick={() => onPick(r.team)}
+            className={cn(
+              "flex min-h-11 w-full items-center gap-2 rounded-sm px-1.5 text-left",
+              r.selected ? "bg-sage/15" : "hover:bg-elevated",
+            )}
+          >
+            <span className="w-5 shrink-0 font-mono text-[10px] text-subtle tabular-nums">{i + 1}</span>
+            <span className="w-8 shrink-0 font-mono text-xs">{r.team}</span>
+            <span className="relative h-2 min-w-0 flex-1 rounded-full bg-elevated">
+              <span
+                className={cn(
+                  "absolute inset-y-0 left-0 rounded-full",
+                  r.selected ? "bg-sage" : "bg-accent",
+                )}
+                style={{ width: `${Math.max(4, (r.value / max) * 100)}%` }}
+              />
+            </span>
+            <span className="w-12 shrink-0 text-right font-mono text-xs tabular-nums">{format(r.value)}</span>
+          </button>
+        </li>
+      ))}
+    </ol>
   );
 }
 

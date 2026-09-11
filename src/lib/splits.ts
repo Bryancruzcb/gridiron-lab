@@ -59,3 +59,25 @@ export function splitLabel(down: DownFilter, dist: DistFilter, sit: SitFilter): 
   if (y) return y;
   return "Overall";
 }
+
+/** Sample-size floor that matches how rare the slice is (4th down ≠ full season). */
+export function playFloor(
+  season: number,
+  down: DownFilter,
+  dist: DistFilter,
+  sit: SitFilter,
+): { min: number; max: number; step: number; def: number } {
+  const early = season >= 2026;
+  if (early) {
+    if (down === "4") return { min: 3, max: 25, step: 1, def: 5 };
+    if (down !== "all" || dist !== "all" || sit !== "all") {
+      return { min: 3, max: 40, step: 1, def: 5 };
+    }
+    return { min: 5, max: 80, step: 5, def: 10 };
+  }
+  if (down === "4") return { min: 4, max: 30, step: 1, def: 8 };
+  if (down === "3") return { min: 20, max: 160, step: 5, def: 40 };
+  if (sit !== "all") return { min: 15, max: 180, step: 5, def: 30 };
+  if (down !== "all" || dist !== "all") return { min: 30, max: 250, step: 10, def: 60 };
+  return { min: 80, max: 400, step: 10, def: 200 };
+}

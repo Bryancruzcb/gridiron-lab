@@ -39,6 +39,14 @@ export const METRICS = {
     label: "Actual",
     def: "This week’s PPR from the live box (ESPN) while the game is on, then nflverse when the official week file posts.",
   },
+  salary: {
+    label: "Salary",
+    def: "DraftKings-style cost. The solver must keep the 9-man roster at or under $50,000.",
+  },
+  val: {
+    label: "Pts / $1k",
+    def: "Projected points per $1,000 of salary. Higher means more production for the cap hit.",
+  },
 } as const;
 
 export type MetricId = keyof typeof METRICS;
