@@ -124,7 +124,7 @@ function Home() {
                       {formatEpa(q.overall.epa)}
                     </span>
                     <div>
-                      <SampleN n={q.overall.plays} />
+                      <SampleN n={q.overall.plays} unit="dropbacks" />
                     </div>
                   </span>
                 </li>
@@ -183,7 +183,7 @@ function Home() {
                       {formatPct(t.fourthDown.goRate)}
                     </span>
                     <div>
-                      <SampleN n={t.fourthDown.opps} />
+                      <SampleN n={t.fourthDown.opps} unit="4th downs" />
                     </div>
                   </span>
                 </li>

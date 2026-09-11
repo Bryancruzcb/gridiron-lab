@@ -389,11 +389,15 @@ function GamePanel({
                       <td className="px-2 py-2 text-right font-mono tabular-nums">{formatPct(c.passRate)}</td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">
                         {formatPct(c.secondAndShortPass)}
-                        <span className="ml-1 text-subtle">n={c.secondAndShortN}</span>
+                        <span className="ml-1 text-subtle">
+                          {c.secondAndShortN} play{c.secondAndShortN === 1 ? "" : "s"}
+                        </span>
                       </td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">
                         {formatPct(c.fourthGoRate)}
-                        <span className="ml-1 text-subtle">n={c.fourthOpps}</span>
+                        <span className="ml-1 text-subtle">
+                          {c.fourthOpps} 4th down{c.fourthOpps === 1 ? "" : "s"}
+                        </span>
                       </td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">
                         {adv?.proe == null ? "—" : `${adv.proe > 0 ? "+" : ""}${adv.proe.toFixed(1)}`}

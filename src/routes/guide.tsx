@@ -42,12 +42,12 @@ function GuidePage() {
               Resets when you change down. 3rd down is ~40, 4th down is ~8. A 200-play floor hides
               everyone on those slices.
             </Item>
-            <Item term="n">
-              Play count. Under 30 is a thin sample — the number is dimmed. Week 1 2026 is almost
-              all thin.
+            <Item term="Counts">
+              Shown as “36 dropbacks” or “8 4th downs,” not n=. Under 30 is a thin sample — the
+              number is dimmed. Week 1 2026 is almost all thin.
             </Item>
             <Item term="Week strip">
-              On a pinned 2026 QB, each week’s EPA and n. One week is not a season.
+              On a pinned 2026 QB, each week’s EPA and dropbacks. One week is not a season.
             </Item>
           </dl>
         </section>

@@ -188,6 +188,7 @@ function PlayLab() {
                     selected: selected === t.team,
                   }))}
                   format={(v) => `${v.toFixed(0)}%`}
+                  unit="4th downs"
                   onPick={pickTeam}
                 />
               </>
@@ -209,6 +210,7 @@ function PlayLab() {
                     selected: selected === t.team,
                   }))}
                   format={(v) => `${v.toFixed(0)}%`}
+                  unit="plays"
                   onPick={pickTeam}
                 />
               </>
@@ -317,7 +319,7 @@ function PlayLab() {
                                 >
                                   <span>{v}%</span>
                                   <span className={cn("mt-0.5 block text-[10px]", isThin(plays) ? "text-muted" : "text-fg/70")}>
-                                    n={plays}
+                                    {plays} play{plays === 1 ? "" : "s"}
                                   </span>
                                 </span>
                               </td>
@@ -345,10 +347,12 @@ function PlayLab() {
 function RankBars({
   rows,
   format,
+  unit = "plays",
   onPick,
 }: {
   rows: { team: string; value: number; n?: number; selected: boolean }[];
   format: (v: number) => string;
+  unit?: string;
   onPick: (team: string) => void;
 }) {
   const max = Math.max(...rows.map((r) => r.value), 1);
@@ -378,7 +382,7 @@ function RankBars({
             </span>
             <span className="w-16 shrink-0 text-right">
               <span className="block font-mono text-xs tabular-nums">{format(r.value)}</span>
-              {r.n != null ? <SampleN n={r.n} className="text-[10px]" /> : null}
+              {r.n != null ? <SampleN n={r.n} unit={unit} className="text-[10px]" /> : null}
             </span>
           </button>
         </li>

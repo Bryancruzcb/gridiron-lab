@@ -256,7 +256,9 @@ function QbLab() {
                               {pt ? (
                                 <span className={isThin(pt.plays) ? "text-muted" : undefined}>
                                   {formatEpa(pt.epa)}
-                                  <span className="ml-1 text-muted">n={pt.plays}</span>
+                                  <span className="ml-1 text-muted">
+                                    {pt.plays} dropback{pt.plays === 1 ? "" : "s"}
+                                  </span>
                                 </span>
                               ) : (
                                 <span className="text-muted">—</span>
@@ -363,7 +365,7 @@ function QbLab() {
                       <p className="text-xs text-muted">{teamNick(r.qb.team)}</p>
                       {season >= 2026 && r.qb.weeks && r.qb.weeks.length > 0 && (
                         <p className="mt-1 font-mono text-[11px] tabular-nums text-muted">
-                          {r.qb.weeks.map((w) => `W${w.week} ${formatEpa(w.epa)} n=${w.plays}`).join("  ")}
+                          {r.qb.weeks.map((w) => `W${w.week} ${formatEpa(w.epa)} · ${w.plays} dropback${w.plays === 1 ? "" : "s"}`).join("  ")}
                         </p>
                       )}
                     </div>
@@ -377,7 +379,7 @@ function QbLab() {
                         {formatEpa(r.stats.epa)}
                       </span>
                       <div>
-                        <SampleN n={r.stats.plays} />
+                        <SampleN n={r.stats.plays} unit="dropbacks" />
                       </div>
                     </div>
                   </button>

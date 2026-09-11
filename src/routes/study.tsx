@@ -218,7 +218,7 @@ function StudyPage() {
             <section className="mt-10">
               <h2 className="font-display text-2xl uppercase tracking-[0.04em]">QB lag</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                r = {lag.corrEpa ?? "—"} for EPA/attempt, r = {lag.corrCpoe ?? "—"} for CPOE, n ={" "}
+                r = {lag.corrEpa ?? "—"} for EPA/attempt, r = {lag.corrCpoe ?? "—"} for CPOE,{" "}
                 {lag.n} consecutive-week pairs. Last week’s number is a weak forecast of this week.
                 The QB lab describes what already happened. It does not pick next week’s winner.
               </p>
