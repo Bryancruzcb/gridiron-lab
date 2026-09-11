@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, Binary, LayoutDashboard, Radio, Waypoints } from "lucide-react";
+import { ArrowUpRight, Binary, LayoutDashboard, Radio, ScrollText, Waypoints } from "lucide-react";
 import { useEffect, useState } from "react";
 import qbsFile from "@/data/qbs.json";
 import playFile from "@/data/playcalling.json";
@@ -38,6 +38,12 @@ const LABS = [
     title: "Lineup",
     icon: Binary,
     blurb: "$50k roster. Lock, bench, solve. Hindsight after games.",
+  },
+  {
+    to: "/study" as const,
+    title: "Study",
+    icon: ScrollText,
+    blurb: "2025 holdout. Solver vs greedy. EPA this week vs next.",
   },
   {
     to: "/play-calling" as const,

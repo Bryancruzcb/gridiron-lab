@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Lock, Ban } from "lucide-react";
 import fantasyFile from "@/data/fantasy.json";
@@ -404,6 +404,11 @@ function OptimizerLab() {
                     </tr>
                   </tbody>
                 </table>
+                <p className="mt-3 text-xs text-muted">
+                  <Link to="/study" className="text-fg">
+                    2025 weeks 2–18
+                  </Link>
+                </p>
               </div>
             )}
           </aside>

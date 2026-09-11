@@ -139,3 +139,60 @@ export type FantasyFile = {
   roster: Record<string, number>;
   players: FantasyPlayer[];
 };
+
+export type StudyLineupScore = {
+  proj: number;
+  actual: number;
+  salary: number;
+};
+
+export type StudyWeek = {
+  week: number;
+  players: number;
+  exact: StudyLineupScore;
+  greedyProj: StudyLineupScore;
+  greedyValue: StudyLineupScore;
+};
+
+export type StudySummary = {
+  weeks: number;
+  exactMean: number;
+  exactMedian: number;
+  greedyProjMean: number;
+  greedyValueMean: number;
+  exactBeatsProj: number;
+  exactBeatsValue: number;
+};
+
+export type BacktestFile = {
+  source: string;
+  season: number;
+  cap: number;
+  notes: string[];
+  weeks: StudyWeek[];
+  summary: StudySummary;
+};
+
+export type QbLagPoint = {
+  id: string;
+  name: string;
+  team: string;
+  week: number;
+  epaPrev: number;
+  epaNext: number;
+  cpoePrev: number | null;
+  cpoeNext: number | null;
+  attPrev: number;
+  attNext: number;
+};
+
+export type QbLagFile = {
+  source: string;
+  season: number;
+  minAttempts: number;
+  n: number;
+  corrEpa: number | null;
+  corrCpoe: number | null;
+  pairs: QbLagPoint[];
+};
+

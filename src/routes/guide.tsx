@@ -16,7 +16,11 @@ function GuidePage() {
         </p>
         <h1 className="mt-3 font-display text-5xl uppercase tracking-[0.03em]">Guide</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Short definitions. The labs themselves stay empty of this copy after the first visit.
+          Short definitions. The 2025 holdout is on{" "}
+          <Link to="/study" className="text-fg">
+            Study
+          </Link>
+          .
         </p>
 
         <section className="mt-10">
@@ -62,8 +66,7 @@ function GuidePage() {
               Rebuilds the lineup on this week’s actual PPR after games go final.
             </Item>
             <Item term="Backtest">
-              Exact DP, hill-climb, and Pts/$ greedy, built on projections, scored on this week’s
-              actuals. Hindsight is the ceiling after the games.
+              This week on Lineup; 2025 weeks 2–18 on Study. Exact DP vs greedy, scored on actuals.
             </Item>
           </dl>
         </section>
