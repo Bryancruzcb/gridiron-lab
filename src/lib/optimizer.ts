@@ -189,8 +189,146 @@ function slotEligible(slot: string, p: FantasyPlayer) {
   return p.pos === slot;
 }
 
-/** Projection-greedy seed with leftover-cap check, then hill-climb swaps. */
-export function optimizeLineup(opts: {
+/** Pack remaining-slot counts into 0..191. */
+function packNeed(n: Need) {
+  return n.QB + 2 * (n.RB + 3 * (n.WR + 4 * (n.TE + 2 * (n.DST + 2 * n.FLEX))));
+}
+
+function unpackNeed(code: number): Need {
+  const QB = code % 2;
+  code = (code / 2) | 0;
+  const RB = code % 3;
+  code = (code / 3) | 0;
+  const WR = code % 4;
+  code = (code / 4) | 0;
+  const TE = code % 2;
+  code = (code / 2) | 0;
+  const DST = code % 2;
+  code = (code / 2) | 0;
+  return { QB, RB, WR, TE, DST, FLEX: code % 2 };
+}
+
+const NEED_STATES = 192;
+
+function accept(n: Need, p: FantasyPlayer): Need | null {
+  const next = { ...n };
+  return apply(next, p) ? next : null;
+}
+
+/**
+ * Exact 0-1 DP over slots × salary ($100 units). Optimal for cap + roster
+ * (not the optional QB stack — use hill-climb when that flag is on).
+ */
+export function exactLineup(opts: {
+  players: FantasyPlayer[];
+  cap: number;
+  locked: Set<string>;
+  excluded: Set<string>;
+}): Lineup | null {
+  const pool = opts.players.filter((p) => !opts.excluded.has(p.id) && !opts.locked.has(p.id));
+  const locked = opts.players.filter((p) => opts.locked.has(p.id) && !opts.excluded.has(p.id));
+  const need = emptyNeed();
+  let spent = 0;
+  for (const p of locked) {
+    if (!apply(need, p)) return null;
+    spent += p.salary;
+  }
+  if (spent > opts.cap) return null;
+  if (filled(need)) return totals(locked, opts.cap);
+
+  const capU = Math.floor((opts.cap - spent) / 100);
+  const stride = capU + 1;
+  const cells = NEED_STATES * stride;
+  const makeBest = () => {
+    const a = new Float64Array(cells);
+    a.fill(Number.NEGATIVE_INFINITY);
+    return a;
+  };
+  const makeWho = () => {
+    const a = new Int16Array(cells);
+    a.fill(-1);
+    return a;
+  };
+  const makeFrom = () => {
+    const a = new Int32Array(cells);
+    a.fill(-1);
+    return a;
+  };
+
+  let curBest = makeBest();
+  let curWho = makeWho();
+  let curFrom = makeFrom();
+  let nxtBest = makeBest();
+  let nxtWho = makeWho();
+  let nxtFrom = makeFrom();
+  curBest[packNeed(need) * stride + 0] = 0;
+
+  for (let i = 0; i < pool.length; i++) {
+    const p = pool[i]!;
+    const cost = (p.salary / 100) | 0;
+    if (cost > capU || cost <= 0) continue;
+    nxtBest.set(curBest);
+    nxtWho.set(curWho);
+    nxtFrom.set(curFrom);
+    for (let s = 0; s < NEED_STATES; s++) {
+      const nxt = accept(unpackNeed(s), p);
+      if (!nxt) continue;
+      const ns = packNeed(nxt);
+      for (let sal = cost; sal <= capU; sal++) {
+        const from = s * stride + (sal - cost);
+        const v = curBest[from]!;
+        if (v === Number.NEGATIVE_INFINITY) continue;
+        const to = ns * stride + sal;
+        const cand = v + p.proj;
+        if (cand > nxtBest[to]!) {
+          nxtBest[to] = cand;
+          nxtWho[to] = i;
+          nxtFrom[to] = from;
+        }
+      }
+    }
+    const b = curBest;
+    curBest = nxtBest;
+    nxtBest = b;
+    const w = curWho;
+    curWho = nxtWho;
+    nxtWho = w;
+    const f = curFrom;
+    curFrom = nxtFrom;
+    nxtFrom = f;
+  }
+
+  const goal = packNeed({ QB: 0, RB: 0, WR: 0, TE: 0, DST: 0, FLEX: 0 });
+  let top = Number.NEGATIVE_INFINITY;
+  let at = -1;
+  for (let sal = 0; sal <= capU; sal++) {
+    const cell = goal * stride + sal;
+    if (curBest[cell]! > top) {
+      top = curBest[cell]!;
+      at = cell;
+    }
+  }
+  if (at < 0 || top === Number.NEGATIVE_INFINITY) return null;
+
+  const picked: FantasyPlayer[] = [...locked];
+  const seen = new Set(locked.map((p) => p.id));
+  let cell = at;
+  while (cell >= 0 && curWho[cell]! >= 0) {
+    const p = pool[curWho[cell]!]!;
+    if (!seen.has(p.id)) {
+      picked.push(p);
+      seen.add(p.id);
+    }
+    cell = curFrom[cell]!;
+  }
+  const left = emptyNeed();
+  for (const p of picked) apply(left, p);
+  if (!filled(left)) return null;
+  return totals(picked, opts.cap);
+}
+
+/** Projection-greedy seed, then one-for-one swaps. Local max, not the cap optimum. */
+export function hillClimbLineup(opts: {
   players: FantasyPlayer[];
   cap: number;
   locked: Set<string>;
@@ -238,6 +376,21 @@ export function optimizeLineup(opts: {
   return current;
 }
 
+/** Exact DP unless a QB stack is required (then hill-climb). */
+export function optimizeLineup(opts: {
+  players: FantasyPlayer[];
+  cap: number;
+  locked: Set<string>;
+  excluded: Set<string>;
+  requireStack?: boolean;
+}): Lineup | null {
+  if (!opts.requireStack) {
+    const exact = exactLineup(opts);
+    if (exact) return exact;
+  }
+  return hillClimbLineup(opts);
+}
+
 export function orderedLineup(players: FantasyPlayer[]): { slot: string; player: FantasyPlayer }[] {
   const rest = [...players];
   const take = (pos: FantasyPos) => {
@@ -260,8 +413,9 @@ export function orderedLineup(players: FantasyPlayer[]): { slot: string; player:
   if (wr3) out.push({ slot: "WR", player: wr3 });
   const te = take("TE");
   if (te) out.push({ slot: "TE", player: te });
-  if (rest[0] && rest[0].pos !== "DST") {
-    out.push({ slot: "FLEX", player: rest.shift()! });
+  const flexAt = rest.findIndex((p) => p.pos === "RB" || p.pos === "WR" || p.pos === "TE");
+  if (flexAt >= 0) {
+    out.push({ slot: "FLEX", player: rest.splice(flexAt, 1)[0]! });
   }
   const dst = rest.find((p) => p.pos === "DST") ?? rest[0];
   if (dst) {

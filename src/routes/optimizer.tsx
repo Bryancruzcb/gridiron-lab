@@ -15,7 +15,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
 import { actualsByPlayer } from "@/lib/match";
 import { teamNick } from "@/lib/nfl";
-import { greedyLineup, optimizeLineup, orderedLineup, scoreLineup, type Lineup } from "@/lib/optimizer";
+import { exactLineup, greedyLineup, hillClimbLineup, optimizeLineup, orderedLineup, scoreLineup, type Lineup } from "@/lib/optimizer";
 import { useSeason } from "@/lib/season-provider";
 import { cn, formatNum } from "@/lib/utils";
 
@@ -40,12 +40,15 @@ function OptimizerLab() {
   const backtest = useMemo(() => {
     if (actuals.size < 1) return null;
     const empty = { locked: new Set<string>(), excluded: new Set<string>() };
-    const solver = optimizeLineup({ players, cap: data.cap, ...empty });
+    const exact = exactLineup({ players, cap: data.cap, ...empty });
+    const hill = hillClimbLineup({ players, cap: data.cap, ...empty });
     const value = greedyLineup({ players, cap: data.cap, ...empty, by: "value" });
     const scored = players.filter((p) => actuals.has(p.id)).map((p) => ({ ...p, proj: actuals.get(p.id) ?? 0 }));
-    const hindsight = optimizeLineup({ players: scored, cap: data.cap, ...empty });
+    const hindsight = exactLineup({ players: scored, cap: data.cap, ...empty })
+      ?? optimizeLineup({ players: scored, cap: data.cap, ...empty });
     return {
-      solver: { proj: solver?.proj ?? 0, actual: scoreLineup(solver?.players ?? [], actuals) },
+      exact: { proj: exact?.proj ?? 0, actual: scoreLineup(exact?.players ?? [], actuals) },
+      hill: { proj: hill?.proj ?? 0, actual: scoreLineup(hill?.players ?? [], actuals) },
       value: { proj: value?.proj ?? 0, actual: scoreLineup(value?.players ?? [], actuals) },
       hindsight: hindsight?.proj ?? 0,
     };
@@ -380,9 +383,14 @@ function OptimizerLab() {
                   </thead>
                   <tbody className="font-mono tabular-nums">
                     <tr className="border-t border-border/70">
-                      <td className="py-1.5">Solver</td>
-                      <td className="py-1.5 text-right">{backtest.solver.proj.toFixed(1)}</td>
-                      <td className="py-1.5 text-right">{backtest.solver.actual.pts.toFixed(1)}</td>
+                      <td className="py-1.5">Exact DP</td>
+                      <td className="py-1.5 text-right">{backtest.exact.proj.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">{backtest.exact.actual.pts.toFixed(1)}</td>
+                    </tr>
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Hill-climb</td>
+                      <td className="py-1.5 text-right">{backtest.hill.proj.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">{backtest.hill.actual.pts.toFixed(1)}</td>
                     </tr>
                     <tr className="border-t border-border/70">
                       <td className="py-1.5">Pts/$ greedy</td>

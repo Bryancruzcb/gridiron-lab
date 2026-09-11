@@ -62,7 +62,7 @@ function GuidePage() {
               Rebuilds the lineup on this week’s actual PPR after games go final.
             </Item>
             <Item term="Backtest">
-              Solver and a Pts/$ greedy lineup, built on projections, scored on this week’s
+              Exact DP, hill-climb, and Pts/$ greedy, built on projections, scored on this week’s
               actuals. Hindsight is the ceiling after the games.
             </Item>
           </dl>
