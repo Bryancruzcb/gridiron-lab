@@ -26,6 +26,13 @@ export type QbBox = {
   ppr: number | null;
 };
 
+export type QbWeekPoint = {
+  week: number;
+  plays: number;
+  epa: number | null;
+  cpoe: number | null;
+};
+
 export type QbSeason = {
   id: string;
   name: string;
@@ -36,6 +43,7 @@ export type QbSeason = {
   box: QbBox | null;
   overall: SplitStats;
   splits: Record<string, SplitStats>;
+  weeks?: QbWeekPoint[];
 };
 
 export type QbFile = {

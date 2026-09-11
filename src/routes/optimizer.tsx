@@ -13,11 +13,10 @@ import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
-import { getWeekPpr } from "@/lib/live/functions";
-import type { WeekPpr } from "@/lib/live/types";
 import { actualsByPlayer } from "@/lib/match";
 import { teamNick } from "@/lib/nfl";
-import { greedyLineup, optimizeLineup, orderedLineup, type Lineup } from "@/lib/optimizer";
+import { greedyLineup, optimizeLineup, orderedLineup, scoreLineup, type Lineup } from "@/lib/optimizer";
+import { useSeason } from "@/lib/season-provider";
 import { cn, formatNum } from "@/lib/utils";
 
 export const Route = createFileRoute("/optimizer")({ component: OptimizerLab });
@@ -26,30 +25,31 @@ const data = fantasyFile as FantasyFile;
 const POS: (FantasyPos | "ALL")[] = ["ALL", "QB", "RB", "WR", "TE", "DST"];
 
 function OptimizerLab() {
+  const { weekPpr } = useSeason();
   const [pos, setPos] = useState<(typeof POS)[number]>("ALL");
   const [q, setQ] = useState("");
   const [locked, setLocked] = useState<string[]>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   const [stack, setStack] = useState(false);
   const [mode, setMode] = useState<"proj" | "actual">("proj");
-  const [week, setWeek] = useState<WeekPpr | null>(null);
+  const week = weekPpr;
   const players = data.players as FantasyPlayer[];
 
-  useEffect(() => {
-    let cancelled = false;
-    getWeekPpr()
-      .then((w) => {
-        if (!cancelled) setWeek(w);
-      })
-      .catch(() => {
-        if (!cancelled) setWeek(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const actuals = useMemo(() => (week ? actualsByPlayer(players, week.players) : new Map<string, number>()), [week, players]);
+
+  const backtest = useMemo(() => {
+    if (actuals.size < 1) return null;
+    const empty = { locked: new Set<string>(), excluded: new Set<string>() };
+    const solver = optimizeLineup({ players, cap: data.cap, ...empty });
+    const value = greedyLineup({ players, cap: data.cap, ...empty, by: "value" });
+    const scored = players.filter((p) => actuals.has(p.id)).map((p) => ({ ...p, proj: actuals.get(p.id) ?? 0 }));
+    const hindsight = optimizeLineup({ players: scored, cap: data.cap, ...empty });
+    return {
+      solver: { proj: solver?.proj ?? 0, actual: scoreLineup(solver?.players ?? [], actuals) },
+      value: { proj: value?.proj ?? 0, actual: scoreLineup(value?.players ?? [], actuals) },
+      hindsight: hindsight?.proj ?? 0,
+    };
+  }, [players, actuals]);
 
   const slate = useMemo(() => {
     if (mode !== "actual") return players;
@@ -360,8 +360,42 @@ function OptimizerLab() {
             {alt && (
               <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
                 <h2 className="font-display text-lg uppercase tracking-[0.06em]">Value greedy</h2>
-                <p className="mt-1 text-xs text-subtle">Cheaper-points heuristic, not the full solve.</p>
                 <p className="mt-2 font-mono text-sm">{alt.proj.toFixed(1)} pts</p>
+              </div>
+            )}
+
+            {backtest && (
+              <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+                <h2 className="font-display text-lg uppercase tracking-[0.06em]">Backtest</h2>
+                <p className="mt-1 text-xs text-muted">
+                  Solved on projections, scored on this week’s actuals.
+                </p>
+                <table className="mt-3 w-full text-left text-sm">
+                  <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+                    <tr>
+                      <th className="py-1 font-medium"> </th>
+                      <th className="py-1 text-right font-medium">Proj</th>
+                      <th className="py-1 text-right font-medium">Actual</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-mono tabular-nums">
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Solver</td>
+                      <td className="py-1.5 text-right">{backtest.solver.proj.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">{backtest.solver.actual.pts.toFixed(1)}</td>
+                    </tr>
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Pts/$ greedy</td>
+                      <td className="py-1.5 text-right">{backtest.value.proj.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">{backtest.value.actual.pts.toFixed(1)}</td>
+                    </tr>
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Hindsight</td>
+                      <td className="py-1.5 text-right text-muted">—</td>
+                      <td className="py-1.5 text-right">{backtest.hindsight.toFixed(1)}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             )}
           </aside>

@@ -39,6 +39,7 @@ type QbAcc = {
   games: Set<string>;
   overall: SplitAcc;
   splits: Map<string, SplitAcc>;
+  weeks: Map<number, { plays: number; epa: number; epaN: number; cpoe: number; cpoeN: number }>;
 };
 
 type PlayAcc = {
@@ -512,7 +513,15 @@ async function buildPbp(): Promise<PbpBundle> {
 
       let qb = qbs.get(passerId);
       if (!qb) {
-        qb = { id: passerId, name: passerName, team: posteam, games: new Set(), overall: emptySplit(), splits: new Map() };
+        qb = {
+          id: passerId,
+          name: passerName,
+          team: posteam,
+          games: new Set(),
+          overall: emptySplit(),
+          splits: new Map(),
+          weeks: new Map(),
+        };
         qbs.set(passerId, qb);
       }
       qb.team = posteam;
@@ -535,6 +544,20 @@ async function buildPbp(): Promise<PbpBundle> {
         air: fnum(get("air_yards")),
       };
       bumpSplit(qb.overall, row);
+      let wk = qb.weeks.get(week);
+      if (!wk) {
+        wk = { plays: 0, epa: 0, epaN: 0, cpoe: 0, cpoeN: 0 };
+        qb.weeks.set(week, wk);
+      }
+      wk.plays += 1;
+      if (epa != null) {
+        wk.epa += epa;
+        wk.epaN += 1;
+      }
+      if (cpoe != null) {
+        wk.cpoe += cpoe;
+        wk.cpoeN += 1;
+      }
       const sit = {
         redzone: yline != null && yline <= 20,
         twominute: half != null && half <= 120,
@@ -577,6 +600,14 @@ async function buildPbp(): Promise<PbpBundle> {
         box: w?.box ?? null,
         overall: finishSplit(q.overall),
         splits,
+        weeks: [...q.weeks.entries()]
+          .sort((a, b) => a[0] - b[0])
+          .map(([wk, acc]) => ({
+            week: wk,
+            plays: acc.plays,
+            epa: acc.epaN ? round(acc.epa / acc.epaN, 3) : null,
+            cpoe: acc.cpoeN ? round(acc.cpoe / acc.cpoeN, 1) : null,
+          })),
       };
     });
 

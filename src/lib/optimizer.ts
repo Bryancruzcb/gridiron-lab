@@ -17,6 +17,10 @@ function byProj(a: FantasyPlayer, b: FantasyPlayer) {
   return b.proj - a.proj;
 }
 
+function byValue(a: FantasyPlayer, b: FantasyPlayer) {
+  return b.proj / Math.max(b.salary, 1) - a.proj / Math.max(a.salary, 1);
+}
+
 function totals(players: FantasyPlayer[], cap: number): Lineup {
   const salary = players.reduce((s, p) => s + p.salary, 0);
   const proj = players.reduce((s, p) => s + p.proj, 0);
@@ -91,6 +95,7 @@ export function greedyLineup(opts: {
   locked: Set<string>;
   excluded: Set<string>;
   requireStack?: boolean;
+  by?: "proj" | "value";
 }): Lineup | null {
   const eligiblePool = opts.players.filter((p) => !opts.excluded.has(p.id));
   const locked = eligiblePool.filter((p) => opts.locked.has(p.id));
@@ -116,14 +121,16 @@ export function greedyLineup(opts: {
     return true;
   };
 
+  const rank = opts.by === "value" ? byValue : byProj;
+
   if (opts.requireStack && !hasStack(chosen)) {
     const lockedQb = chosen.find((p) => p.pos === "QB");
     const qbs = lockedQb
       ? [lockedQb]
-      : eligiblePool.filter((p) => p.pos === "QB" && !used.has(p.id)).sort(byProj);
+      : eligiblePool.filter((p) => p.pos === "QB" && !used.has(p.id)).sort(rank);
     const wrte = eligiblePool.filter((p) => (p.pos === "WR" || p.pos === "TE") && !used.has(p.id));
     outer: for (const qb of qbs) {
-      for (const mate of wrte.filter((p) => p.team === qb.team).sort(byProj)) {
+      for (const mate of wrte.filter((p) => p.team === qb.team).sort(rank)) {
         if (used.has(qb.id)) {
           if (tryAdd(mate)) break outer;
           continue;
@@ -143,7 +150,7 @@ export function greedyLineup(opts: {
     }
   }
 
-  for (const p of eligiblePool.slice().sort(byProj)) {
+  for (const p of eligiblePool.slice().sort(rank)) {
     tryAdd(p);
     if (filled(need)) break;
   }
@@ -263,4 +270,17 @@ export function orderedLineup(players: FantasyPlayer[]): { slot: string; player:
     out.push({ slot: "DST", player: dst });
   }
   return out;
+}
+
+export function scoreLineup(players: FantasyPlayer[], actuals: Map<string, number>) {
+  let pts = 0;
+  let n = 0;
+  for (const p of players) {
+    const a = actuals.get(p.id);
+    if (a != null) {
+      pts += a;
+      n += 1;
+    }
+  }
+  return { pts, n };
 }

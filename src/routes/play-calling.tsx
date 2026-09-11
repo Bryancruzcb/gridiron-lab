@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -11,22 +11,21 @@ import {
   YAxis,
 } from "recharts";
 import playFile from "@/data/playcalling.json";
-import snapFile from "@/data/season2026.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { FirstLook } from "@/components/FirstLook";
+import { SampleN } from "@/components/SampleN";
 import { StatTip } from "@/components/StatTip";
 import { Segmented } from "@/components/ui/segmented";
 import { axisProps, CHART, tooltipStyle } from "@/components/charts/theme";
 import type { PlaycallingFile, TeamSeason } from "@/data/types";
-import { getSeasonLabs } from "@/lib/live/functions";
-import type { SeasonLabs } from "@/lib/live/types";
+import { historyTeams, isThin } from "@/lib/season";
+import { useSeason } from "@/lib/season-provider";
 import { teamNick } from "@/lib/nfl";
 import { cn, formatEpa, formatPct } from "@/lib/utils";
 
 export const Route = createFileRoute("/play-calling")({ component: PlayLab });
 
 const data = playFile as unknown as PlaycallingFile;
-const snap = snapFile as unknown as SeasonLabs;
 const DOWNS = [1, 2, 3, 4] as const;
 const DISTS = ["short", "medium", "long"] as const;
 
@@ -37,35 +36,15 @@ function teamFromClick(d: unknown): string | null {
 }
 
 function PlayLab() {
-  const [season26, setSeason26] = useState<SeasonLabs | null>(null);
+  const { labs } = useSeason();
   const [season, setSeason] = useState(2026);
   const [metric, setMetric] = useState<"fourth" | "second" | "proe">("fourth");
   const [selected, setSelected] = useState<string | null>(null);
   const [flash, setFlash] = useState(0);
   const heatRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    getSeasonLabs()
-      .then((s) => {
-        if (!cancelled) setSeason26(s);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSeason26(null);
-          setSeason((s) => (s === 2026 ? 2025 : s));
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const overlay = season26?.teams.length ? season26 : snap;
-  const allTeams = useMemo(() => {
-    const hist = data.teams as TeamSeason[];
-    return [...overlay.teams, ...hist.filter((t) => t.season !== 2026)];
-  }, [overlay]);
+  const overlay = labs;
+  const allTeams = useMemo(() => historyTeams(overlay, data.teams as TeamSeason[]), [overlay]);
 
   const seasons = useMemo(() => {
     const s = new Set(allTeams.map((t) => t.season));
@@ -92,6 +71,7 @@ function PlayLab() {
       name: teamNick(t.team),
       go: (t.fourthDown.goRate ?? 0) * 100,
       convert: (t.fourthDown.convertRate ?? 0) * 100,
+      n: t.fourthDown.opps,
       coach: t.coach,
     }));
 
@@ -102,6 +82,7 @@ function PlayLab() {
       team: t.team,
       name: teamNick(t.team),
       pass: (t.secondAndShort.passRate ?? 0) * 100,
+      n: t.secondAndShort.plays,
       epaPass: t.secondAndShort.epaPass ?? 0,
       epaRush: t.secondAndShort.epaRush ?? 0,
     }));
@@ -203,6 +184,7 @@ function PlayLab() {
                   rows={fourth.map((t) => ({
                     team: t.team,
                     value: t.go,
+                    n: t.n,
                     selected: selected === t.team,
                   }))}
                   format={(v) => `${v.toFixed(0)}%`}
@@ -223,6 +205,7 @@ function PlayLab() {
                   rows={second.map((t) => ({
                     team: t.team,
                     value: t.pass,
+                    n: t.n,
                     selected: selected === t.team,
                   }))}
                   format={(v) => `${v.toFixed(0)}%`}
@@ -276,6 +259,7 @@ function PlayLab() {
                 {selectedTeam.coach ? <p className="mt-1 text-sm text-muted">{selectedTeam.coach}</p> : null}
                 <dl className="mt-4 grid grid-cols-2 gap-3">
                   <Stat label="Pass rate" value={formatPct(selectedTeam.passRate)} />
+                  <Stat label="Plays" value={String(selectedTeam.plays)} />
                   <Stat
                     label="PROE"
                     value={
@@ -331,7 +315,10 @@ function PlayLab() {
                                   )}
                                   style={{ background: bg }}
                                 >
-                                  {v}%
+                                  <span>{v}%</span>
+                                  <span className={cn("mt-0.5 block text-[10px]", isThin(plays) ? "text-muted" : "text-fg/70")}>
+                                    n={plays}
+                                  </span>
                                 </span>
                               </td>
                             );
@@ -360,7 +347,7 @@ function RankBars({
   format,
   onPick,
 }: {
-  rows: { team: string; value: number; selected: boolean }[];
+  rows: { team: string; value: number; n?: number; selected: boolean }[];
   format: (v: number) => string;
   onPick: (team: string) => void;
 }) {
@@ -375,6 +362,7 @@ function RankBars({
             className={cn(
               "flex min-h-11 w-full items-center gap-2 rounded-sm px-1.5 text-left",
               r.selected ? "bg-sage/15" : "hover:bg-elevated",
+              r.n != null && isThin(r.n) && "opacity-70",
             )}
           >
             <span className="w-5 shrink-0 font-mono text-[10px] text-subtle tabular-nums">{i + 1}</span>
@@ -388,7 +376,10 @@ function RankBars({
                 style={{ width: `${Math.max(4, (r.value / max) * 100)}%` }}
               />
             </span>
-            <span className="w-12 shrink-0 text-right font-mono text-xs tabular-nums">{format(r.value)}</span>
+            <span className="w-16 shrink-0 text-right">
+              <span className="block font-mono text-xs tabular-nums">{format(r.value)}</span>
+              {r.n != null ? <SampleN n={r.n} className="text-[10px]" /> : null}
+            </span>
           </button>
         </li>
       ))}

@@ -38,6 +38,13 @@ function GuidePage() {
               Resets when you change down. 3rd down is ~40, 4th down is ~8. A 200-play floor hides
               everyone on those slices.
             </Item>
+            <Item term="n">
+              Play count. Under 30 is a thin sample — the number is dimmed. Week 1 2026 is almost
+              all thin.
+            </Item>
+            <Item term="Week strip">
+              On a pinned 2026 QB, each week’s EPA and n. One week is not a season.
+            </Item>
           </dl>
         </section>
 
@@ -53,6 +60,10 @@ function GuidePage() {
             <Item term="Bench">Never pick that player.</Item>
             <Item term="Hindsight">
               Rebuilds the lineup on this week’s actual PPR after games go final.
+            </Item>
+            <Item term="Backtest">
+              Solver and a Pts/$ greedy lineup, built on projections, scored on this week’s
+              actuals. Hindsight is the ceiling after the games.
             </Item>
           </dl>
         </section>

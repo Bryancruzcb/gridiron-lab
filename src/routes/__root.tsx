@@ -1,5 +1,6 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
+import { SeasonProvider } from "@/lib/season-provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import appCss from "../styles.css?url";
@@ -40,9 +41,11 @@ export const Route = createRootRoute({
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
         <AuthProvider>
-          <TooltipProvider delayDuration={200}>
-            <Outlet />
-          </TooltipProvider>
+          <SeasonProvider>
+            <TooltipProvider delayDuration={200}>
+              <Outlet />
+            </TooltipProvider>
+          </SeasonProvider>
         </AuthProvider>
         <Scripts />
       </body>

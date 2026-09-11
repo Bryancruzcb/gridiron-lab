@@ -13,18 +13,18 @@ import {
   ZAxis,
 } from "recharts";
 import qbsFile from "@/data/qbs.json";
-import snapFile from "@/data/season2026.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
+import { SampleN } from "@/components/SampleN";
 import { StatTip } from "@/components/StatTip";
 import { Segmented } from "@/components/ui/segmented";
 import { Slider } from "@/components/ui/slider";
 import { axisProps, CHART } from "@/components/charts/theme";
 import type { QbFile, QbSeason, SplitStats } from "@/data/types";
 import { teamNick } from "@/lib/nfl";
-import { getSeasonLabs } from "@/lib/live/functions";
-import type { SeasonLabs } from "@/lib/live/types";
+import { historyQbs, isThin } from "@/lib/season";
+import { useSeason } from "@/lib/season-provider";
 import {
   playFloor,
   splitKey,
@@ -39,10 +39,9 @@ import { cn, formatCpoe, formatEpa, formatPct } from "@/lib/utils";
 export const Route = createFileRoute("/qb")({ component: QbLab });
 
 const data = qbsFile as QbFile;
-const snap = snapFile as unknown as SeasonLabs;
 
 function QbLab() {
-  const [season26, setSeason26] = useState<SeasonLabs | null>(null);
+  const { labs } = useSeason();
   const [season, setSeason] = useState<number>(2026);
   const [minPlays, setMinPlays] = useState(10);
   const [down, setDown] = useState<DownFilter>("all");
@@ -51,28 +50,8 @@ function QbLab() {
   const [pinned, setPinned] = useState<string[]>([]);
   const [sort, setSort] = useState<"epa" | "cpoe" | "press" | "comp">("epa");
 
-  useEffect(() => {
-    let cancelled = false;
-    getSeasonLabs()
-      .then((s) => {
-        if (!cancelled) setSeason26(s);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setSeason26(null);
-          setSeason((s) => (s === 2026 ? 2025 : s));
-        }
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const overlay = season26?.qbs.length ? season26 : snap;
-  const allQbs = useMemo(() => {
-    const hist = data.qbs as QbSeason[];
-    return [...overlay.qbs, ...hist.filter((q) => q.season !== 2026)];
-  }, [overlay]);
+  const overlay = labs;
+  const allQbs = useMemo(() => historyQbs(overlay, data.qbs as QbSeason[]), [overlay]);
 
   const seasons = useMemo(() => {
     const s = new Set(allQbs.map((q) => q.season));
@@ -117,7 +96,13 @@ function QbLab() {
     cpoe: r.stats.cpoe ?? 0,
     press: r.stats.press ?? 0,
     plays: r.stats.plays,
-    fill: pinned.includes(r.qb.id) ? CHART.sage : i < 8 ? CHART.paper : CHART.muted,
+    fill: pinned.includes(r.qb.id)
+      ? CHART.sage
+      : isThin(r.stats.plays)
+        ? CHART.muted
+        : i < 8
+          ? CHART.paper
+          : CHART.muted,
   }));
 
   const togglePin = (id: string) => {
@@ -127,6 +112,14 @@ function QbLab() {
       return [...prev, id];
     });
   };
+
+  const weekRows = useMemo(() => {
+    if (season < 2026) return [];
+    return allQbs
+      .filter((q) => q.season === 2026 && (q.weeks?.length ?? 0) > 0)
+      .slice()
+      .sort((a, b) => (b.overall.plays ?? 0) - (a.overall.plays ?? 0));
+  }, [allQbs, season]);
 
   const pinnedRows = pinned
     .map((id) => rows.find((r) => r.qb.id === id))
@@ -229,7 +222,57 @@ function QbLab() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        {weekRows.length > 0 && (
+          <div className="mt-4 overflow-hidden rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
+            <h2 className="font-display text-xl uppercase tracking-[0.06em]">By week</h2>
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[320px] text-left text-sm">
+                <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+                  <tr className="border-b border-border">
+                    <th className="py-2 pr-3 font-medium">QB</th>
+                    {Array.from(
+                      new Set(weekRows.flatMap((q) => (q.weeks ?? []).map((w) => w.week))),
+                    )
+                      .sort((a, b) => a - b)
+                      .map((w) => (
+                        <th key={w} className="px-2 py-2 text-right font-medium">
+                          W{w}
+                        </th>
+                      ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {weekRows.map((q) => (
+                    <tr key={q.id} className="border-b border-border/70">
+                      <td className="py-2 pr-3">{q.name.split(" ").pop()}</td>
+                      {Array.from(
+                        new Set(weekRows.flatMap((x) => (x.weeks ?? []).map((w) => w.week))),
+                      )
+                        .sort((a, b) => a - b)
+                        .map((w) => {
+                          const pt = q.weeks?.find((x) => x.week === w);
+                          return (
+                            <td key={w} className="px-2 py-2 text-right font-mono text-xs tabular-nums">
+                              {pt ? (
+                                <span className={isThin(pt.plays) ? "text-muted" : undefined}>
+                                  {formatEpa(pt.epa)}
+                                  <span className="ml-1 text-muted">n={pt.plays}</span>
+                                </span>
+                              ) : (
+                                <span className="text-muted">—</span>
+                              )}
+                            </td>
+                          );
+                        })}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
           <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             <div className="mb-3">
               <h2 className="font-display text-xl uppercase tracking-[0.06em]">EPA vs CPOE</h2>
@@ -318,10 +361,25 @@ function QbLab() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{r.qb.name}</p>
                       <p className="text-xs text-muted">{teamNick(r.qb.team)}</p>
+                      {season >= 2026 && r.qb.weeks && r.qb.weeks.length > 0 && (
+                        <p className="mt-1 font-mono text-[11px] tabular-nums text-muted">
+                          {r.qb.weeks.map((w) => `W${w.week} ${formatEpa(w.epa)} n=${w.plays}`).join("  ")}
+                        </p>
+                      )}
                     </div>
-                    <span className="font-mono text-sm tabular-nums text-sage">
-                      {formatEpa(r.stats.epa)}
-                    </span>
+                    <div className="text-right">
+                      <span
+                        className={cn(
+                          "font-mono text-sm tabular-nums",
+                          isThin(r.stats.plays) ? "text-muted" : "text-sage",
+                        )}
+                      >
+                        {formatEpa(r.stats.epa)}
+                      </span>
+                      <div>
+                        <SampleN n={r.stats.plays} />
+                      </div>
+                    </div>
                   </button>
                 </li>
               ))}
@@ -344,6 +402,7 @@ function QbLab() {
                       [
                         ["EPA", (s: SplitStats) => formatEpa(s.epa)],
                         ["CPOE", (s: SplitStats) => formatCpoe(s.cpoe)],
+                        ["n", (s: SplitStats) => String(s.plays)],
                         ["Comp", (s: SplitStats) => formatPct(s.comp)],
                         ["Press", (s: SplitStats) => formatPct(s.press)],
                       ] as const
@@ -432,7 +491,14 @@ function QbLab() {
                         </div>
                       </td>
                       <td className="px-3 py-2.5 text-muted">{r.qb.team}</td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums">{r.stats.plays}</td>
+                      <td
+                        className={cn(
+                          "px-3 py-2.5 text-right font-mono tabular-nums",
+                          isThin(r.stats.plays) && "text-muted",
+                        )}
+                      >
+                        {r.stats.plays}
+                      </td>
                       <td
                         className={cn(
                           "px-3 py-2.5 text-right font-mono tabular-nums",
@@ -498,7 +564,10 @@ function QbDotTip({
         <dt className="text-muted">EPA/play</dt>
         <dd>{formatEpa(d.epa)}</dd>
         <dt className="text-muted">Dropbacks</dt>
-        <dd>{d.plays}</dd>
+        <dd className={isThin(d.plays) ? "text-muted" : undefined}>
+          {d.plays}
+          {isThin(d.plays) ? " · thin" : ""}
+        </dd>
       </dl>
     </div>
   );

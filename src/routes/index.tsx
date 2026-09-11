@@ -3,13 +3,15 @@ import { ArrowUpRight, Binary, LayoutDashboard, Radio, Waypoints } from "lucide-
 import { useEffect, useState } from "react";
 import qbsFile from "@/data/qbs.json";
 import playFile from "@/data/playcalling.json";
-import snapFile from "@/data/season2026.json";
 import { AppShell } from "@/components/layout/AppShell";
+import { SampleN } from "@/components/SampleN";
 import { Button } from "@/components/ui/button";
-import { getScoreboard, getSeasonLabs } from "@/lib/live/functions";
-import type { Scoreboard, SeasonLabs } from "@/lib/live/types";
+import { getScoreboard } from "@/lib/live/functions";
+import type { Scoreboard } from "@/lib/live/types";
 import { formatEpa, formatPct } from "@/lib/utils";
 import { teamNick } from "@/lib/nfl";
+import { isThin } from "@/lib/season";
+import { useSeason } from "@/lib/season-provider";
 import type { QbFile, PlaycallingFile, QbSeason, TeamSeason } from "@/data/types";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +19,6 @@ export const Route = createFileRoute("/")({ component: Home });
 
 const qbData = qbsFile as QbFile;
 const pcData = playFile as unknown as PlaycallingFile;
-const snap = snapFile as unknown as SeasonLabs;
 
 const LABS = [
   {
@@ -47,21 +48,14 @@ const LABS = [
 ];
 
 function Home() {
-  const [y26, setY26] = useState<SeasonLabs | null>(null);
-  useEffect(() => {
-    getSeasonLabs()
-      .then(setY26)
-      .catch(() => {
-        /* historical boards still work */
-      });
-  }, []);
+  const { labs } = useSeason();
 
   const histLeaders = (qbData.qbs as QbSeason[])
     .filter((q) => q.season === 2025 && q.overall.plays >= 250)
     .slice()
     .sort((a, b) => (b.overall.epa ?? -99) - (a.overall.epa ?? -99))
     .slice(0, 5);
-  const overlay = y26?.qbs.length ? y26 : snap;
+  const overlay = labs;
   const liveLeaders = overlay.qbs
     .slice()
     .sort((a, b) => (b.overall.epa ?? -99) - (a.overall.epa ?? -99))
@@ -114,8 +108,18 @@ function Home() {
                       <p className="text-xs text-muted">{teamNick(q.team)}</p>
                     </div>
                   </div>
-                  <span className="font-mono text-sm tabular-nums text-sage">
-                    {formatEpa(q.overall.epa)}
+                  <span className="text-right">
+                    <span
+                      className={cn(
+                        "font-mono text-sm tabular-nums",
+                        isThin(q.overall.plays) ? "text-muted" : "text-sage",
+                      )}
+                    >
+                      {formatEpa(q.overall.epa)}
+                    </span>
+                    <div>
+                      <SampleN n={q.overall.plays} />
+                    </div>
                   </span>
                 </li>
               ))}
@@ -154,30 +158,27 @@ function Home() {
       </section>
 
       <section className="border-t border-border">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2">
-          <div>
-            <h2 className="font-display text-3xl uppercase tracking-[0.04em]">Why these three</h2>
-            <p className="mt-4 text-sm leading-relaxed text-muted">
-              Recruiters see a lot of Titanic notebooks. They do not see many people who can talk
-              EPA, write a constraint set, and show a coach-level tendency chart without switching
-              tools. Each lab here is a closed demo with the same stats you would pull from
-              nflfastR — plus the filters that make the analysis feel like a product, not a
-              screenshot.
-            </p>
-          </div>
-          <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
+          <div className="max-w-md rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
             <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
-              {use26 ? "2026 4th-down go rate" : "2025 4th-down go rate"}
+              {use26 ? `2026 4th-down go · week ${overlay.throughWeek}` : "2025 4th-down go"}
             </p>
             <ul className="mt-4 space-y-3">
               {goers.map((t) => (
-                <li key={t.team} className="flex items-center justify-between">
-                  <span className="text-sm">
-                    {teamNick(t.team)}
-                    {t.coach ? <span className="ml-2 text-xs text-muted">{t.coach}</span> : null}
-                  </span>
-                  <span className="font-mono text-sm tabular-nums">
-                    {formatPct(t.fourthDown.goRate)}
+                <li key={t.team} className="flex items-center justify-between gap-3">
+                  <span className="text-sm">{teamNick(t.team)}</span>
+                  <span className="text-right">
+                    <span
+                      className={cn(
+                        "font-mono text-sm tabular-nums",
+                        isThin(t.fourthDown.opps) && "text-muted",
+                      )}
+                    >
+                      {formatPct(t.fourthDown.goRate)}
+                    </span>
+                    <div>
+                      <SampleN n={t.fourthDown.opps} />
+                    </div>
                   </span>
                 </li>
               ))}
