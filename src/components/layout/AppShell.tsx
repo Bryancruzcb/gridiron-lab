@@ -1,0 +1,89 @@
+import { Link, useRouterState } from "@tanstack/react-router";
+import { Menu } from "lucide-react";
+import { useState, type ReactNode } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+
+const NAV = [
+  { to: "/", label: "Labs" },
+  { to: "/live", label: "Live" },
+  { to: "/qb", label: "QB Lab" },
+  { to: "/optimizer", label: "Optimizer" },
+  { to: "/play-calling", label: "Play-calling" },
+] as const;
+
+function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolean }) {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  return (
+    <nav className={cn("flex", stacked ? "flex-col gap-1" : "items-center gap-1")}>
+      {NAV.map((item) => {
+        const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+        return (
+          <Link
+            key={item.to}
+            to={item.to}
+            onClick={onClick}
+            className={cn(
+              "rounded-sm px-3 py-2 text-[13px] font-medium tracking-wide uppercase transition-colors duration-150",
+              stacked ? "h-12 flex items-center" : "h-10",
+              active ? "bg-elevated text-fg" : "text-muted hover:text-fg",
+            )}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-bg text-fg">
+      <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
+          <Link to="/" className="flex items-center gap-3">
+            <span className="grid size-8 place-items-center rounded-[6px] bg-elevated shadow-[var(--shadow-border)]">
+              <span className="block h-4 w-[3px] bg-sage" />
+            </span>
+            <span className="font-display text-lg uppercase tracking-[0.18em]">
+              Gridiron Lab
+            </span>
+          </Link>
+          <div className="hidden md:block">
+            <NavLinks />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-fg md:hidden"
+            aria-label="Open menu"
+            onClick={() => setOpen(true)}
+          >
+            <Menu />
+          </Button>
+        </div>
+      </header>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="left" className="w-[280px]">
+          <SheetHeader>
+            <SheetTitle>Labs</SheetTitle>
+          </SheetHeader>
+          <div className="px-4">
+            <NavLinks stacked onClick={() => setOpen(false)} />
+          </div>
+        </SheetContent>
+      </Sheet>
+      <main className="flex-1">{children}</main>
+      <footer className="border-t border-border">
+        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-subtle sm:flex-row sm:items-center sm:justify-between sm:px-6">
+          <p>Live box via ESPN. EPA / CPOE via nflverse — labs refresh after each dump.</p>
+          <p>Not affiliated with the NFL.</p>
+        </div>
+      </footer>
+    </div>
+  );
+}
