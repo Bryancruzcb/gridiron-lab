@@ -6,6 +6,8 @@ Built with TanStack Start (React 19), Tailwind v4, Recharts.
 
 ## Open in VS Code
 
+Needs **Node 20.19+ or 22.12+**. Then:
+
 ```bash
 git clone https://github.com/Bryancruzcb/gridiron-lab.git
 cd gridiron-lab

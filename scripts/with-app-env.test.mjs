@@ -11,6 +11,8 @@ import {
   parseAppEnv,
   projectRoot,
   readAppEnv,
+  resolveSpawnTarget,
+  withLocalBinPath,
 } from "./with-app-env.mjs";
 
 const execFileAsync = promisify(execFile);
@@ -125,4 +127,18 @@ test("the CLI still runs when invoked through a symlinked path", async () => {
     PRINT_FLAG,
   ]);
   assert.equal(stdout, "false");
+});
+
+test("vite is launched via the local package, not a global PATH binary", () => {
+  const target = resolveSpawnTarget("vite", ["dev", "--host", "0.0.0.0"]);
+  assert.equal(target.found, true);
+  assert.equal(target.file, process.execPath);
+  assert.equal(target.argv[0].endsWith("vite/bin/vite.js"), true);
+  assert.deepEqual(target.argv.slice(1), ["dev", "--host", "0.0.0.0"]);
+});
+
+test("local node_modules/.bin is prepended to PATH", () => {
+  const env = withLocalBinPath({ PATH: "/usr/bin" });
+  const bin = join(projectRoot(), "node_modules", ".bin");
+  assert.equal(env.PATH.startsWith(`${bin}:`) || env.PATH.startsWith(`${bin};`), true);
 });

@@ -20,7 +20,7 @@
  * `process.env`, which is why the merge has to happen before Vite starts.
  */
 import { spawn } from "node:child_process";
-import { readFileSync, realpathSync } from "node:fs";
+import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { constants as osConstants } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -87,6 +87,37 @@ export function projectRoot() {
   return dirname(dirname(fileURLToPath(import.meta.url)));
 }
 
+export function localBinDir(root = projectRoot()) {
+  return join(root, "node_modules", ".bin");
+}
+
+/** Prepend `node_modules/.bin` so local bins win even if npm did not mutate PATH. */
+export function withLocalBinPath(env, root = projectRoot()) {
+  const merged = { ...env };
+  const pathKey = Object.keys(merged).find((k) => k.toLowerCase() === "path") ?? "PATH";
+  const sep = process.platform === "win32" ? ";" : ":";
+  merged[pathKey] = `${localBinDir(root)}${sep}${merged[pathKey] ?? ""}`;
+  return merged;
+}
+
+/**
+ * Resolve a command to a spawn target that does not depend on a global install.
+ * Vite is launched via `node …/vite/bin/vite.js` so Windows does not need `.cmd`.
+ */
+export function resolveSpawnTarget(command, args, root = projectRoot()) {
+  if (command === "vite") {
+    const viteJs = join(root, "node_modules", "vite", "bin", "vite.js");
+    if (existsSync(viteJs)) {
+      return { file: process.execPath, argv: [viteJs, ...args], found: true };
+    }
+  }
+  const unixBin = join(localBinDir(root), command);
+  if (existsSync(unixBin)) {
+    return { file: unixBin, argv: args, found: true };
+  }
+  return { file: command, argv: args, found: false };
+}
+
 /**
  * Whether `moduleUrl` is the script node was asked to run.
  *
@@ -110,13 +141,29 @@ function main(argv) {
     console.error("usage: node scripts/with-app-env.mjs <command> [args…]");
     process.exit(2);
   }
-  const env = mergeAppEnv(readAppEnv(projectRoot()), process.env);
-  const child = spawn(command, args, { stdio: "inherit", env });
+  const root = projectRoot();
+  const env = withLocalBinPath(mergeAppEnv(readAppEnv(root), process.env), root);
+  const { file, argv: childArgv, found } = resolveSpawnTarget(command, args, root);
+  const child = spawn(file, childArgv, {
+    stdio: "inherit",
+    env,
+    shell: process.platform === "win32" && !found,
+  });
   // The dev server is long-running and is stopped by signalling this wrapper.
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
     process.on(signal, () => child.kill(signal));
   }
   child.on("error", (err) => {
+    const code = err && typeof err === "object" && "code" in err ? err.code : "";
+    if (code === "ENOENT") {
+      console.error(`[with-app-env] failed to run ${command}: not found.`);
+      if (command === "vite") {
+        console.error(
+          "Run `npm install` in the project root (Node 20.19+ or 22.12+), then `npm run dev` again.",
+        );
+      }
+      process.exit(127);
+    }
     console.error(`[with-app-env] failed to run ${command}:`, err?.message || err);
     process.exit(127);
   });
