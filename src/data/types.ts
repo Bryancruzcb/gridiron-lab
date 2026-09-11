@@ -214,4 +214,25 @@ export type ProjectionFile = {
   models: ProjectionModel[];
 };
 
+export type EwmaPoint = {
+  alpha: number;
+  mae: number;
+  rmse: number;
+  n: number;
+  lineupMean: number;
+  lineupMedian: number;
+  weeks: number;
+};
+
+export type EwmaFile = {
+  source: string;
+  season: number;
+  note: string;
+  trail: Omit<EwmaPoint, "alpha">;
+  points: EwmaPoint[];
+  bestLineup: { alpha: number; lineupMean: number; mae: number };
+  bestMae: { alpha: number; mae: number; lineupMean: number };
+};
+
+
 

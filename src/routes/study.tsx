@@ -1,6 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   CartesianGrid,
+  Line,
+  LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Scatter,
   ScatterChart,
@@ -9,11 +12,12 @@ import {
   YAxis,
 } from "recharts";
 import backtestFile from "@/data/study-backtest.json";
+import ewmaFile from "@/data/study-ewma.json";
 import lagFile from "@/data/study-qb-lag.json";
 import projFile from "@/data/study-projections.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { axisProps, CHART } from "@/components/charts/theme";
-import type { BacktestFile, ProjectionFile, QbLagFile } from "@/data/types";
+import type { BacktestFile, EwmaFile, ProjectionFile, QbLagFile } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/study")({ component: StudyPage });
@@ -21,6 +25,7 @@ export const Route = createFileRoute("/study")({ component: StudyPage });
 const backtest = backtestFile as BacktestFile;
 const lag = lagFile as QbLagFile;
 const projections = projFile as ProjectionFile;
+const ewma = ewmaFile as EwmaFile;
 
 function StudyPage() {
   const s = backtest.summary;
@@ -125,6 +130,7 @@ function StudyPage() {
                 Shrinkage is the most accurate player-level forecast and a worse lineup — it flattens
                 stars. EWMA is a little noisier per player and the only model that moved the lineup
                 table (+2.4 vs trailing mean). Opponent-adjust with thin splits broke the solver.
+                α=0.35 was one point on a noisy ridge — see the sweep below.
               </p>
               <div className="mt-6 overflow-x-auto rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
                 <table className="w-full min-w-[28rem] text-left text-sm">
@@ -157,6 +163,56 @@ function StudyPage() {
                   </tbody>
                 </table>
               </div>
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">EWMA α</h2>
+              <p className="mt-3 text-sm leading-relaxed">
+                α=1 is last week only. Small α is not the season mean — it sticks to week 1. Trailing
+                mean MAE is {ewma.trail.mae}, lineup {ewma.trail.lineupMean}. Best lineup on this
+                sweep is α={ewma.bestLineup.alpha} at {ewma.bestLineup.lineupMean} actual points. Best
+                MAE is α={ewma.bestMae.alpha} at {ewma.bestMae.mae}. Neighbors of the lineup peak
+                drop several points. 17 weeks is not enough to treat {ewma.bestLineup.alpha} as a
+                fitted parameter.
+              </p>
+              <div className="mt-6 h-[240px] rounded-xl bg-surface p-3 shadow-[var(--shadow-border)] sm:p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={ewma.points} margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
+                    <CartesianGrid stroke={CHART.grid} />
+                    <XAxis
+                      dataKey="alpha"
+                      type="number"
+                      domain={[0, 1]}
+                      ticks={[0.2, 0.4, 0.6, 0.8, 1]}
+                      {...axisProps}
+                      tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                    />
+                    <YAxis
+                      domain={[105, 125]}
+                      width={36}
+                      {...axisProps}
+                      tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                    />
+                    <ReferenceLine
+                      y={ewma.trail.lineupMean}
+                      stroke={CHART.muted}
+                      strokeDasharray="4 4"
+                    />
+                    <Tooltip content={<AlphaTip trail={ewma.trail.lineupMean} />} />
+                    <Line
+                      type="linear"
+                      dataKey="lineupMean"
+                      stroke={CHART.paper}
+                      strokeWidth={2}
+                      dot={{ r: 3, fill: CHART.paper }}
+                      activeDot={{ r: 5, fill: CHART.sage }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-2 text-xs text-muted">
+                Lineup actual vs α. Dashed line is trailing mean ({ewma.trail.lineupMean}).
+              </p>
             </section>
 
             <section className="mt-10">
@@ -212,8 +268,8 @@ function StudyPage() {
                   no opponent term.
                 </li>
                 <li>
-                  EWMA only adds ~2 lineup points over trailing mean. The remaining miss is injuries,
-                  usage shocks, and a 114-player pool — not the knapsack.
+                  EWMA α=0.30 peaked at {ewma.bestLineup.lineupMean} on this sweep; α=0.40 is 114.3.
+                  Do not fit α on 17 weeks.
                 </li>
                 <li>
                   Exact beat greedy-proj only {s.exactBeatsProj}/{s.weeks} weeks. Cap-optimal on a bad
@@ -228,6 +284,32 @@ function StudyPage() {
         )}
       </article>
     </AppShell>
+  );
+}
+
+function AlphaTip({
+  active,
+  payload,
+  trail,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: { alpha: number; lineupMean: number; mae: number } }>;
+  trail: number;
+}) {
+  if (!active || !payload?.[0]) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
+      <p className="font-medium">α {d.alpha.toFixed(2)}</p>
+      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
+        <dt className="text-muted">Lineup</dt>
+        <dd>{d.lineupMean.toFixed(1)}</dd>
+        <dt className="text-muted">MAE</dt>
+        <dd>{d.mae.toFixed(2)}</dd>
+        <dt className="text-muted">Trail</dt>
+        <dd>{trail.toFixed(1)}</dd>
+      </dl>
+    </div>
   );
 }
 
