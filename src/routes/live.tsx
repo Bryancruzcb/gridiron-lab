@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
-import { MethodNote } from "@/components/MethodNote";
+import { FirstLook } from "@/components/FirstLook";
 import { StatTip } from "@/components/StatTip";
 import { Badge } from "@/components/ui/badge";
 import { getGameDetail, getScoreboard } from "@/lib/live/functions";
@@ -104,13 +104,14 @@ function LiveLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <p className="text-[11px] font-medium tracking-[0.2em] text-sage uppercase">2026 season · as it happens</p>
-          <h1 className="mt-2 font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Live wire</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Four stages of the same game. The box ticks while it's on. At the whistle you get play-calling
-            from the play list. EPA and CPOE land when nflverse posts — usually the next morning.
-          </p>
+          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Live</h1>
         </header>
+        <FirstLook id="live" title="This page">
+          <p>
+            Pick a game. Live and final are the ESPN box. Advanced (EPA, CPOE) shows up the morning
+            after, when nflverse posts.
+          </p>
+        </FirstLook>
 
         {boardErr && (
           <p className="mt-6 text-sm text-rust">Live feed is down. The 2023–2025 labs still work.</p>
@@ -136,25 +137,6 @@ function LiveLab() {
             error={detailErr}
           />
         )}
-
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <MethodNote title="The stages">
-            <p>
-              <span className="text-fg">Live</span> and <span className="text-fg">final whistle</span> are ESPN
-              box scores and play lists — yards, TDs, live PPR, 4th-down goes, 2nd-and-short pass rate.
-            </p>
-            <p>
-              <span className="text-fg">Advanced</span> is nflverse / nflfastR: EPA per dropback, CPOE, PROE.
-              That model is not in the broadcast feed, so it cannot tick with the play clock.
-            </p>
-          </MethodNote>
-          <MethodNote title="What to watch Sunday">
-            <p>
-              Kickoff Weekend continues Sunday 1:00 ET. Open a game here — when it goes live the card pulses
-              and the box starts filling. By Tuesday morning the same game should show Advanced.
-            </p>
-          </MethodNote>
-        </div>
       </div>
     </AppShell>
   );
@@ -357,10 +339,6 @@ function GamePanel({
           )}
 
           <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Live PPR</h3>
-          <p className="mt-1 text-xs text-subtle">
-            <StatTip metric="ppr">DraftKings-style PPR</StatTip> from the box. Tight ends stay TEs
-            (Henry is not a WR). Same numbers feed the optimizer.
-          </p>
           <ul className="mt-3 divide-y divide-border">
             {skill.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-2 py-2">

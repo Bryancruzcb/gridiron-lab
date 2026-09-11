@@ -13,7 +13,7 @@ import {
 import playFile from "@/data/playcalling.json";
 import snapFile from "@/data/season2026.json";
 import { AppShell } from "@/components/layout/AppShell";
-import { MethodNote } from "@/components/MethodNote";
+import { FirstLook } from "@/components/FirstLook";
 import { StatTip } from "@/components/StatTip";
 import { Segmented } from "@/components/ui/segmented";
 import { axisProps, CHART, tooltipStyle } from "@/components/charts/theme";
@@ -134,15 +134,13 @@ function PlayLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <p className="text-[11px] font-medium tracking-[0.2em] text-sage uppercase">Lab 03</p>
-          <h1 className="mt-2 font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">
+          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">
             Play-calling
           </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Rank every staff, then tap a team for the down × distance heatmap. The list stays the
-            same height at 4 teams or 32 — it just scrolls.
-          </p>
         </header>
+        <FirstLook id="play" title="This page">
+          <p>Ranked list of every team. Tap a row for the down × distance heatmap. A dash means no plays in that bucket.</p>
+        </FirstLook>
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Segmented
@@ -199,8 +197,7 @@ function PlayLab() {
                   <StatTip metric="fourthGo">4th-down go rate</StatTip>
                 </h2>
                 <p className="mt-1 text-xs text-muted">
-                  {teams.length} teams, ranked. Tap a row for the heatmap
-                  {teams.length > 8 ? " — scroll for the rest." : "."}
+                  {teams.length} teams{teams.length > 8 ? " · scroll" : ""}
                 </p>
                 <RankBars
                   rows={fourth.map((t) => ({
@@ -219,8 +216,8 @@ function PlayLab() {
                   <StatTip metric="secondShort">2nd-and-short pass rate</StatTip>
                 </h2>
                 <p className="mt-1 text-xs text-muted">
-                  Pass calls on 2nd-and-1 to 3. {teams.length} teams, ranked
-                  {teams.length > 8 ? " — scroll for the rest." : "."}
+                  2nd-and-1 to 3 · {teams.length} teams
+                  {teams.length > 8 ? " · scroll" : ""}
                 </p>
                 <RankBars
                   rows={second.map((t) => ({
@@ -240,7 +237,6 @@ function PlayLab() {
                   <span className="text-muted"> vs </span>
                   <StatTip metric="epa">EPA</StatTip>
                 </h2>
-                <p className="mt-1 text-xs text-subtle">Pass rate over expected against offensive EPA per play.</p>
                 <div className="mt-4 h-[360px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <ScatterChart margin={{ left: 0, right: 8, top: 8, bottom: 8 }}>
@@ -297,7 +293,6 @@ function PlayLab() {
                 <p className="mt-6 text-[11px] tracking-[0.14em] text-subtle uppercase">
                   Pass rate by down × distance
                 </p>
-                <p className="mt-1 text-xs text-muted">Dash means no plays in that bucket yet.</p>
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full min-w-[280px] text-center text-sm">
                     <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
@@ -348,34 +343,12 @@ function PlayLab() {
                 </div>
               </>
             ) : (
-              <div className="flex min-h-[280px] flex-col justify-center">
+              <div className="flex min-h-[200px] flex-col justify-center">
                 <p className="font-display text-2xl uppercase tracking-[0.04em]">Heatmap</p>
-                <p className="mt-3 text-sm leading-relaxed text-muted">
-                  Tap a ranked row to pin a staff here. Down × distance pass rate is the pre-scout
-                  artifact. A dash in the grid means that bucket has no plays yet.
-                </p>
+                <p className="mt-2 text-sm text-muted">Tap a team in the list.</p>
               </div>
             )}
           </div>
-        </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <MethodNote title="Definitions">
-            <p>
-              A 4th-down “go” is a pass or run on 4th, versus punt or field goal. 2nd-and-short is
-              2nd down with 1–3 yards to go. PROE is called pass rate minus nflfastR’s expected
-              pass rate (xpass) given down, distance, score, and clock. Hover the metric names for
-              the short version.
-            </p>
-          </MethodNote>
-          <MethodNote title="Portfolio angle">
-            <p>
-              Play-calling work is strongest when it answers a specific coaching question — “who
-              throws into a 3-yard situation?” — and then shows the EPA of that choice. The heatmap
-              is the artifact you would paste into a pre-scout.
-            </p>
-            <p>{season >= 2026 ? overlay.source : data.source}</p>
-          </MethodNote>
         </div>
       </div>
     </AppShell>

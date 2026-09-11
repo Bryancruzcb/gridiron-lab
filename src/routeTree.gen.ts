@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as OptimizerRouteImport } from './routes/optimizer'
 import { Route as PlayCallingRouteImport } from './routes/play-calling'
@@ -18,6 +19,11 @@ import { Route as QbRouteImport } from './routes/qb'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LiveRoute = LiveRouteImport.update({
@@ -43,6 +49,7 @@ const QbRoute = QbRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
@@ -50,6 +57,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
@@ -58,6 +66,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
@@ -65,14 +74,22 @@ export interface FileRoutesById {
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/live' | '/optimizer' | '/play-calling' | '/qb'
+  fullPaths: '/' | '/guide' | '/live' | '/optimizer' | '/play-calling' | '/qb'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/live' | '/optimizer' | '/play-calling' | '/qb'
-  id: '__root__' | '/' | '/live' | '/optimizer' | '/play-calling' | '/qb'
+  to: '/' | '/guide' | '/live' | '/optimizer' | '/play-calling' | '/qb'
+  id:
+    | '__root__'
+    | '/'
+    | '/guide'
+    | '/live'
+    | '/optimizer'
+    | '/play-calling'
+    | '/qb'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GuideRoute: typeof GuideRoute
   LiveRoute: typeof LiveRoute
   OptimizerRoute: typeof OptimizerRoute
   PlayCallingRoute: typeof PlayCallingRoute
@@ -86,6 +103,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/live': {
@@ -121,6 +145,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GuideRoute: GuideRoute,
   LiveRoute: LiveRoute,
   OptimizerRoute: OptimizerRoute,
   PlayCallingRoute: PlayCallingRoute,

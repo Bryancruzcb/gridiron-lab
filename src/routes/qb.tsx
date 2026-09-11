@@ -3,7 +3,6 @@ import { useMemo, useState, useEffect, type ReactNode } from "react";
 import {
   CartesianGrid,
   Cell,
-  LabelList,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -17,11 +16,10 @@ import qbsFile from "@/data/qbs.json";
 import snapFile from "@/data/season2026.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
-import { MethodNote } from "@/components/MethodNote";
+import { FirstLook } from "@/components/FirstLook";
 import { StatTip } from "@/components/StatTip";
 import { Segmented } from "@/components/ui/segmented";
 import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
 import { axisProps, CHART } from "@/components/charts/theme";
 import type { QbFile, QbSeason, SplitStats } from "@/data/types";
 import { teamNick } from "@/lib/nfl";
@@ -138,15 +136,14 @@ function QbLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <p className="text-[11px] font-medium tracking-[0.2em] text-sage uppercase">Lab 01</p>
-          <h1 className="mt-2 font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">
-            QB comparison
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Each quarterback is one row and one dot. Filter by down — 3rd-and-long is a different
-            player than 1st-and-10. 2026 updates the morning after nflverse posts.
-          </p>
+          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">QB</h1>
         </header>
+        <FirstLook id="qb" title="This page">
+          <p>
+            Each dot is a quarterback. Tap a dot or a row to pin. Filters change the slice — 3rd
+            down is not the same player as 1st-and-10.
+          </p>
+        </FirstLook>
 
         <div className="mt-8 flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -229,15 +226,6 @@ function QbLab() {
                 className="sm:max-w-xs"
               />
             </div>
-            <p className="text-xs text-muted">
-              {down === "4"
-                ? "4th-down dropbacks are rare (usually under 30 a year). The min resets when you change down."
-                : down === "3"
-                  ? "Starters throw ~80–180 times on 3rd down in a full season — not 200+."
-                  : sit !== "all"
-                    ? "Situation splits are smaller samples. The min drops automatically."
-                    : "Overall dropbacks. Tighten this to hide backups."}
-            </p>
           </div>
         </div>
 
@@ -245,10 +233,6 @@ function QbLab() {
           <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             <div className="mb-3">
               <h2 className="font-display text-xl uppercase tracking-[0.06em]">EPA vs CPOE</h2>
-              <p className="mt-1 text-xs leading-relaxed text-muted">
-                Each dot is one quarterback. Right = more accurate than expected. Up = more EPA per
-                dropback. Bigger = more plays. Tap a dot to pin.
-              </p>
             </div>
             {rows.length === 0 ? (
               <div className="flex h-[280px] flex-col items-center justify-center rounded-md bg-elevated px-6 text-center">
@@ -306,18 +290,12 @@ function QbLab() {
                         {scatter.map((s) => (
                           <Cell key={s.id} fill={s.fill} stroke="#0A0B0D" strokeWidth={1} />
                         ))}
-                        <LabelList
-                          dataKey="tag"
-                          position="top"
-                          offset={8}
-                          style={{ fill: "#F1F0EA", fontSize: 10 }}
-                        />
                       </Scatter>
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
                 <p className="mt-1 text-center font-mono text-[10px] tracking-wide text-muted uppercase">
-                  CPOE → more accurate &nbsp;&nbsp; EPA/play ↑ more efficient
+                  CPOE → &nbsp;&nbsp; EPA ↑
                 </p>
               </div>
             )}
@@ -325,7 +303,6 @@ function QbLab() {
 
           <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             <h2 className="font-display text-xl uppercase tracking-[0.06em]">Pinned</h2>
-            <p className="mt-1 text-xs text-subtle">Up to four QBs. Empty pins fill from the table.</p>
             <ul className="mt-4 space-y-2">
               {pinnedRows.length === 0 && (
                 <li className="text-sm text-muted">Click a row or a scatter point to compare.</li>
@@ -486,37 +463,6 @@ function QbLab() {
             </table>
           </div>
         </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <MethodNote title="How to read it">
-            <p>
-              <strong className="font-medium text-fg">EPA per play</strong> is expected points added
-              on dropbacks (passes, sacks, scrambles). Above zero means the offense gained ground
-              relative to a league-average play in that down-and-distance.
-            </p>
-            <p>
-              <strong className="font-medium text-fg">CPOE</strong> is completion percentage over
-              expected, from nflfastR’s completion-probability model. Pressure rate here is sacks +
-              hits as a share of dropbacks — a public-data stand-in for true pressure.
-            </p>
-          </MethodNote>
-          <MethodNote title="Portfolio angle">
-            <p>
-              The interesting version of this dashboard is not “who has the most yards.” It is
-              whether a quarterback’s EPA holds up on 3rd-and-long, in the red zone, or once the
-              pocket collapses. Pin two names and flip the situation chips.
-            </p>
-            <p>
-              Data: {season >= 2026 ? overlay.source : data.source}. {rows.length}{" "}
-              quarterbacks shown for {season} with at least {minPlays} dropbacks in this slice.
-            </p>
-          </MethodNote>
-        </div>
-        {pinned.length > 0 && (
-          <p className="mt-4">
-            <Badge variant="outline">{pinned.length} pinned</Badge>
-          </p>
-        )}
       </div>
     </AppShell>
   );

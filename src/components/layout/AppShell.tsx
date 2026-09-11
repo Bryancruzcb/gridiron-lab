@@ -6,11 +6,12 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { to: "/", label: "Labs" },
+  { to: "/", label: "Home" },
   { to: "/live", label: "Live" },
-  { to: "/qb", label: "QB Lab" },
-  { to: "/optimizer", label: "Optimizer" },
+  { to: "/qb", label: "QB" },
+  { to: "/optimizer", label: "Lineup" },
   { to: "/play-calling", label: "Play-calling" },
+  { to: "/guide", label: "Guide" },
 ] as const;
 
 function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolean }) {
@@ -80,8 +81,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="flex-1">{children}</main>
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-6 text-xs text-subtle sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <p>Live box via ESPN. EPA / CPOE via nflverse — labs refresh after each dump.</p>
-          <p>Not affiliated with the NFL.</p>
+          <p>ESPN box scores. nflverse EPA / CPOE. Not the NFL.</p>
         </div>
       </footer>
     </div>

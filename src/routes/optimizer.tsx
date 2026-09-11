@@ -4,7 +4,7 @@ import { Lock, Ban } from "lucide-react";
 import fantasyFile from "@/data/fantasy.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
-import { MethodNote } from "@/components/MethodNote";
+import { FirstLook } from "@/components/FirstLook";
 import { StatTip } from "@/components/StatTip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -133,15 +133,14 @@ function OptimizerLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <p className="text-[11px] font-medium tracking-[0.2em] text-sage uppercase">Lab 02</p>
-          <h1 className="mt-2 font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">
-            Fantasy optimizer
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            $50k DraftKings roster. Lock a guy you want, bench one you don’t, then solve. Hindsight
-            swaps projections for this week’s actual PPR once games go final.
-          </p>
+          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Lineup</h1>
         </header>
+        <FirstLook id="lineup" title="This page">
+          <p>
+            Build a $50k roster. Salary is the price. Lock forces a player in; bench keeps him out.
+            Hindsight rebuilds on this week’s actual points.
+          </p>
+        </FirstLook>
 
         {week && (
           <div className="mt-6 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]">
@@ -175,9 +174,6 @@ function OptimizerLab() {
                 className="sm:max-w-[220px]"
               />
             </div>
-            <p className="px-4 pb-2 text-xs text-muted">
-              Salary is the DraftKings price. Pts/$1k is value. Lock forces him in; bench keeps him out.
-            </p>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[620px] text-left text-sm">
                 <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
@@ -369,27 +365,6 @@ function OptimizerLab() {
               </div>
             )}
           </aside>
-        </div>
-
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <MethodNote title="How the solver works">
-            <p>
-              One QB, two RBs, three WRs, a TE, a FLEX (extra RB/WR/TE), and a D/ST, max $50,000.
-              Lock pins a player in; bench (the slash icon) keeps them out. Pts/$1k is projected
-              points per thousand dollars of salary.
-            </p>
-          </MethodNote>
-          <MethodNote title="Portfolio angle">
-            <p>
-              Optimization projects fall apart when they hide the constraints. This one shows the
-              roster math, a greedy baseline, a stack rule, and a live scoreboard so you can talk
-              about modeling choices — not just a screenshot of a lineup.
-            </p>
-            <p>
-              {data.source}
-              {week ? ` Week ${week.week} actuals from the live box.` : ""}
-            </p>
-          </MethodNote>
         </div>
       </div>
     </AppShell>

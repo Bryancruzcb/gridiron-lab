@@ -22,39 +22,27 @@ const snap = snapFile as unknown as SeasonLabs;
 const LABS = [
   {
     to: "/live" as const,
-    kicker: "00",
-    title: "Live wire",
+    title: "Live",
     icon: Radio,
-    tools: "In-game · Final · Advanced",
-    blurb:
-      "Watch a 2026 game through every stage: live box and PPR during the play clock, play-calling at the whistle, EPA and CPOE when nflverse posts.",
+    blurb: "Box score while the game is on. EPA the next morning.",
   },
   {
     to: "/qb" as const,
-    kicker: "01",
-    title: "QB comparison",
+    title: "QB",
     icon: LayoutDashboard,
-    tools: "Dashboard · EPA · CPOE",
-    blurb:
-      "Rank and overlay quarterbacks on EPA per dropback, completion percentage over expected, and pressure rate. 2023–2025 plus 2026 as it posts.",
+    blurb: "EPA and CPOE, with down and distance filters.",
   },
   {
     to: "/optimizer" as const,
-    kicker: "02",
-    title: "Fantasy optimizer",
+    title: "Lineup",
     icon: Binary,
-    tools: "Integer program · PPR",
-    blurb:
-      "A salary-cap lineup solver with lock / exclude, a QB stack, and this week’s live PPR so you can score the lineup — or solve the hindsight roster.",
+    blurb: "$50k roster. Lock, bench, solve. Hindsight after games.",
   },
   {
     to: "/play-calling" as const,
-    kicker: "03",
     title: "Play-calling",
     icon: Waypoints,
-    tools: "Tendencies · 4th down",
-    blurb:
-      "Who throws on 2nd-and-short, who goes for it on 4th, and which staffs out-pass expectation. 2023–2025, with 2026 filling in after each dump.",
+    blurb: "4th-down goes, 2nd-and-short, down × distance heatmap.",
   },
 ];
 
@@ -94,28 +82,21 @@ function Home() {
       <section className="relative overflow-hidden hash-mark">
         <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
           <div className="stagger-in max-w-2xl">
-            <p className="text-[11px] font-medium tracking-[0.22em] text-sage uppercase">
-              NFL analytics portfolio
-            </p>
             <h1 className="mt-4 font-display text-[clamp(3rem,10vw,6.5rem)] leading-[0.9] tracking-[0.02em] uppercase">
-              Three labs.
-              <br />
-              A live wire.
+              Gridiron Lab
             </h1>
             <p className="mt-6 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
-              The three portfolio labs stay current with 2026: EPA and CPOE in the QB lab,
-              play-calling after each dump, and this week’s PPR on the optimizer. Live wire is the
-              in-game feed.
+              QB stats, a $50k lineup, play-calling, and a live box. 2023–2026.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Button asChild>
                 <Link to="/live">
-                  Open live wire
+                  Live
                   <ArrowUpRight className="size-4" />
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/qb">QB lab</Link>
+                <Link to="/qb">QB</Link>
               </Button>
             </div>
           </div>
@@ -156,13 +137,11 @@ function Home() {
                 className="group flex flex-col rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] transition-[box-shadow,transform] duration-200 ease-out hover:shadow-[var(--shadow-border-hover)]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-subtle">{lab.kicker}</span>
                   <Icon className="size-4 text-muted" />
                 </div>
                 <h2 className="mt-6 font-display text-3xl uppercase tracking-[0.04em]">
                   {lab.title}
                 </h2>
-                <p className="mt-1 text-[11px] tracking-[0.14em] text-sage uppercase">{lab.tools}</p>
                 <p className="mt-4 flex-1 text-sm leading-relaxed text-muted">{lab.blurb}</p>
                 <span className="mt-6 inline-flex items-center gap-1 text-sm text-fg">
                   Open lab

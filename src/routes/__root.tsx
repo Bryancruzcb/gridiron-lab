@@ -15,7 +15,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "NFL analytics labs — QB comparison, fantasy optimizer, play-calling, and a 2026 live wire — on nflverse play-by-play.",
+          "QB, lineup, play-calling, and live box scores on nflverse play-by-play.",
       },
       { name: "theme-color", content: "#0A0B0D" },
     ],
