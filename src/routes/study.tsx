@@ -10,15 +10,17 @@ import {
 } from "recharts";
 import backtestFile from "@/data/study-backtest.json";
 import lagFile from "@/data/study-qb-lag.json";
+import projFile from "@/data/study-projections.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { axisProps, CHART } from "@/components/charts/theme";
-import type { BacktestFile, QbLagFile } from "@/data/types";
+import type { BacktestFile, ProjectionFile, QbLagFile } from "@/data/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/study")({ component: StudyPage });
 
 const backtest = backtestFile as BacktestFile;
 const lag = lagFile as QbLagFile;
+const projections = projFile as ProjectionFile;
 
 function StudyPage() {
   const s = backtest.summary;
@@ -34,7 +36,7 @@ function StudyPage() {
         </p>
         <h1 className="mt-3 font-display text-5xl uppercase tracking-[0.03em]">Study</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-          Two questions on 2025. Held out. Not a dashboard.
+          Two questions on 2025, plus which projection actually scores.
         </p>
 
         {!ready ? (
@@ -116,6 +118,48 @@ function StudyPage() {
             </section>
 
             <section className="mt-10">
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Projections</h2>
+              <p className="mt-3 text-sm leading-relaxed">
+                Same slate, same cap, same weeks. Only the guess of next week’s PPR changes. MAE is
+                error per player who played. Lineup is actual PPR of exact-DP using that guess.
+                Shrinkage is the most accurate player-level forecast and a worse lineup — it flattens
+                stars. EWMA is a little noisier per player and the only model that moved the lineup
+                table (+2.4 vs trailing mean). Opponent-adjust with thin splits broke the solver.
+              </p>
+              <div className="mt-6 overflow-x-auto rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
+                <table className="w-full min-w-[28rem] text-left text-sm">
+                  <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+                    <tr className="border-b border-border">
+                      <th className="py-2 font-medium">Model</th>
+                      <th className="py-2 text-right font-medium">MAE</th>
+                      <th className="py-2 text-right font-medium">Lineup</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-mono tabular-nums">
+                    {[...projections.models]
+                      .sort((a, b) => b.lineupMean - a.lineupMean)
+                      .map((m) => (
+                        <tr key={m.id} className="border-b border-border/70">
+                          <td className="py-1.5 font-sans">{m.label}</td>
+                          <td className={cn("py-1.5 text-right", m.id === "shrink" ? "text-sage" : undefined)}>
+                            {m.mae.toFixed(2)}
+                          </td>
+                          <td
+                            className={cn(
+                              "py-1.5 text-right",
+                              m.id === "ewma" ? "text-sage" : m.lineupMean < 90 ? "text-muted" : undefined,
+                            )}
+                          >
+                            {m.lineupMean.toFixed(1)}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="mt-10">
               <h2 className="font-display text-2xl uppercase tracking-[0.04em]">QB lag</h2>
               <p className="mt-3 text-sm leading-relaxed">
                 r = {lag.corrEpa ?? "—"} for EPA/attempt, r = {lag.corrCpoe ?? "—"} for CPOE, n ={" "}
@@ -160,8 +204,16 @@ function StudyPage() {
                   <li key={n}>{n}</li>
                 ))}
                 <li>
-                  Trailing-mean PPR is a weak projection. A better forecast would move the backtest
-                  more than a better solver.
+                  Shrinkage wins MAE (6.23) and loses lineup (112.9). Ranking stars is not the same
+                  job as predicting every player.
+                </li>
+                <li>
+                  A naive opponent adjustment averaged 67.8 lineup points. Thin splits are worse than
+                  no opponent term.
+                </li>
+                <li>
+                  EWMA only adds ~2 lineup points over trailing mean. The remaining miss is injuries,
+                  usage shocks, and a 114-player pool — not the knapsack.
                 </li>
                 <li>
                   Exact beat greedy-proj only {s.exactBeatsProj}/{s.weeks} weeks. Cap-optimal on a bad

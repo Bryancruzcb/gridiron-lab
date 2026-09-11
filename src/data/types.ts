@@ -196,3 +196,22 @@ export type QbLagFile = {
   pairs: QbLagPoint[];
 };
 
+export type ProjectionModel = {
+  id: string;
+  label: string;
+  mae: number;
+  rmse: number;
+  n: number;
+  lineupMean: number;
+  lineupMedian: number;
+  weeks: number;
+};
+
+export type ProjectionFile = {
+  source: string;
+  season: number;
+  notes: string[];
+  models: ProjectionModel[];
+};
+
+
