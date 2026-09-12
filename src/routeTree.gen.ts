@@ -10,14 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as GuideRouteImport } from './routes/guide'
 import { Route as LiveRouteImport } from './routes/live'
 import { Route as OptimizerRouteImport } from './routes/optimizer'
 import { Route as PlayCallingRouteImport } from './routes/play-calling'
+import { Route as PlayersRouteImport } from './routes/players'
 import { Route as QbRouteImport } from './routes/qb'
+import { Route as StudyRouteImport } from './routes/study'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GuideRoute = GuideRouteImport.update({
+  id: '/guide',
+  path: '/guide',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LiveRoute = LiveRouteImport.update({
@@ -35,48 +43,95 @@ const PlayCallingRoute = PlayCallingRouteImport.update({
   path: '/play-calling',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlayersRoute = PlayersRouteImport.update({
+  id: '/players',
+  path: '/players',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const QbRoute = QbRouteImport.update({
   id: '/qb',
   path: '/qb',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StudyRoute = StudyRouteImport.update({
+  id: '/study',
+  path: '/study',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
+  '/players': typeof PlayersRoute
   '/qb': typeof QbRoute
+  '/study': typeof StudyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
+  '/players': typeof PlayersRoute
   '/qb': typeof QbRoute
+  '/study': typeof StudyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/guide': typeof GuideRoute
   '/live': typeof LiveRoute
   '/optimizer': typeof OptimizerRoute
   '/play-calling': typeof PlayCallingRoute
+  '/players': typeof PlayersRoute
   '/qb': typeof QbRoute
+  '/study': typeof StudyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/live' | '/optimizer' | '/play-calling' | '/qb'
+  fullPaths:
+    | '/'
+    | '/guide'
+    | '/live'
+    | '/optimizer'
+    | '/play-calling'
+    | '/players'
+    | '/qb'
+    | '/study'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/live' | '/optimizer' | '/play-calling' | '/qb'
-  id: '__root__' | '/' | '/live' | '/optimizer' | '/play-calling' | '/qb'
+  to:
+    | '/'
+    | '/guide'
+    | '/live'
+    | '/optimizer'
+    | '/play-calling'
+    | '/players'
+    | '/qb'
+    | '/study'
+  id:
+    | '__root__'
+    | '/'
+    | '/guide'
+    | '/live'
+    | '/optimizer'
+    | '/play-calling'
+    | '/players'
+    | '/qb'
+    | '/study'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  GuideRoute: typeof GuideRoute
   LiveRoute: typeof LiveRoute
   OptimizerRoute: typeof OptimizerRoute
   PlayCallingRoute: typeof PlayCallingRoute
+  PlayersRoute: typeof PlayersRoute
   QbRoute: typeof QbRoute
+  StudyRoute: typeof StudyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -86,6 +141,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/guide': {
+      id: '/guide'
+      path: '/guide'
+      fullPath: '/guide'
+      preLoaderRoute: typeof GuideRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/live': {
@@ -109,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PlayCallingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/players': {
+      id: '/players'
+      path: '/players'
+      fullPath: '/players'
+      preLoaderRoute: typeof PlayersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/qb': {
       id: '/qb'
       path: '/qb'
@@ -116,15 +185,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof QbRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/study': {
+      id: '/study'
+      path: '/study'
+      fullPath: '/study'
+      preLoaderRoute: typeof StudyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  GuideRoute: GuideRoute,
   LiveRoute: LiveRoute,
   OptimizerRoute: OptimizerRoute,
   PlayCallingRoute: PlayCallingRoute,
+  PlayersRoute: PlayersRoute,
   QbRoute: QbRoute,
+  StudyRoute: StudyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

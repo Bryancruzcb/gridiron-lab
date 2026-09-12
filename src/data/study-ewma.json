@@ -1,0 +1,205 @@
+{
+  "source": "nflverse 2025 REG, EWMA on trailing PPR, frozen 114-player salaries",
+  "season": 2025,
+  "note": "α=1 is last week only. Trailing mean is not α=0 — small α sticks to week 1.",
+  "trail": {
+    "mae": 6.58,
+    "rmse": 8.58,
+    "n": 1552,
+    "lineupMean": 116.5,
+    "lineupMedian": 119.6,
+    "weeks": 17
+  },
+  "points": [
+    {
+      "alpha": 0.05,
+      "mae": 7.27,
+      "rmse": 9.46,
+      "n": 1552,
+      "lineupMean": 108.8,
+      "lineupMedian": 105.7,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.1,
+      "mae": 6.89,
+      "rmse": 8.98,
+      "n": 1552,
+      "lineupMean": 108,
+      "lineupMedian": 109,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.15,
+      "mae": 6.72,
+      "rmse": 8.77,
+      "n": 1552,
+      "lineupMean": 111,
+      "lineupMedian": 111,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.2,
+      "mae": 6.67,
+      "rmse": 8.69,
+      "n": 1552,
+      "lineupMean": 115.2,
+      "lineupMedian": 119.6,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.25,
+      "mae": 6.67,
+      "rmse": 8.68,
+      "n": 1552,
+      "lineupMean": 117.6,
+      "lineupMedian": 120.7,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.3,
+      "mae": 6.7,
+      "rmse": 8.71,
+      "n": 1552,
+      "lineupMean": 121.5,
+      "lineupMedian": 119.6,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.35,
+      "mae": 6.75,
+      "rmse": 8.78,
+      "n": 1552,
+      "lineupMean": 118.9,
+      "lineupMedian": 113.1,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.4,
+      "mae": 6.81,
+      "rmse": 8.87,
+      "n": 1552,
+      "lineupMean": 114.3,
+      "lineupMedian": 102.4,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.45,
+      "mae": 6.89,
+      "rmse": 8.97,
+      "n": 1552,
+      "lineupMean": 112.5,
+      "lineupMedian": 102.3,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.5,
+      "mae": 6.98,
+      "rmse": 9.09,
+      "n": 1552,
+      "lineupMean": 114,
+      "lineupMedian": 110.1,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.55,
+      "mae": 7.08,
+      "rmse": 9.22,
+      "n": 1552,
+      "lineupMean": 116.8,
+      "lineupMedian": 119.6,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.6,
+      "mae": 7.19,
+      "rmse": 9.36,
+      "n": 1552,
+      "lineupMean": 116.4,
+      "lineupMedian": 118.7,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.65,
+      "mae": 7.31,
+      "rmse": 9.51,
+      "n": 1552,
+      "lineupMean": 118.9,
+      "lineupMedian": 125.7,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.7,
+      "mae": 7.43,
+      "rmse": 9.68,
+      "n": 1552,
+      "lineupMean": 119.1,
+      "lineupMedian": 123.3,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.75,
+      "mae": 7.56,
+      "rmse": 9.85,
+      "n": 1552,
+      "lineupMean": 115.3,
+      "lineupMedian": 119.3,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.8,
+      "mae": 7.71,
+      "rmse": 10.04,
+      "n": 1552,
+      "lineupMean": 115.7,
+      "lineupMedian": 119.3,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.85,
+      "mae": 7.86,
+      "rmse": 10.24,
+      "n": 1552,
+      "lineupMean": 115.7,
+      "lineupMedian": 119.3,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.9,
+      "mae": 8.03,
+      "rmse": 10.46,
+      "n": 1552,
+      "lineupMean": 117,
+      "lineupMedian": 119.6,
+      "weeks": 17
+    },
+    {
+      "alpha": 0.95,
+      "mae": 8.2,
+      "rmse": 10.69,
+      "n": 1552,
+      "lineupMean": 115.6,
+      "lineupMedian": 119.6,
+      "weeks": 17
+    },
+    {
+      "alpha": 1,
+      "mae": 8.39,
+      "rmse": 10.94,
+      "n": 1552,
+      "lineupMean": 116.8,
+      "lineupMedian": 119.6,
+      "weeks": 17
+    }
+  ],
+  "bestLineup": {
+    "alpha": 0.3,
+    "lineupMean": 121.5,
+    "mae": 6.7
+  },
+  "bestMae": {
+    "alpha": 0.2,
+    "mae": 6.67,
+    "lineupMean": 115.2
+  }
+}

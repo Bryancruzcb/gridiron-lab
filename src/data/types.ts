@@ -26,6 +26,13 @@ export type QbBox = {
   ppr: number | null;
 };
 
+export type QbWeekPoint = {
+  week: number;
+  plays: number;
+  epa: number | null;
+  cpoe: number | null;
+};
+
 export type QbSeason = {
   id: string;
   name: string;
@@ -36,6 +43,7 @@ export type QbSeason = {
   box: QbBox | null;
   overall: SplitStats;
   splits: Record<string, SplitStats>;
+  weeks?: QbWeekPoint[];
 };
 
 export type QbFile = {
@@ -131,3 +139,100 @@ export type FantasyFile = {
   roster: Record<string, number>;
   players: FantasyPlayer[];
 };
+
+export type StudyLineupScore = {
+  proj: number;
+  actual: number;
+  salary: number;
+};
+
+export type StudyWeek = {
+  week: number;
+  players: number;
+  exact: StudyLineupScore;
+  greedyProj: StudyLineupScore;
+  greedyValue: StudyLineupScore;
+};
+
+export type StudySummary = {
+  weeks: number;
+  exactMean: number;
+  exactMedian: number;
+  greedyProjMean: number;
+  greedyValueMean: number;
+  exactBeatsProj: number;
+  exactBeatsValue: number;
+};
+
+export type BacktestFile = {
+  source: string;
+  season: number;
+  cap: number;
+  notes: string[];
+  weeks: StudyWeek[];
+  summary: StudySummary;
+};
+
+export type QbLagPoint = {
+  id: string;
+  name: string;
+  team: string;
+  week: number;
+  epaPrev: number;
+  epaNext: number;
+  cpoePrev: number | null;
+  cpoeNext: number | null;
+  attPrev: number;
+  attNext: number;
+};
+
+export type QbLagFile = {
+  source: string;
+  season: number;
+  minAttempts: number;
+  n: number;
+  corrEpa: number | null;
+  corrCpoe: number | null;
+  pairs: QbLagPoint[];
+};
+
+export type ProjectionModel = {
+  id: string;
+  label: string;
+  mae: number;
+  rmse: number;
+  n: number;
+  lineupMean: number;
+  lineupMedian: number;
+  weeks: number;
+};
+
+export type ProjectionFile = {
+  source: string;
+  season: number;
+  notes: string[];
+  models: ProjectionModel[];
+};
+
+export type EwmaPoint = {
+  alpha: number;
+  mae: number;
+  rmse: number;
+  n: number;
+  lineupMean: number;
+  lineupMedian: number;
+  weeks: number;
+};
+
+export type EwmaFile = {
+  source: string;
+  season: number;
+  note: string;
+  trail: Omit<EwmaPoint, "alpha">;
+  points: EwmaPoint[];
+  bestLineup: { alpha: number; lineupMean: number; mae: number };
+  bestMae: { alpha: number; mae: number; lineupMean: number };
+};
+
+
+

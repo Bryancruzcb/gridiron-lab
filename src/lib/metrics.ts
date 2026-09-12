@@ -7,6 +7,10 @@ export const METRICS = {
     label: "CPOE",
     def: "Completion percentage over expected, from nflfastR’s completion-probability model. +5 means five percentage points above a typical throw of that difficulty.",
   },
+  passer: {
+    label: "Passer",
+    def: "NFL box passer rating (0–158.3) from completions, yards, TDs, and INTs. Ignores down, sacks, and rushing. Not EPA and not ESPN QBR. Stays the season total when you filter downs.",
+  },
   proe: {
     label: "PROE",
     def: "Pass rate over expected: called pass rate minus xpass (the model’s pass probability given down, distance, score, and clock), in percentage points.",
@@ -38,6 +42,14 @@ export const METRICS = {
   actual: {
     label: "Actual",
     def: "This week’s PPR from the live box (ESPN) while the game is on, then nflverse when the official week file posts.",
+  },
+  salary: {
+    label: "Salary",
+    def: "DraftKings-style cost. The solver must keep the 9-man roster at or under $50,000.",
+  },
+  val: {
+    label: "Pts / $1k",
+    def: "Projected points per $1,000 of salary. Higher means more production for the cap hit.",
   },
 } as const;
 

@@ -1,22 +1,22 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { Lock, Ban } from "lucide-react";
 import fantasyFile from "@/data/fantasy.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
-import { MethodNote } from "@/components/MethodNote";
+import { FirstLook } from "@/components/FirstLook";
 import { StatTip } from "@/components/StatTip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
-import { getWeekPpr } from "@/lib/live/functions";
-import type { WeekPpr } from "@/lib/live/types";
 import { actualsByPlayer } from "@/lib/match";
 import { teamNick } from "@/lib/nfl";
-import { greedyLineup, optimizeLineup, orderedLineup, type Lineup } from "@/lib/optimizer";
+import { exactLineup, greedyLineup, hillClimbLineup, optimizeLineup, orderedLineup, scoreLineup, type Lineup } from "@/lib/optimizer";
+import { useSeason } from "@/lib/season-provider";
 import { cn, formatNum } from "@/lib/utils";
 
 export const Route = createFileRoute("/optimizer")({ component: OptimizerLab });
@@ -25,30 +25,34 @@ const data = fantasyFile as FantasyFile;
 const POS: (FantasyPos | "ALL")[] = ["ALL", "QB", "RB", "WR", "TE", "DST"];
 
 function OptimizerLab() {
+  const { weekPpr } = useSeason();
   const [pos, setPos] = useState<(typeof POS)[number]>("ALL");
   const [q, setQ] = useState("");
   const [locked, setLocked] = useState<string[]>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   const [stack, setStack] = useState(false);
   const [mode, setMode] = useState<"proj" | "actual">("proj");
-  const [week, setWeek] = useState<WeekPpr | null>(null);
+  const week = weekPpr;
   const players = data.players as FantasyPlayer[];
 
-  useEffect(() => {
-    let cancelled = false;
-    getWeekPpr()
-      .then((w) => {
-        if (!cancelled) setWeek(w);
-      })
-      .catch(() => {
-        if (!cancelled) setWeek(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
   const actuals = useMemo(() => (week ? actualsByPlayer(players, week.players) : new Map<string, number>()), [week, players]);
+
+  const backtest = useMemo(() => {
+    if (actuals.size < 1) return null;
+    const empty = { locked: new Set<string>(), excluded: new Set<string>() };
+    const exact = exactLineup({ players, cap: data.cap, ...empty });
+    const hill = hillClimbLineup({ players, cap: data.cap, ...empty });
+    const value = greedyLineup({ players, cap: data.cap, ...empty, by: "value" });
+    const scored = players.filter((p) => actuals.has(p.id)).map((p) => ({ ...p, proj: actuals.get(p.id) ?? 0 }));
+    const hindsight = exactLineup({ players: scored, cap: data.cap, ...empty })
+      ?? optimizeLineup({ players: scored, cap: data.cap, ...empty });
+    return {
+      exact: { proj: exact?.proj ?? 0, actual: scoreLineup(exact?.players ?? [], actuals) },
+      hill: { proj: hill?.proj ?? 0, actual: scoreLineup(hill?.players ?? [], actuals) },
+      value: { proj: value?.proj ?? 0, actual: scoreLineup(value?.players ?? [], actuals) },
+      hindsight: hindsight?.proj ?? 0,
+    };
+  }, [players, actuals]);
 
   const slate = useMemo(() => {
     if (mode !== "actual") return players;
@@ -132,16 +136,14 @@ function OptimizerLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <p className="text-[11px] font-medium tracking-[0.2em] text-sage uppercase">Lab 02</p>
-          <h1 className="mt-2 font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">
-            Fantasy optimizer
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            DraftKings-style roster: 1 QB, 2 RB, 3 WR, 1 TE, 1 FLEX, 1 D/ST, $50,000 cap. Build on
-            2025 pace, then score it against this week’s live PPR — or solve the hindsight lineup
-            once games go final.
-          </p>
+          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Lineup</h1>
         </header>
+        <FirstLook id="lineup" title="This page">
+          <p>
+            Build a $50k roster. Salary is the price. Lock forces a player in; bench keeps him out.
+            Hindsight rebuilds on this week’s actual points.
+          </p>
+        </FirstLook>
 
         {week && (
           <div className="mt-6 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]">
@@ -187,9 +189,15 @@ function OptimizerLab() {
                     <th className="px-2 py-2 text-right font-medium">
                       <StatTip metric="actual" />
                     </th>
-                    <th className="px-2 py-2 text-right font-medium">Salary</th>
-                    <th className="px-2 py-2 text-right font-medium">Val</th>
-                    <th className="px-3 py-2 text-right font-medium"> </th>
+                    <th className="px-2 py-2 text-right font-medium">
+                      <StatTip metric="salary" />
+                    </th>
+                    <th className="px-2 py-2 text-right font-medium">
+                      <StatTip metric="val" />
+                    </th>
+                    <th className="px-3 py-2 text-right font-medium">
+                      <span className="text-[10px] tracking-wide text-subtle uppercase">Lock / bench</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -234,34 +242,48 @@ function OptimizerLab() {
                         </td>
                         <td className="px-3 py-2">
                           <div className="flex justify-end gap-1">
-                            <button
-                              type="button"
-                              aria-label={isL ? "Unlock" : "Lock"}
-                              onClick={() => {
-                                toggle(locked, p.id, setLocked);
-                                if (!isL) setExcluded((e) => e.filter((x) => x !== p.id));
-                              }}
-                              className={cn(
-                                "grid size-9 place-items-center rounded-sm",
-                                isL ? "bg-sage/20 text-sage" : "text-subtle hover:bg-elevated hover:text-fg",
-                              )}
-                            >
-                              <Lock className="size-3.5" />
-                            </button>
-                            <button
-                              type="button"
-                              aria-label={isX ? "Include" : "Exclude"}
-                              onClick={() => {
-                                toggle(excluded, p.id, setExcluded);
-                                if (!isX) setLocked((e) => e.filter((x) => x !== p.id));
-                              }}
-                              className={cn(
-                                "grid size-9 place-items-center rounded-sm",
-                                isX ? "bg-rust/20 text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
-                              )}
-                            >
-                              <Ban className="size-3.5" />
-                            </button>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={isL ? "Unlock" : "Lock into lineup"}
+                                  onClick={() => {
+                                    toggle(locked, p.id, setLocked);
+                                    if (!isL) setExcluded((e) => e.filter((x) => x !== p.id));
+                                  }}
+                                  className={cn(
+                                    "grid size-9 place-items-center rounded-sm",
+                                    isL ? "bg-sage/20 text-sage" : "text-subtle hover:bg-elevated hover:text-fg",
+                                  )}
+                                >
+                                  <Lock className="size-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {isL ? "Locked — always in the lineup" : "Lock: force this player into the lineup"}
+                              </TooltipContent>
+                            </Tooltip>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <button
+                                  type="button"
+                                  aria-label={isX ? "Include" : "Bench / exclude"}
+                                  onClick={() => {
+                                    toggle(excluded, p.id, setExcluded);
+                                    if (!isX) setLocked((e) => e.filter((x) => x !== p.id));
+                                  }}
+                                  className={cn(
+                                    "grid size-9 place-items-center rounded-sm",
+                                    isX ? "bg-rust/20 text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
+                                  )}
+                                >
+                                  <Ban className="size-3.5" />
+                                </button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {isX ? "Benched — tap to put back in the pool" : "Bench: never pick this player"}
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                         </td>
                       </tr>
@@ -341,43 +363,55 @@ function OptimizerLab() {
             {alt && (
               <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
                 <h2 className="font-display text-lg uppercase tracking-[0.06em]">Value greedy</h2>
-                <p className="mt-1 text-xs text-subtle">Points-per-salary heuristic — a baseline, not the IP.</p>
                 <p className="mt-2 font-mono text-sm">{alt.proj.toFixed(1)} pts</p>
               </div>
             )}
-          </aside>
-        </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
-          <MethodNote title="The integer program">
-            <p className="font-mono text-[12px] leading-relaxed text-fg/90">
-              max Σ proj<sub>i</sub> x<sub>i</sub>
-              <br />
-              s.t. Σ salary<sub>i</sub> x<sub>i</sub> ≤ 50000
-              <br />
-              Σ x<sub>QB</sub> = 1, Σ x<sub>RB</sub> ≥ 2, Σ x<sub>WR</sub> ≥ 3, Σ x<sub>TE</sub> ≥ 1, Σ
-              x<sub>DST</sub> = 1
-              <br />
-              Σ x<sub>RB+WR+TE</sub> = 7, x<sub>i</sub> ∈ {"{0,1}"}
-            </p>
-            <p>
-              FLEX is the extra RB/WR/TE. Locking a player sets x<sub>i</sub> = 1; excluding sets it
-              to 0. We seed a projection-greedy roster that keeps enough cap for a legal rest of
-              roster, then hill-climb swaps — the same model you would hand to PuLP, running
-              instantly in the browser. “Solve on actuals” swaps the objective for this week’s PPR.
-            </p>
-          </MethodNote>
-          <MethodNote title="Portfolio angle">
-            <p>
-              Optimization projects fall apart when they hide the constraints. This one shows the
-              roster math, a greedy baseline, a stack rule, and a live scoreboard so you can talk
-              about modeling choices — not just a screenshot of a lineup.
-            </p>
-            <p>
-              {data.source}
-              {week ? ` Week ${week.week} actuals from the live box.` : ""}
-            </p>
-          </MethodNote>
+            {backtest && (
+              <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+                <h2 className="font-display text-lg uppercase tracking-[0.06em]">Backtest</h2>
+                <p className="mt-1 text-xs text-muted">
+                  Solved on projections, scored on this week’s actuals.
+                </p>
+                <table className="mt-3 w-full text-left text-sm">
+                  <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+                    <tr>
+                      <th className="py-1 font-medium"> </th>
+                      <th className="py-1 text-right font-medium">Proj</th>
+                      <th className="py-1 text-right font-medium">Actual</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-mono tabular-nums">
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Exact DP</td>
+                      <td className="py-1.5 text-right">{backtest.exact.proj.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">{backtest.exact.actual.pts.toFixed(1)}</td>
+                    </tr>
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Hill-climb</td>
+                      <td className="py-1.5 text-right">{backtest.hill.proj.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">{backtest.hill.actual.pts.toFixed(1)}</td>
+                    </tr>
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Pts/$ greedy</td>
+                      <td className="py-1.5 text-right">{backtest.value.proj.toFixed(1)}</td>
+                      <td className="py-1.5 text-right">{backtest.value.actual.pts.toFixed(1)}</td>
+                    </tr>
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5">Hindsight</td>
+                      <td className="py-1.5 text-right text-muted">—</td>
+                      <td className="py-1.5 text-right">{backtest.hindsight.toFixed(1)}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <p className="mt-3 text-xs text-muted">
+                  <Link to="/study" className="text-fg">
+                    2025 weeks 2–18
+                  </Link>
+                </p>
+              </div>
+            )}
+          </aside>
         </div>
       </div>
     </AppShell>

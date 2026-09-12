@@ -58,6 +58,17 @@ async function build(): Promise<WeekPpr> {
         ppr: p.ppr,
         headshot: p.headshot,
         status: d.game.status,
+        passCmp: p.passCmp,
+        passAtt: p.passAtt,
+        passYds: p.passYds,
+        passTd: p.passTd,
+        ints: p.ints,
+        rushAtt: p.rushAtt,
+        rushYds: p.rushYds,
+        rushTd: p.rushTd,
+        rec: p.rec,
+        recYds: p.recYds,
+        recTd: p.recTd,
       });
     }
     const away = d.game.away;

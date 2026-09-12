@@ -2,12 +2,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
-import { MethodNote } from "@/components/MethodNote";
+import { FirstLook } from "@/components/FirstLook";
+import { MatchHero, MatchTile } from "@/components/match/MatchFace";
 import { StatTip } from "@/components/StatTip";
 import { Badge } from "@/components/ui/badge";
 import { getGameDetail, getScoreboard } from "@/lib/live/functions";
 import type { GameDetail, GameStage, LiveGame, Scoreboard } from "@/lib/live/types";
 import { teamNick } from "@/lib/nfl";
+import { useSeason } from "@/lib/season-provider";
 import { cn, formatCpoe, formatEpa, formatPct } from "@/lib/utils";
 
 type Search = { game?: string };
@@ -40,10 +42,15 @@ function stageIndex(s: GameStage) {
 function LiveLab() {
   const { game: selectedId } = Route.useSearch();
   const navigate = useNavigate({ from: "/live" });
-  const [board, setBoard] = useState<Scoreboard | null>(null);
+  const { scoreboard: seeded } = useSeason();
+  const [board, setBoard] = useState<Scoreboard | null>(seeded);
   const [detail, setDetail] = useState<GameDetail | null>(null);
   const [boardErr, setBoardErr] = useState<string | null>(null);
   const [detailErr, setDetailErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (seeded) setBoard(seeded);
+  }, [seeded]);
 
   const selected = useMemo(() => {
     if (!board) return null;
@@ -104,13 +111,14 @@ function LiveLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <p className="text-[11px] font-medium tracking-[0.2em] text-sage uppercase">2026 season · as it happens</p>
-          <h1 className="mt-2 font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Live wire</h1>
-          <p className="mt-3 text-sm leading-relaxed text-muted sm:text-base">
-            Four stages of the same game. The box ticks while it's on. At the whistle you get play-calling
-            from the play list. EPA and CPOE land when nflverse posts — usually the next morning.
-          </p>
+          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Live</h1>
         </header>
+        <FirstLook id="live" title="This page">
+          <p>
+            Pick a game. Live and final are the ESPN box. Advanced (EPA, CPOE) shows up the morning
+            after, when nflverse posts.
+          </p>
+        </FirstLook>
 
         {boardErr && (
           <p className="mt-6 text-sm text-rust">Live feed is down. The 2023–2025 labs still work.</p>
@@ -123,9 +131,15 @@ function LiveLab() {
           </p>
         )}
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {selected && (
+          <div className="mt-6">
+            <MatchHero game={selected} />
+          </div>
+        )}
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {(board?.games ?? []).map((g) => (
-            <GameCard key={g.id} game={g} active={selected?.id === g.id} onPick={() => pick(g.id)} />
+            <MatchTile key={g.id} game={g} active={selected?.id === g.id} onPick={() => pick(g.id)} />
           ))}
         </div>
 
@@ -136,73 +150,8 @@ function LiveLab() {
             error={detailErr}
           />
         )}
-
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <MethodNote title="The stages">
-            <p>
-              <span className="text-fg">Live</span> and <span className="text-fg">final whistle</span> are ESPN
-              box scores and play lists — yards, TDs, live PPR, 4th-down goes, 2nd-and-short pass rate.
-            </p>
-            <p>
-              <span className="text-fg">Advanced</span> is nflverse / nflfastR: EPA per dropback, CPOE, PROE.
-              That model is not in the broadcast feed, so it cannot tick with the play clock.
-            </p>
-          </MethodNote>
-          <MethodNote title="What to watch Sunday">
-            <p>
-              Kickoff Weekend continues Sunday 1:00 ET. Open a game here — when it goes live the card pulses
-              and the box starts filling. By Tuesday morning the same game should show Advanced.
-            </p>
-          </MethodNote>
-        </div>
       </div>
     </AppShell>
-  );
-}
-
-function GameCard({
-  game,
-  active,
-  onPick,
-}: {
-  game: LiveGame;
-  active: boolean;
-  onPick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onPick}
-      className={cn(
-        "flex min-h-11 flex-col rounded-xl bg-surface p-4 text-left shadow-[var(--shadow-border)] transition-[box-shadow] duration-150",
-        active && "shadow-[var(--shadow-border-hover)]",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <StageBadge stage={game.stage} />
-        <span className="font-mono text-[11px] text-subtle">{game.statusText}</span>
-      </div>
-      <div className="mt-3 space-y-1.5">
-        <Row side={game.away} />
-        <Row side={game.home} />
-      </div>
-    </button>
-  );
-}
-
-function Row({ side }: { side: LiveGame["away"] }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="flex min-w-0 items-center gap-2">
-        {side.logo ? (
-          <img src={side.logo} alt="" className="size-5 object-contain" />
-        ) : null}
-        <span className="truncate text-sm font-medium">{side.nick}</span>
-      </span>
-      <span className={cn("font-mono text-sm tabular-nums", side.winner && "text-sage")}>
-        {side.score}
-      </span>
-    </div>
   );
 }
 
@@ -296,60 +245,31 @@ function GamePanel({
 
           <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Quarterbacks</h3>
           <p className="mt-1 text-xs text-subtle">Box line now. EPA / CPOE when Advanced is in.</p>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
-                <tr className="border-y border-border">
-                  <th className="px-2 py-2 font-medium">QB</th>
-                  <th className="px-2 py-2 text-right font-medium">C/ATT</th>
-                  <th className="px-2 py-2 text-right font-medium">Yds</th>
-                  <th className="px-2 py-2 text-right font-medium">TD/INT</th>
-                  <th className="px-2 py-2 text-right font-medium">
-                    <StatTip metric="ppr" />
-                  </th>
-                  <th className="px-2 py-2 text-right font-medium">
-                    <StatTip metric="epa" />
-                  </th>
-                  <th className="px-2 py-2 text-right font-medium">
-                    <StatTip metric="cpoe" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {qbs.map((p) => {
-                  const adv = detail.advanced?.qbs.find((q) => prettyQb(q.name, detail) === p.name)
-                    ?? detail.advanced?.qbs.find((q) => q.team === p.team);
-                  return (
-                    <tr key={p.id} className="border-b border-border/70">
-                      <td className="px-2 py-2">
-                        <div className="flex items-center gap-2">
-                          <Headshot src={p.headshot} name={p.name} team={p.team} className="size-8" />
-                          <div>
-                            <p className="font-medium">{p.name}</p>
-                            <p className="text-xs text-muted">{teamNick(p.team)}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">
-                        {p.passCmp ?? "—"}/{p.passAtt ?? "—"}
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">{p.passYds}</td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">
-                        {p.passTd}/{p.ints}
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">{p.ppr.toFixed(1)}</td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums text-sage">
-                        {adv ? formatEpa(adv.epa) : "—"}
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">
-                        {adv ? formatCpoe(adv.cpoe) : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className="mt-3 divide-y divide-border">
+            {qbs.map((p) => {
+              const adv = detail.advanced?.qbs.find((q) => prettyQb(q.name, detail) === p.name)
+                ?? detail.advanced?.qbs.find((q) => q.team === p.team);
+              return (
+                <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Headshot src={p.headshot} name={p.name} team={p.team} className="size-8" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{p.name}</p>
+                      <p className="text-xs text-muted">
+                        {p.passCmp ?? "—"}/{p.passAtt ?? "—"} · {p.passYds} yds · {p.passTd}/{p.ints}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-right">
+                    <span className="block font-mono text-sm tabular-nums text-sage">
+                      {adv ? formatEpa(adv.epa) : "—"}
+                    </span>
+                    <span className="font-mono text-xs tabular-nums text-muted">{p.ppr.toFixed(1)} PPR</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
           {!detail.advanced && game.status === "post" && (
             <p className="mt-2 text-xs text-muted">
               Advanced pending — nflverse has not posted EPA for this game yet.
@@ -357,10 +277,6 @@ function GamePanel({
           )}
 
           <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Live PPR</h3>
-          <p className="mt-1 text-xs text-subtle">
-            <StatTip metric="ppr">DraftKings-style PPR</StatTip> from the box. Tight ends stay TEs
-            (Henry is not a WR). Same numbers feed the optimizer.
-          </p>
           <ul className="mt-3 divide-y divide-border">
             {skill.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-2 py-2">
@@ -411,11 +327,15 @@ function GamePanel({
                       <td className="px-2 py-2 text-right font-mono tabular-nums">{formatPct(c.passRate)}</td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">
                         {formatPct(c.secondAndShortPass)}
-                        <span className="ml-1 text-subtle">n={c.secondAndShortN}</span>
+                        <span className="ml-1 text-subtle">
+                          {c.secondAndShortN} play{c.secondAndShortN === 1 ? "" : "s"}
+                        </span>
                       </td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">
                         {formatPct(c.fourthGoRate)}
-                        <span className="ml-1 text-subtle">n={c.fourthOpps}</span>
+                        <span className="ml-1 text-subtle">
+                          {c.fourthOpps} 4th down{c.fourthOpps === 1 ? "" : "s"}
+                        </span>
                       </td>
                       <td className="px-2 py-2 text-right font-mono tabular-nums">
                         {adv?.proe == null ? "—" : `${adv.proe > 0 ? "+" : ""}${adv.proe.toFixed(1)}`}

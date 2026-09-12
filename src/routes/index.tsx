@@ -1,15 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, Binary, LayoutDashboard, Radio, Waypoints } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowUpRight, Binary, LayoutDashboard, Radio, ScrollText, Users, Waypoints } from "lucide-react";
 import qbsFile from "@/data/qbs.json";
 import playFile from "@/data/playcalling.json";
-import snapFile from "@/data/season2026.json";
 import { AppShell } from "@/components/layout/AppShell";
-import { Button } from "@/components/ui/button";
-import { getScoreboard, getSeasonLabs } from "@/lib/live/functions";
-import type { Scoreboard, SeasonLabs } from "@/lib/live/types";
+import { Headshot } from "@/components/Headshot";
+import { SampleN } from "@/components/SampleN";
 import { formatEpa, formatPct } from "@/lib/utils";
-import { teamNick } from "@/lib/nfl";
+import { teamLogo, teamNick } from "@/lib/nfl";
+import { isThin } from "@/lib/season";
+import { useSeason } from "@/lib/season-provider";
+import type { Scoreboard } from "@/lib/live/types";
 import type { QbFile, PlaycallingFile, QbSeason, TeamSeason } from "@/data/types";
 import { cn } from "@/lib/utils";
 
@@ -17,63 +17,55 @@ export const Route = createFileRoute("/")({ component: Home });
 
 const qbData = qbsFile as QbFile;
 const pcData = playFile as unknown as PlaycallingFile;
-const snap = snapFile as unknown as SeasonLabs;
 
 const LABS = [
   {
     to: "/live" as const,
-    kicker: "00",
-    title: "Live wire",
+    title: "Live",
     icon: Radio,
-    tools: "In-game · Final · Advanced",
-    blurb:
-      "Watch a 2026 game through every stage: live box and PPR during the play clock, play-calling at the whistle, EPA and CPOE when nflverse posts.",
+    blurb: "Box score while the game is on. EPA the next morning.",
   },
   {
     to: "/qb" as const,
-    kicker: "01",
-    title: "QB comparison",
+    title: "QB",
     icon: LayoutDashboard,
-    tools: "Dashboard · EPA · CPOE",
-    blurb:
-      "Rank and overlay quarterbacks on EPA per dropback, completion percentage over expected, and pressure rate. 2023–2025 plus 2026 as it posts.",
+    blurb: "EPA and CPOE, with down and distance filters.",
+  },
+  {
+    to: "/players" as const,
+    title: "Players",
+    icon: Users,
+    blurb: "This week’s box and last season’s line. Search, tap a name.",
   },
   {
     to: "/optimizer" as const,
-    kicker: "02",
-    title: "Fantasy optimizer",
+    title: "Lineup",
     icon: Binary,
-    tools: "Integer program · PPR",
-    blurb:
-      "A salary-cap lineup solver with lock / exclude, a QB stack, and this week’s live PPR so you can score the lineup — or solve the hindsight roster.",
+    blurb: "$50k roster. Lock, bench, solve. Hindsight after games.",
+  },
+  {
+    to: "/study" as const,
+    title: "Study",
+    icon: ScrollText,
+    blurb: "2025 test. Did the Lineup computer beat grabbing the top names?",
   },
   {
     to: "/play-calling" as const,
-    kicker: "03",
     title: "Play-calling",
     icon: Waypoints,
-    tools: "Tendencies · 4th down",
-    blurb:
-      "Who throws on 2nd-and-short, who goes for it on 4th, and which staffs out-pass expectation. 2023–2025, with 2026 filling in after each dump.",
+    blurb: "4th-down goes, 2nd-and-short, down × distance heatmap.",
   },
 ];
 
 function Home() {
-  const [y26, setY26] = useState<SeasonLabs | null>(null);
-  useEffect(() => {
-    getSeasonLabs()
-      .then(setY26)
-      .catch(() => {
-        /* historical boards still work */
-      });
-  }, []);
+  const { labs } = useSeason();
 
   const histLeaders = (qbData.qbs as QbSeason[])
     .filter((q) => q.season === 2025 && q.overall.plays >= 250)
     .slice()
     .sort((a, b) => (b.overall.epa ?? -99) - (a.overall.epa ?? -99))
     .slice(0, 5);
-  const overlay = y26?.qbs.length ? y26 : snap;
+  const overlay = labs;
   const liveLeaders = overlay.qbs
     .slice()
     .sort((a, b) => (b.overall.epa ?? -99) - (a.overall.epa ?? -99))
@@ -91,34 +83,17 @@ function Home() {
 
   return (
     <AppShell>
-      <section className="relative overflow-hidden hash-mark">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-          <div className="stagger-in max-w-2xl">
-            <p className="text-[11px] font-medium tracking-[0.22em] text-sage uppercase">
-              NFL analytics portfolio
-            </p>
-            <h1 className="mt-4 font-display text-[clamp(3rem,10vw,6.5rem)] leading-[0.9] tracking-[0.02em] uppercase">
-              Three labs.
-              <br />
-              A live wire.
-            </h1>
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
-              The three portfolio labs stay current with 2026: EPA and CPOE in the QB lab,
-              play-calling after each dump, and this week’s PPR on the optimizer. Live wire is the
-              in-game feed.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild>
-                <Link to="/live">
-                  Open live wire
-                  <ArrowUpRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/qb">QB lab</Link>
-              </Button>
-            </div>
-          </div>
+      <section className="px-4 pt-8 sm:px-6 sm:pt-10">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="font-display text-5xl uppercase tracking-[0.04em] sm:text-6xl">Gridiron</h1>
+          <p className="mt-2 text-sm text-muted">NFL. Live box. EPA when the file posts.</p>
+        </div>
+      </section>
+
+      <LiveStrip />
+
+      <section className="border-t border-border">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-2">
           <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
             <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
               {use26 ? `2026 EPA / dropback · week ${overlay.throughWeek}` : "2025 EPA / dropback"}
@@ -128,22 +103,66 @@ function Home() {
                 <li key={q.id} className="flex items-center justify-between gap-3 py-3">
                   <div className="flex items-center gap-3">
                     <span className="w-5 font-mono text-xs text-subtle">{i + 1}</span>
+                    <Headshot src={q.headshot} name={q.name} team={q.team} className="size-10" />
                     <div>
                       <p className="text-sm font-medium">{q.name}</p>
-                      <p className="text-xs text-muted">{teamNick(q.team)}</p>
+                      <p className="flex items-center gap-1.5 text-xs text-muted">
+                        <img src={teamLogo(q.team)} alt="" className="size-3.5 object-contain" />
+                        {teamNick(q.team)}
+                      </p>
                     </div>
                   </div>
-                  <span className="font-mono text-sm tabular-nums text-sage">
-                    {formatEpa(q.overall.epa)}
+                  <span className="text-right">
+                    <span
+                      className={cn(
+                        "font-mono text-sm tabular-nums",
+                        isThin(q.overall.plays) ? "text-muted" : "text-sage",
+                      )}
+                    >
+                      {formatEpa(q.overall.epa)}
+                    </span>
+                    <div>
+                      <SampleN n={q.overall.plays} unit="dropbacks" />
+                    </div>
                   </span>
                 </li>
               ))}
             </ol>
+            <Link to="/qb" className="mt-4 inline-flex items-center gap-1 text-sm">
+              QB lab
+              <ArrowUpRight className="size-3.5" />
+            </Link>
+          </div>
+          <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+            <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
+              {use26 ? `2026 4th-down go · week ${overlay.throughWeek}` : "2025 4th-down go"}
+            </p>
+            <ul className="mt-4 space-y-3">
+              {goers.map((t) => (
+                <li key={t.team} className="flex items-center justify-between gap-3">
+                  <span className="flex min-w-0 items-center gap-2 text-sm">
+                    <img src={teamLogo(t.team)} alt="" className="size-5 object-contain" />
+                    {teamNick(t.team)}
+                  </span>
+                  <span className="text-right">
+                    <span
+                      className={cn(
+                        "font-mono text-sm tabular-nums",
+                        isThin(t.fourthDown.opps) && "text-muted",
+                      )}
+                    >
+                      {formatPct(t.fourthDown.goRate)}
+                    </span>
+                    <div>
+                      <SampleN n={t.fourthDown.opps} unit="4th downs" />
+                    </div>
+                  </span>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
       </section>
-
-      <LiveStrip />
 
       <section className="border-t border-border">
         <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:px-6 lg:grid-cols-2">
@@ -156,13 +175,11 @@ function Home() {
                 className="group flex flex-col rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] transition-[box-shadow,transform] duration-200 ease-out hover:shadow-[var(--shadow-border-hover)]"
               >
                 <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs text-subtle">{lab.kicker}</span>
                   <Icon className="size-4 text-muted" />
                 </div>
                 <h2 className="mt-6 font-display text-3xl uppercase tracking-[0.04em]">
                   {lab.title}
                 </h2>
-                <p className="mt-1 text-[11px] tracking-[0.14em] text-sage uppercase">{lab.tools}</p>
                 <p className="mt-4 flex-1 text-sm leading-relaxed text-muted">{lab.blurb}</p>
                 <span className="mt-6 inline-flex items-center gap-1 text-sm text-fg">
                   Open lab
@@ -173,61 +190,26 @@ function Home() {
           })}
         </div>
       </section>
-
-      <section className="border-t border-border">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2">
-          <div>
-            <h2 className="font-display text-3xl uppercase tracking-[0.04em]">Why these three</h2>
-            <p className="mt-4 text-sm leading-relaxed text-muted">
-              Recruiters see a lot of Titanic notebooks. They do not see many people who can talk
-              EPA, write a constraint set, and show a coach-level tendency chart without switching
-              tools. Each lab here is a closed demo with the same stats you would pull from
-              nflfastR — plus the filters that make the analysis feel like a product, not a
-              screenshot.
-            </p>
-          </div>
-          <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
-            <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
-              {use26 ? "2026 4th-down go rate" : "2025 4th-down go rate"}
-            </p>
-            <ul className="mt-4 space-y-3">
-              {goers.map((t) => (
-                <li key={t.team} className="flex items-center justify-between">
-                  <span className="text-sm">
-                    {teamNick(t.team)}
-                    {t.coach ? <span className="ml-2 text-xs text-muted">{t.coach}</span> : null}
-                  </span>
-                  <span className="font-mono text-sm tabular-nums">
-                    {formatPct(t.fourthDown.goRate)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </section>
     </AppShell>
   );
 }
 
 function LiveStrip() {
-  const [board, setBoard] = useState<Scoreboard | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getScoreboard()
-      .then((b) => {
-        if (!cancelled) setBoard(b);
-      })
-      .catch(() => {
-        /* home still works without the live feed */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (!board) return null;
+  const { scoreboard: board } = useSeason();
+  if (!board) {
+    return (
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">This week’s slate</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-24 rounded-xl bg-surface" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
   const featured = [
     ...board.games.filter((g) => g.status === "in"),
     ...board.games.filter((g) => g.status === "post"),
@@ -252,7 +234,7 @@ function LiveStrip() {
               key={g.id}
               to="/live"
               search={{ game: g.id }}
-              className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]"
+              className="rounded-xl bg-surface p-4"
             >
               <div className="flex items-center justify-between">
                 <span
@@ -265,12 +247,10 @@ function LiveStrip() {
                 </span>
                 {g.status === "in" ? <span className="live-dot" /> : null}
               </div>
-              <p className="mt-2 text-sm">
-                {g.away.nick} {g.away.score}
-              </p>
-              <p className="text-sm">
-                {g.home.nick} {g.home.score}
-              </p>
+              <div className="mt-3 space-y-1.5">
+                <StripSide side={g.away} />
+                <StripSide side={g.home} />
+              </div>
             </Link>
           ))}
         </div>
@@ -278,3 +258,19 @@ function LiveStrip() {
     </section>
   );
 }
+
+function StripSide({ side }: { side: Scoreboard["games"][number]["away"] }) {
+  return (
+    <p className="flex items-center justify-between gap-2">
+      <span className="flex min-w-0 items-center gap-2">
+        {side.logo ? <img src={side.logo} alt="" className="size-6 object-contain" /> : null}
+        <span className="truncate text-sm">{side.nick}</span>
+      </span>
+      <span className={cn("font-mono text-sm tabular-nums", side.winner && "text-sage")}>
+        {side.score}
+      </span>
+    </p>
+  );
+}
+
+

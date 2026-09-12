@@ -16,6 +16,14 @@ export function teamColor(abbr: string) {
   return TEAM_META[abbr]?.color ?? "#6B6D68";
 }
 
+/** ESPN CDN. nflverse uses LA / WAS; ESPN uses LAR / WSH. */
+const NFL_TO_ESPN: Record<string, string> = { LA: "LAR", WAS: "WSH" };
+
+export function teamLogo(abbr: string) {
+  const espn = NFL_TO_ESPN[abbr] ?? abbr;
+  return `https://a.espncdn.com/i/teamlogos/nfl/500/${espn}.png`;
+}
+
 export const CHART = {
   grid: "rgba(241,240,234,0.08)",
   axis: "#93958F",

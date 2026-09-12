@@ -146,6 +146,17 @@ export type WeekSkill = {
   ppr: number;
   headshot: string | null;
   status: GameStatus;
+  passCmp?: number | null;
+  passAtt?: number | null;
+  passYds?: number;
+  passTd?: number;
+  ints?: number;
+  rushAtt?: number;
+  rushYds?: number;
+  rushTd?: number;
+  rec?: number;
+  recYds?: number;
+  recTd?: number;
 };
 
 export type WeekPpr = {

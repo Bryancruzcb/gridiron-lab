@@ -10,12 +10,12 @@
   --color-surface: #13151a;
   --color-elevated: #1a1d24;
   --color-fg: #f1f0ea;
-  --color-muted: #93958f;
-  --color-subtle: #6b6d68;
+  --color-muted: #c2c4be;
+  --color-subtle: #9a9c96;
   --color-border: #2a2d34;
   --color-accent: #c5ccd6;
   --color-accent-fg: #0a0b0d;
-  --color-sage: #7a9a7a;
+  --color-navy: #1e4e8c;
   --color-rust: #c47868;
   --color-ring: #c5ccd6;
 
@@ -25,8 +25,10 @@
   --radius-lg: 18px;
   --radius-xl: 28px;
 
-  --shadow-border: 0 0 0 1px rgba(241, 240, 234, 0.08);
-  --shadow-border-hover: 0 0 0 1px rgba(241, 240, 234, 0.14);
+  --shadow-border: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 0 0 1px rgb(255 255 255 / 0.08),
+    0 10px 32px rgb(0 0 0 / 0.28);
+  --shadow-border-hover: inset 0 1px 0 rgb(255 255 255 / 0.32), 0 0 0 1px rgb(255 255 255 / 0.14),
+    0 14px 40px rgb(0 0 0 / 0.34);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -37,6 +39,10 @@
     -moz-osx-font-smoothing: grayscale;
     background: var(--color-bg);
     color: var(--color-fg);
+    --spec-x: 50%;
+    --spec-y: 8%;
+    --light-x: 22%;
+    --light-y: 14%;
   }
 
   body {
@@ -76,6 +82,111 @@
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+/* Fixed wash the glass frosts. --light-* moves with scroll / pointer. */
+.atmosphere {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      70vmax 50vmax at var(--light-x) var(--light-y),
+      rgb(30 78 140 / 0.38),
+      transparent 58%
+    ),
+    radial-gradient(
+      48vmax 38vmax at calc(var(--light-x) + 38%) calc(var(--light-y) + 22%),
+      rgb(122 154 122 / 0.18),
+      transparent 55%
+    ),
+    radial-gradient(
+      42vmax 34vmax at calc(var(--light-x) - 18%) calc(var(--light-y) + 48%),
+      rgb(196 80 72 / 0.16),
+      transparent 52%
+    ),
+    radial-gradient(
+      32vmax 26vmax at calc(var(--spec-x) + 8%) calc(var(--spec-y) + 6%),
+      rgb(241 240 234 / 0.22),
+      transparent 48%
+    ),
+    radial-gradient(36vmax 30vmax at 86% 82%, rgb(197 204 214 / 0.12), transparent 50%);
+}
+.atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(to right, rgb(241 240 234 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(241 240 234 / 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* iOS material: blur the wash behind the panel. Specular is --spec-*, not a baked angle. */
+.bg-surface {
+  background-color: rgb(241 240 234 / 0.055);
+  background-image: radial-gradient(
+    70vmax 50vmax at var(--spec-x) var(--spec-y),
+    rgb(255 255 255 / 0.18),
+    transparent 55%
+  );
+  background-attachment: fixed;
+  -webkit-backdrop-filter: blur(28px) saturate(1.85) brightness(1.12);
+  backdrop-filter: blur(28px) saturate(1.85) brightness(1.12);
+}
+.bg-elevated {
+  background-color: rgb(241 240 234 / 0.08);
+  background-image: radial-gradient(
+    70vmax 50vmax at var(--spec-x) var(--spec-y),
+    rgb(255 255 255 / 0.14),
+    transparent 55%
+  );
+  background-attachment: fixed;
+  -webkit-backdrop-filter: blur(18px) saturate(1.65) brightness(1.1);
+  backdrop-filter: blur(18px) saturate(1.65) brightness(1.1);
+}
+
+.glass-bar,
+.liquid-chrome {
+  background-color: rgb(241 240 234 / 0.06);
+  background-image: none;
+  overflow: hidden;
+}
+.liquid-chrome {
+  -webkit-backdrop-filter: blur(var(--lg-blur, 24px)) saturate(1.7);
+  backdrop-filter: blur(var(--lg-blur, 24px)) saturate(1.7);
+}
+
+/* One-light rim on hover; flash on press. */
+.hit-shine {
+  transition: box-shadow 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.hit-shine:hover,
+.hit-shine:focus-visible {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.42),
+    0 0 16px rgb(241 240 234 / 0.22);
+}
+.hit-shine:active {
+  animation: hit-shine 420ms var(--ease-out);
+}
+@keyframes hit-shine {
+  0% {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.85),
+      0 0 28px rgb(255 255 255 / 0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.2),
+      0 0 0 rgb(255 255 255 / 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hit-shine:active {
+    animation: none;
+  }
 }
 
 .field-grid {
@@ -161,6 +272,18 @@
   100% {
     box-shadow: var(--shadow-border);
   }
+}
+
+.overflow-x-auto,
+.overflow-y-auto,
+.overflow-auto {
+  scrollbar-width: none;
+}
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

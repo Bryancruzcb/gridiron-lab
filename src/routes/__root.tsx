@@ -1,6 +1,8 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
+import { SeasonProvider } from "@/lib/season-provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { GlassLight } from "@/components/GlassLight";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import appCss from "../styles.css?url";
 
@@ -15,7 +17,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "NFL analytics labs — QB comparison, fantasy optimizer, play-calling, and a 2026 live wire — on nflverse play-by-play.",
+          "QB, lineup, play-calling, and live box scores on nflverse play-by-play.",
       },
       { name: "theme-color", content: "#0A0B0D" },
     ],
@@ -39,10 +41,13 @@ export const Route = createRootRoute({
       </head>
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
+        <GlassLight />
         <AuthProvider>
-          <TooltipProvider delayDuration={200}>
-            <Outlet />
-          </TooltipProvider>
+          <SeasonProvider>
+            <TooltipProvider delayDuration={200}>
+              <Outlet />
+            </TooltipProvider>
+          </SeasonProvider>
         </AuthProvider>
         <Scripts />
       </body>
