@@ -112,7 +112,10 @@ export async function isolateNetwork(context, base, opts = {}) {
       calls.week++;
       if (held) await held;
       // Plain JSON (no x-tss-serialized header) is returned as-is and the client unwraps `.result`.
-      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ result: opts.week, context: {} }) });
+      // getWeekPpr answers with the Task 7 FeedResponse envelope, not a bare WeekPpr.
+      const week = /** @type {{ fetchedAt?: string }} */ (opts.week);
+      const feed = { data: opts.week, source: "live", fetchedAt: week.fetchedAt ?? null, respondedAt: week.fetchedAt ?? new Date(0).toISOString(), error: null, partial: [] };
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ result: feed, context: {} }) });
       return;
     }
     calls.other++;
