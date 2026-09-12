@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Binary, House, LayoutDashboard, Menu, Radio, Users } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,25 @@ const DOCK = [
   { to: "/optimizer", label: "Lineup", icon: Binary },
   { to: "/qb", label: "QB", icon: LayoutDashboard },
 ] as const;
+
+/** Home-screen / installed PWA only. Desktop and phone browsers stay the website chrome. */
+function useStandaloneApp() {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia(
+      "(display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui)",
+    );
+    const ios =
+      typeof navigator !== "undefined" &&
+      "standalone" in navigator &&
+      Boolean((navigator as { standalone?: boolean }).standalone);
+    const sync = () => setOn(mq.matches || ios);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+  return on;
+}
 
 function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -52,6 +71,7 @@ function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolea
 export function AppShell({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const app = useStandaloneApp();
 
   return (
     <div className="flex min-h-dvh flex-col bg-bg text-fg">
@@ -63,18 +83,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             <span className="font-display text-lg uppercase tracking-[0.18em]">Gridiron Lab</span>
           </Link>
-          <div className="hidden md:block">
+          <div className={cn(app ? "hidden" : "hidden md:block")}>
             <NavLinks />
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-fg md:hidden"
-            aria-label="Open menu"
-            onClick={() => setOpen(true)}
-          >
-            <Menu />
-          </Button>
+          {!app ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-fg md:hidden"
+              aria-label="Open menu"
+              onClick={() => setOpen(true)}
+            >
+              <Menu />
+            </Button>
+          ) : null}
         </div>
       </header>
       <Sheet open={open} onOpenChange={setOpen}>
@@ -87,37 +109,40 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </SheetContent>
       </Sheet>
-      <main className="flex-1 pb-24 md:pb-0">{children}</main>
-      <nav
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
-        aria-label="Primary"
-      >
-        <ul className="pointer-events-auto mx-auto flex max-w-sm items-center justify-center gap-3 px-4">
-          {DOCK.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
-            return (
-              <li key={item.to}>
-                <Link
-                  to={item.to}
-                  aria-label={item.label}
-                  className={cn(
-                    "grid size-14 place-items-center rounded-full transition-colors duration-150",
-                    active ? "bg-fg text-bg" : "bg-elevated text-fg shadow-[var(--shadow-border)]",
-                  )}
-                >
-                  <Icon className="size-6" />
-                </Link>
-              </li>
-            );
-          })}
-        </ul>
-      </nav>
-      <footer className="hidden border-t border-border md:block">
-        <div className="mx-auto flex max-w-6xl px-4 py-6 text-xs text-subtle sm:px-6">
-          <p>ESPN box scores. nflverse EPA / CPOE. Not the NFL.</p>
-        </div>
-      </footer>
+      <main className={cn("flex-1", app && "pb-24")}>{children}</main>
+      {app ? (
+        <nav
+          className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(1rem,env(safe-area-inset-bottom))]"
+          aria-label="Primary"
+        >
+          <ul className="pointer-events-auto mx-auto flex max-w-sm items-center justify-center gap-3 px-4">
+            {DOCK.map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+              return (
+                <li key={item.to}>
+                  <Link
+                    to={item.to}
+                    aria-label={item.label}
+                    className={cn(
+                      "grid size-14 place-items-center rounded-full transition-colors duration-150",
+                      active ? "bg-fg text-bg" : "bg-elevated text-fg shadow-[var(--shadow-border)]",
+                    )}
+                  >
+                    <Icon className="size-6" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+      ) : (
+        <footer className="hidden border-t border-border md:block">
+          <div className="mx-auto flex max-w-6xl px-4 py-6 text-xs text-subtle sm:px-6">
+            <p>ESPN box scores. nflverse EPA / CPOE. Not the NFL.</p>
+          </div>
+        </footer>
+      )}
     </div>
   );
 }
