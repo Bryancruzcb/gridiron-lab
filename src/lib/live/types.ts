@@ -1,3 +1,6 @@
+import type { SeasonType, WeekKey } from "../football/player-weeks.ts";
+import type { ScoreMeta } from "../football/scoring.ts";
+
 export type GameStatus = "pre" | "in" | "post";
 export type GameStage = "pregame" | "live" | "final" | "advanced";
 
@@ -21,6 +24,7 @@ export type LiveGame = {
   period: number | null;
   week: number;
   season: number;
+  seasonType: SeasonType | null;
   broadcast: string | null;
   venue: string | null;
   lastPlay: string | null;
@@ -34,6 +38,9 @@ export type LiveGame = {
 export type Scoreboard = {
   season: number;
   week: number;
+  seasonType: SeasonType | null;
+  /** Full join key, or null when ESPN omitted the season, season type or week. */
+  weekKey: WeekKey | null;
   fetchedAt: string;
   anyLive: boolean;
   games: LiveGame[];
@@ -57,6 +64,7 @@ export type BoxPlayer = {
   recYds: number;
   recTd: number;
   ppr: number;
+  score: ScoreMeta;
 };
 
 export type TeamBox = {
@@ -68,11 +76,17 @@ export type TeamBox = {
   compAtt: string | null;
   thirdDown: string | null;
   fourthDown: string | null;
-  turnovers: number | null;
   possession: string | null;
-  sacks: number | null;
-  defTd: number | null;
-  ints: number | null;
+  /** ESPN turnovers: giveaways by this team. */
+  giveaways: number | null;
+  /** ESPN interceptions: passes this team threw that were intercepted. */
+  interceptionsThrown: number | null;
+  /** ESPN fumblesLost: fumbles this team lost. */
+  fumblesLost: number | null;
+  /** ESPN sacksYardsLost: times this team's passers were sacked. */
+  sacksSuffered: number | null;
+  /** ESPN defensiveTouchdowns: defensive and return touchdowns scored by this team. */
+  defenseTds: number | null;
 };
 
 export type ScoringPlay = {
@@ -146,6 +160,9 @@ export type WeekSkill = {
   ppr: number;
   headshot: string | null;
   status: GameStatus;
+  /** "espn": provisional box score. "nflverse": published weekly stats for this same week. */
+  source: "espn" | "nflverse";
+  score: ScoreMeta;
   passCmp?: number | null;
   passAtt?: number | null;
   passYds?: number;
@@ -161,6 +178,7 @@ export type WeekSkill = {
 
 export type WeekPpr = {
   season: number;
+  seasonType: SeasonType | null;
   week: number;
   fetchedAt: string;
   gamesFinal: number;

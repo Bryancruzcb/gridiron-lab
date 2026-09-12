@@ -1,0 +1,8 @@
+{
+  "file": "espn_scoreboard_2025_reg_w5.json",
+  "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?seasontype=2&week=5&dates=2025",
+  "retrieved": "2026-09-12",
+  "originalSha256": "ad1ad2df3714760ebbad51fd82e98449b1576410e04154108e36fe843064b97b",
+  "originalBytes": 124037,
+  "trimmed": "season {type, year}, week {number}, and only event 401772854 (DET at CIN) with competitor abbreviations, names, scores and status."
+}

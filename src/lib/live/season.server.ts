@@ -5,7 +5,10 @@ import type { QbBox, QbSeason, SplitStats, TeamSeason } from "@/data/types";
 import type { AdvancedBlock, AdvQb, AdvTeam, SeasonLabs } from "./types";
 import { fnum, parseCsvLine, round, truthy, UA } from "./csv";
 import { lastTeamKey, nameTeamKey, seedPosMap, type SkillPos } from "./names";
+import { parsePlayerWeeks } from "../football/nflverse";
+import { aggregateSeason, throughWeek, type PlayerSeason, type PlayerWeek } from "../football/player-weeks";
 
+const SEASON = 2026;
 const PBP_URL =
   "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz";
 const WEEK_URL =
@@ -71,15 +74,13 @@ type GameAcc = {
   teams: Map<string, { team: string; plays: number; epa: number; epaN: number; pass: number; rush: number; xpass: number; xpassN: number; fourthGo: number; fourthOpp: number }>;
 };
 
-type WeekPlayer = {
-  id: string;
-  name: string;
-  team: string;
-  pos: string;
-  headshot: string | null;
-  week: number;
-  ppr: number;
-  box: QbBox;
+type PlayerWeekBundle = {
+  at: number;
+  /** Every published row, keyed by season + season type + week + player. */
+  weeks: PlayerWeek[];
+  /** Regular-season totals derived from `weeks`, for season views. */
+  byId: Map<string, PlayerSeason>;
+  pos: Map<string, SkillPos>;
 };
 
 type PbpBundle = {
@@ -92,8 +93,7 @@ type PbpBundle = {
 
 let pbpCache: PbpBundle | null = null;
 let pbpInflight: Promise<PbpBundle> | null = null;
-let weekCache: { at: number; rows: WeekPlayer[]; byId: Map<string, WeekPlayer>; pos: Map<string, SkillPos> } | null =
-  null;
+let weekCache: PlayerWeekBundle | null = null;
 let weekInflight: ReturnType<typeof loadPlayerWeek> | null = null;
 
 function emptySplit(): SplitAcc {
@@ -578,8 +578,7 @@ async function buildPbp(): Promise<PbpBundle> {
     }
   }
 
-  const weekRows = weekCache?.rows ?? [];
-  const byId = new Map(weekRows.map((r) => [r.id, r]));
+  const byId = weekCache?.byId ?? new Map<string, PlayerSeason>();
 
   const qbSeasons: QbSeason[] = [...qbs.values()]
     .filter((q) => q.overall.plays >= 5)
@@ -597,7 +596,7 @@ async function buildPbp(): Promise<PbpBundle> {
         season: 2026,
         games: q.games.size,
         headshot: w?.headshot ?? null,
-        box: w?.box ?? null,
+        box: w ? qbBox(w) : null,
         overall: finishSplit(q.overall),
         splits,
         weeks: [...q.weeks.entries()]
@@ -654,81 +653,39 @@ async function buildPbp(): Promise<PbpBundle> {
   return { at: Date.now(), throughWeek, games: byKey, qbs: qbSeasons, teams: teamSeasons };
 }
 
-async function loadPlayerWeek() {
-  const res = await fetch(WEEK_URL, { headers: UA, redirect: "follow" });
-  if (!res.ok) throw new Error(`nflverse week ${res.status}`);
-  const text = await res.text();
-  const lines = text.split(/\r?\n/).filter(Boolean);
-  if (!lines[0]) return { at: Date.now(), rows: [] as WeekPlayer[], byId: new Map<string, WeekPlayer>(), pos: seedPosMap() };
-  const header = parseCsvLine(lines[0]);
-  const idx: Record<string, number> = {};
-  for (const col of header) idx[col] = header.indexOf(col);
-  const get = (cells: string[], c: string) => {
-    const i = idx[c];
-    return i == null ? "" : (cells[i] ?? "");
+function qbBox(s: PlayerSeason): QbBox {
+  const b = s.box;
+  return {
+    games: s.games,
+    cmp: b.completions,
+    att: b.attempts,
+    yds: b.passingYards,
+    td: b.passingTds,
+    int: b.interceptions,
+    sk: b.sacksSuffered,
+    rushYds: b.rushingYards,
+    rushTd: b.rushingTds,
+    ppr: s.ppr,
   };
-  const rows: WeekPlayer[] = [];
-  const pos = seedPosMap();
-  const agg = new Map<string, WeekPlayer>();
-  for (const line of lines.slice(1)) {
-    const cells = parseCsvLine(line);
-    if (get(cells, "season_type") && get(cells, "season_type") !== "REG") continue;
-    const id = get(cells, "player_id");
-    const name = get(cells, "player_display_name") || get(cells, "player_name");
-    const team = get(cells, "team");
-    const position = get(cells, "position");
-    if (!id || !name || !team) continue;
-    const skill = position === "QB" || position === "RB" || position === "WR" || position === "TE" ? position : null;
-    if (skill) {
-      pos.set(nameTeamKey(name, team), skill);
-      pos.set(lastTeamKey(name, team), skill);
-    }
-    const week = fnum(get(cells, "week")) ?? 1;
-    const ppr = fnum(get(cells, "fantasy_points_ppr")) ?? 0;
-    const prev = agg.get(id);
-    const add = {
-      cmp: fnum(get(cells, "completions")) ?? 0,
-      att: fnum(get(cells, "attempts")) ?? 0,
-      yds: fnum(get(cells, "passing_yards")) ?? 0,
-      td: fnum(get(cells, "passing_tds")) ?? 0,
-      int: fnum(get(cells, "passing_interceptions")) ?? 0,
-      sk: fnum(get(cells, "sacks_suffered")) ?? 0,
-      rushYds: fnum(get(cells, "rushing_yards")) ?? 0,
-      rushTd: fnum(get(cells, "rushing_tds")) ?? 0,
-    };
-    if (!prev) {
-      agg.set(id, {
-        id,
-        name,
-        team,
-        pos: position,
-        headshot: get(cells, "headshot_url") || null,
-        week,
-        ppr,
-        box: { games: 1, ...add, ppr },
-      });
-    } else {
-      prev.team = team;
-      prev.week = Math.max(prev.week, week);
-      prev.ppr = round(prev.ppr + ppr, 1);
-      prev.box.games += 1;
-      prev.box.cmp += add.cmp;
-      prev.box.att += add.att;
-      prev.box.yds += add.yds;
-      prev.box.td += add.td;
-      prev.box.int += add.int;
-      prev.box.sk += add.sk;
-      prev.box.rushYds += add.rushYds;
-      prev.box.rushTd += add.rushTd;
-      prev.box.ppr = prev.ppr;
-    }
-  }
-  rows.push(...agg.values());
-  const byId = new Map(rows.map((r) => [r.id, r]));
-  return { at: Date.now(), rows, byId, pos };
 }
 
-async function playerWeek() {
+async function loadPlayerWeek(): Promise<PlayerWeekBundle> {
+  const res = await fetch(WEEK_URL, { headers: UA, redirect: "follow" });
+  if (!res.ok) throw new Error(`nflverse week ${res.status}`);
+  const { rows: weeks } = parsePlayerWeeks(await res.text(), WEEK_URL);
+  const pos = seedPosMap();
+  for (const w of weeks) {
+    const p = w.position;
+    if (p === "QB" || p === "RB" || p === "WR" || p === "TE") {
+      pos.set(nameTeamKey(w.name, w.team), p);
+      pos.set(lastTeamKey(w.name, w.team), p);
+    }
+  }
+  const byId = new Map(aggregateSeason(weeks, SEASON, "REG").map((s) => [s.playerId, s]));
+  return { at: Date.now(), weeks, byId, pos };
+}
+
+async function playerWeek(): Promise<PlayerWeekBundle> {
   if (weekCache && Date.now() - weekCache.at < TTL_MS) return weekCache;
   if (weekInflight) return weekInflight;
   weekInflight = loadPlayerWeek()
@@ -742,7 +699,7 @@ async function playerWeek() {
   try {
     return await weekInflight;
   } catch {
-    return weekCache ?? { at: 0, rows: [], byId: new Map(), pos: seedPosMap() };
+    return weekCache ?? { at: 0, weeks: [], byId: new Map(), pos: seedPosMap() };
   }
 }
 
@@ -810,11 +767,11 @@ export async function loadSeasonLabs(): Promise<SeasonLabs> {
   const qbs = bundle.qbs.map((q) => {
     const w = week.byId.get(q.id);
     if (!w) return q;
-    return { ...q, name: w.name, team: w.team, headshot: w.headshot ?? q.headshot, box: w.box };
+    return { ...q, name: w.name, team: w.team, headshot: w.headshot ?? q.headshot, box: qbBox(w) };
   });
   return {
-    season: 2026,
-    throughWeek: bundle.throughWeek || Math.max(0, ...week.rows.map((r) => r.week)),
+    season: SEASON,
+    throughWeek: bundle.throughWeek || (throughWeek(week.weeks, SEASON, "REG") ?? 0),
     fetchedAt: new Date(bundle.at).toISOString(),
     source: "nflverse play-by-play + player week 2026",
     qbs,

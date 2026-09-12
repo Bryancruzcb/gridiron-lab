@@ -1,7 +1,10 @@
-import { dstPpr, fetchScoreboardRaw, fetchSummaryRaw, parseScoreboard, parseSummary } from "./espn.server";
+import { fetchScoreboardRaw, fetchSummaryRaw, parseScoreboard, parseSummary } from "./espn.server";
 import { positionMap, weekPlayers } from "./season.server";
 import { nameTeamKey } from "./names";
-import type { WeekPpr, WeekSkill } from "./types";
+import type { TeamSide, WeekPpr, WeekSkill } from "./types";
+import { espnDefenseStats, twoPointScoresFromPlays } from "../football/espn";
+import { isScored, scoreDefense, scoreMeta } from "../football/scoring";
+import { mergeCurrentWeek } from "../football/week-merge";
 
 const TTL_MS = 2 * 60 * 1000;
 let cache: { at: number; data: WeekPpr } | null = null;
@@ -33,23 +36,21 @@ async function build(): Promise<WeekPpr> {
   const details = await pool(active, 5, async (g) => {
     try {
       const summary = await fetchSummaryRaw(g.id);
-      return parseSummary(summary, g, null, posMap);
+      return {
+        detail: parseSummary(summary, g, null, posMap),
+        twoPointScores: twoPointScoresFromPlays(summary, g.away.abbr, g.home.abbr),
+      };
     } catch {
       return null;
     }
   });
 
-  const byKey = new Map<string, WeekSkill>();
-  const put = (row: WeekSkill) => {
-    const k = nameTeamKey(row.name, row.team) || row.espnId;
-    const prev = byKey.get(k);
-    if (!prev || row.ppr >= prev.ppr) byKey.set(k, row);
-  };
-
+  const live: WeekSkill[] = [];
   for (const d of details) {
     if (!d) continue;
-    for (const p of d.players) {
-      put({
+    const { game, players, teamBox } = d.detail;
+    for (const p of players) {
+      live.push({
         gsisId: null,
         espnId: p.id,
         name: p.name,
@@ -57,7 +58,9 @@ async function build(): Promise<WeekPpr> {
         pos: p.pos === "FLEX" ? "WR" : p.pos,
         ppr: p.ppr,
         headshot: p.headshot,
-        status: d.game.status,
+        status: game.status,
+        source: "espn",
+        score: p.score,
         passCmp: p.passCmp,
         passAtt: p.passAtt,
         passYds: p.passYds,
@@ -71,62 +74,51 @@ async function build(): Promise<WeekPpr> {
         recTd: p.recTd,
       });
     }
-    const away = d.game.away;
-    const home = d.game.home;
-    for (const tb of d.teamBox) {
-      const opp = tb.abbr === home.abbr ? away.score : home.score;
-      put({
-        gsisId: null,
-        espnId: `DST-${tb.abbr}`,
-        name: `${tb.abbr} D/ST`,
-        team: tb.abbr,
-        pos: "DST",
-        ppr: dstPpr({
-          pa: opp,
-          sacks: tb.sacks ?? 0,
-          ints: tb.ints ?? 0,
-          turnovers: tb.turnovers ?? 0,
-          defTd: tb.defTd ?? 0,
+    const sides: [TeamSide, TeamSide][] = [
+      [game.away, game.home],
+      [game.home, game.away],
+    ];
+    for (const [team, opponent] of sides) {
+      const score = scoreDefense(
+        espnDefenseStats({
+          team: team.abbr,
+          opponent: opponent.abbr,
+          boxes: teamBox,
+          opponentScore: opponent.score,
+          twoPointScores: d.twoPointScores,
         }),
+      );
+      // No D/ST row without its required inputs; a filled-in score would look real.
+      if (!isScored(score)) continue;
+      live.push({
+        gsisId: null,
+        espnId: `DST-${team.abbr}`,
+        name: `${team.abbr} D/ST`,
+        team: team.abbr,
+        pos: "DST",
+        ppr: score.points,
         headshot: null,
-        status: d.game.status,
+        status: game.status,
+        source: "espn",
+        score: scoreMeta(score),
       });
-    }
-  }
-
-  if (week) {
-    for (const row of week.rows) {
-      const k = nameTeamKey(row.name, row.team);
-      const existing = byKey.get(k);
-      const skillPos =
-        row.pos === "QB" || row.pos === "RB" || row.pos === "WR" || row.pos === "TE" ? row.pos : existing?.pos ?? "FLEX";
-      if (existing) {
-        existing.gsisId = row.id;
-        if (existing.status === "post" && row.ppr) existing.ppr = row.ppr;
-        if (skillPos !== "FLEX") existing.pos = skillPos;
-      } else {
-        put({
-          gsisId: row.id,
-          espnId: row.id,
-          name: row.name,
-          team: row.team,
-          pos: skillPos === "FLEX" ? "WR" : skillPos,
-          ppr: row.ppr,
-          headshot: row.headshot,
-          status: "post",
-        });
-      }
     }
   }
 
   return {
     season: board.season,
+    seasonType: board.seasonType,
     week: board.week,
     fetchedAt: new Date().toISOString(),
     gamesFinal: board.games.filter((g) => g.status === "post").length,
     gamesLive: board.games.filter((g) => g.status === "in").length,
     games: board.games.length,
-    players: [...byKey.values()].sort((a, b) => b.ppr - a.ppr),
+    players: mergeCurrentWeek({
+      week: board.weekKey,
+      live,
+      published: week?.weeks ?? [],
+      identity: nameTeamKey,
+    }),
   };
 }
 
