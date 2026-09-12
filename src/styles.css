@@ -15,7 +15,7 @@
   --color-border: #2a2d34;
   --color-accent: #c5ccd6;
   --color-accent-fg: #0a0b0d;
-  --color-sage: #7a9a7a;
+  --color-navy: #1e4e8c;
   --color-rust: #c47868;
   --color-ring: #c5ccd6;
 
@@ -93,15 +93,20 @@
   background:
     radial-gradient(
       70vmax 50vmax at var(--light-x) var(--light-y),
-      rgb(122 154 122 / 0.28),
+      rgb(30 78 140 / 0.38),
       transparent 58%
     ),
     radial-gradient(
-      50vmax 40vmax at calc(var(--light-x) + 42%) calc(var(--light-y) + 36%),
-      rgb(196 120 104 / 0.16),
+      48vmax 38vmax at calc(var(--light-x) + 38%) calc(var(--light-y) + 22%),
+      rgb(122 154 122 / 0.18),
       transparent 55%
     ),
-    radial-gradient(40vmax 32vmax at 82% 88%, rgb(197 204 214 / 0.1), transparent 50%);
+    radial-gradient(
+      42vmax 34vmax at calc(var(--light-x) - 18%) calc(var(--light-y) + 48%),
+      rgb(196 80 72 / 0.16),
+      transparent 52%
+    ),
+    radial-gradient(36vmax 30vmax at 86% 82%, rgb(197 204 214 / 0.1), transparent 50%);
 }
 .atmosphere::after {
   content: "";
