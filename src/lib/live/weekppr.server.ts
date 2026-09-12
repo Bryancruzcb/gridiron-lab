@@ -1,14 +1,17 @@
-import { fetchScoreboardRaw, fetchSummaryRaw, parseScoreboard, parseSummary } from "./espn.server";
-import { positionMap, weekPlayers } from "./season.server";
-import { nameTeamKey } from "./names";
-import type { TeamSide, WeekPpr, WeekSkill } from "./types";
+import { loadScoreboardRaw, loadSummaryRaw, parseScoreboard, parseSummary } from "./espn.server";
+import { loadWeekPlayers } from "./season.server";
+import { nameTeamKey, seedPosMap } from "./names";
+import type { FeedResponse, LiveGame, TeamSide, WeekPpr, WeekSkill } from "./types";
+import { FEED_POLICY } from "./feed-state";
+import { createLoader, toFeedResponse, UpstreamError } from "./loader";
 import { espnDefenseStats, twoPointScoresFromPlays } from "../football/espn";
 import { isScored, scoreDefense, scoreMeta } from "../football/scoring";
 import { mergeCurrentWeek } from "../football/week-merge";
 
-const TTL_MS = 2 * 60 * 1000;
-let cache: { at: number; data: WeekPpr } | null = null;
-let inflight: Promise<WeekPpr> | null = null;
+type WeekBuild = { ppr: WeekPpr; partial: string[] };
+
+// The published file only upgrades finals; live lines never wait long on it.
+const PUBLISHED_WAIT_MS = 8_000;
 
 async function pool<T, R>(items: T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -23,27 +26,44 @@ async function pool<T, R>(items: T[], n: number, fn: (t: T) => Promise<R>): Prom
   return out;
 }
 
-async function build(): Promise<WeekPpr> {
-  const [raw, pos, week] = await Promise.all([
-    fetchScoreboardRaw(),
-    positionMap().catch(() => null),
-    weekPlayers().catch(() => null),
-  ]);
-  const board = parseScoreboard(raw, new Set());
-  const active = board.games.filter((g) => g.status === "in" || g.status === "post");
-  const posMap = pos ?? (await import("./names")).seedPosMap();
+const matchup = (g: LiveGame) => `${g.away.abbr}@${g.home.abbr}`;
+
+async function build(): Promise<WeekBuild> {
+  const [board, week] = await Promise.all([loadScoreboardRaw(), loadWeekPlayers(PUBLISHED_WAIT_MS)]);
+  // Scoring the week from an out-of-date board would misstate which games are final.
+  if (!board.ok) {
+    throw new UpstreamError(board.error.code, board.error.message, {
+      retryable: board.error.retryable,
+      retryAfterMs: board.error.retryAfterMs,
+    });
+  }
+  const parsed = parseScoreboard(board.data, new Set());
+  const active = parsed.games.filter((g) => g.status === "in" || g.status === "post");
+  const published = week.ok ? week.data : (week.stale?.data ?? null);
+  const posMap = published?.pos ?? seedPosMap();
+  const partial: string[] = [];
 
   const details = await pool(active, 5, async (g) => {
+    const r = await loadSummaryRaw(g.id);
+    const raw = r.ok ? r.data : r.stale?.data;
+    if (!raw) {
+      partial.push(`box score for ${matchup(g)}`);
+      return null;
+    }
+    if (!r.ok) partial.push(`latest box score for ${matchup(g)} (showing an earlier fetch)`);
     try {
-      const summary = await fetchSummaryRaw(g.id);
       return {
-        detail: parseSummary(summary, g, null, posMap),
-        twoPointScores: twoPointScoresFromPlays(summary, g.away.abbr, g.home.abbr),
+        detail: parseSummary(raw, g, null, posMap),
+        twoPointScores: twoPointScoresFromPlays(raw, g.away.abbr, g.home.abbr),
       };
     } catch {
+      partial.push(`box score for ${matchup(g)} (unreadable)`);
       return null;
     }
   });
+  if (!published && active.some((g) => g.status === "post")) {
+    partial.push("published nflverse stats (finals show ESPN box scores)");
+  }
 
   const live: WeekSkill[] = [];
   for (const d of details) {
@@ -106,32 +126,43 @@ async function build(): Promise<WeekPpr> {
   }
 
   return {
-    season: board.season,
-    seasonType: board.seasonType,
-    week: board.week,
-    fetchedAt: new Date().toISOString(),
-    gamesFinal: board.games.filter((g) => g.status === "post").length,
-    gamesLive: board.games.filter((g) => g.status === "in").length,
-    games: board.games.length,
-    players: mergeCurrentWeek({
-      week: board.weekKey,
-      live,
-      published: week?.weeks ?? [],
-      identity: nameTeamKey,
-    }),
+    partial: partial.sort(),
+    ppr: {
+      season: parsed.season,
+      seasonType: parsed.seasonType,
+      week: parsed.week,
+      fetchedAt: new Date().toISOString(),
+      gamesFinal: parsed.games.filter((g) => g.status === "post").length,
+      gamesLive: parsed.games.filter((g) => g.status === "in").length,
+      games: parsed.games.length,
+      players: mergeCurrentWeek({
+        week: parsed.weekKey,
+        live,
+        published: published?.weeks ?? [],
+        identity: nameTeamKey,
+      }),
+    },
   };
 }
 
-export async function loadWeekPpr(): Promise<WeekPpr> {
-  if (cache && Date.now() - cache.at < TTL_MS) return cache.data;
-  if (inflight) return inflight;
-  inflight = build()
-    .then((data) => {
-      cache = { at: Date.now(), data };
-      return data;
-    })
-    .finally(() => {
-      inflight = null;
-    });
-  return inflight;
+// The ESPN loaders underneath own their own retries and bounds; this layer only caches the merge.
+const loader = createLoader<WeekBuild>({
+  name: "week PPR",
+  ttlMs: FEED_POLICY.weekPpr.serverTtlMs,
+  attemptTimeoutMs: 25_000,
+  deadlineMs: 30_000,
+  maxAttempts: 1,
+  failureCooldownMs: 3_000,
+  load: () => build(),
+});
+
+export async function weekPprResponse(): Promise<FeedResponse<WeekPpr>> {
+  const result = await loader.get({ waitMs: 20_000 });
+  const retrieval = result.ok ? result.fetchedAt : result.stale?.fetchedAt;
+  return toFeedResponse(
+    result,
+    (b) => (retrieval == null ? b.ppr : { ...b.ppr, fetchedAt: new Date(retrieval).toISOString() }),
+    Date.now(),
+    (b) => b.partial,
+  );
 }

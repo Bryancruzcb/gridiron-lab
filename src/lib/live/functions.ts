@@ -1,56 +1,56 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { fetchScoreboardRaw, fetchSummaryRaw, parseScoreboard, parseSummary } from "./espn.server";
+import { loadScoreboardRaw, loadSummaryRaw, parseScoreboard, parseSummary, scoreboardResponse } from "./espn.server";
+import { fixtureFeedResponse } from "./fixtures.server";
+import { toFeedResponse } from "./loader";
 import { seedPosMap } from "./names";
-import { bustSeasonCache, loadSeasonLabs, peekAdvanced, peekAdvancedKeys, peekPosMap, warmNflverse } from "./season.server";
-import { loadWeekPpr } from "./weekppr.server";
-import type { GameDetail, Scoreboard, SeasonLabs, WeekPpr } from "./types";
+import { peekAdvanced, peekAdvancedKeys, peekPosMap, seasonLabsResponse, warmNflverse } from "./season.server";
+import type { FeedResponse, GameDetail, Scoreboard, SeasonLabs, WeekPpr } from "./types";
+import { weekPprResponse } from "./weekppr.server";
 
-export const getScoreboard = createServerFn({ method: "GET" }).handler(async (): Promise<Scoreboard> => {
+// Every handler answers with what actually happened upstream (FeedResponse), never empty rows
+// stamped with the current time. GRIDIRON_LIVE_FIXTURE swaps in named fixtures; see fixtures.server.ts.
+
+export const getScoreboard = createServerFn({ method: "GET" }).handler(async (): Promise<FeedResponse<Scoreboard>> => {
+  const fixture = fixtureFeedResponse("scoreboard");
+  if (fixture) return fixture;
   warmNflverse();
-  const raw = await fetchScoreboardRaw();
-  return parseScoreboard(raw, peekAdvancedKeys());
+  return scoreboardResponse(peekAdvancedKeys());
 });
 
 export const getGameDetail = createServerFn({ method: "POST" })
   .validator(z.object({ eventId: z.string().regex(/^\d{6,12}$/) }))
-  .handler(async ({ data }): Promise<GameDetail> => {
+  .handler(async ({ data }): Promise<FeedResponse<GameDetail>> => {
+    const fixture = fixtureFeedResponse("detail", data.eventId);
+    if (fixture) return fixture;
     warmNflverse();
-    const [rawBoard, summary] = await Promise.all([
-      fetchScoreboardRaw(),
-      fetchSummaryRaw(data.eventId),
-    ]);
-    const board = parseScoreboard(rawBoard, peekAdvancedKeys());
-    const game = board.games.find((g) => g.id === data.eventId);
-    if (!game) throw new Error("Game not on this week's board");
+    const [board, summary] = await Promise.all([loadScoreboardRaw(), loadSummaryRaw(data.eventId)]);
+    const now = Date.now();
+    const rawBoard = board.ok ? board.data : board.stale?.data;
+    const game = rawBoard
+      ? parseScoreboard(rawBoard, peekAdvancedKeys()).games.find((g) => g.id === data.eventId)
+      : undefined;
+    if (!game) {
+      const error =
+        !board.ok && !rawBoard
+          ? board.error
+          : { code: "not-found" as const, message: "Game not on this week's board", retryable: false, retryAfterMs: null };
+      return { data: null, source: "none", fetchedAt: null, respondedAt: new Date(now).toISOString(), error, partial: [] };
+    }
     const pos = peekPosMap() ?? seedPosMap();
     const advanced = game.status === "pre" ? null : peekAdvanced(game.nflverseKey);
-    return parseSummary(summary, game, advanced, pos);
+    return toFeedResponse(summary, (raw) => parseSummary(raw, game, advanced, pos), now);
   });
 
-export const getSeasonLabs = createServerFn({ method: "GET" }).handler(async (): Promise<SeasonLabs> => {
-  try {
-    return await Promise.race([
-      loadSeasonLabs(),
-      new Promise<never>((_, reject) => setTimeout(() => reject(new Error("season timeout")), 12000)),
-    ]);
-  } catch {
-    return {
-      season: 2026,
-      throughWeek: 0,
-      fetchedAt: new Date().toISOString(),
-      source: "nflverse unavailable — showing last snapshot",
-      qbs: [],
-      teams: [],
-    };
-  }
+export const getSeasonLabs = createServerFn({ method: "GET" }).handler(async (): Promise<FeedResponse<SeasonLabs>> => {
+  return fixtureFeedResponse("labs") ?? seasonLabsResponse();
 });
 
-export const getWeekPpr = createServerFn({ method: "GET" }).handler(async (): Promise<WeekPpr> => {
-  return loadWeekPpr();
+export const getWeekPpr = createServerFn({ method: "GET" }).handler(async (): Promise<FeedResponse<WeekPpr>> => {
+  return fixtureFeedResponse("weekPpr") ?? weekPprResponse();
 });
 
-export const refreshSeason = createServerFn({ method: "POST" }).handler(async (): Promise<SeasonLabs> => {
-  bustSeasonCache();
-  return loadSeasonLabs();
+/** Re-downloads the season files if the cached copies are over a minute old; last good data stays as fallback. */
+export const refreshSeason = createServerFn({ method: "POST" }).handler(async (): Promise<FeedResponse<SeasonLabs>> => {
+  return fixtureFeedResponse("labs") ?? seasonLabsResponse({ force: true });
 });

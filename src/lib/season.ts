@@ -1,5 +1,6 @@
 import snapFile from "@/data/season2026.json";
 import type { QbSeason, TeamSeason } from "@/data/types";
+import { mergeLabs, snapshotFeed, type FeedState, type LabsSections } from "@/lib/live/feed-state";
 import type { SeasonLabs } from "@/lib/live/types";
 
 export const SNAP = snapFile as unknown as SeasonLabs;
@@ -9,41 +10,20 @@ export function isThin(n: number) {
   return n > 0 && n < THIN_N;
 }
 
-/** One 2026 record: live parse if a side has rows, else the snapshot. */
-export function resolveLabs(live: SeasonLabs | null | undefined, snap: SeasonLabs = SNAP): SeasonLabs {
-  if (!live) return withWeekFallback(snap);
-  const qbs = live.qbs.length ? live.qbs : snap.qbs;
-  const teams = live.teams.length ? live.teams : snap.teams;
-  const usedLive = live.qbs.length > 0 || live.teams.length > 0;
-  return withWeekFallback({
-    season: live.season || snap.season,
-    throughWeek: live.throughWeek || snap.throughWeek,
-    fetchedAt: live.fetchedAt || snap.fetchedAt,
-    source: usedLive ? live.source : snap.source,
-    qbs,
-    teams,
-  });
+/** The labs feed before any request: the checked-in snapshot, stamped with its own time. */
+export function snapshotLabsFeed(snap: SeasonLabs = SNAP): FeedState<SeasonLabs> {
+  return snapshotFeed(snap, snap.fetchedAt);
 }
 
-export function withWeekFallback(labs: SeasonLabs): SeasonLabs {
-  const week = labs.throughWeek || 1;
-  return {
-    ...labs,
-    qbs: labs.qbs.map((q) => {
-      if (q.weeks?.length) return q;
-      return {
-        ...q,
-        weeks: [
-          {
-            week,
-            plays: q.overall.plays,
-            epa: q.overall.epa,
-            cpoe: q.overall.cpoe,
-          },
-        ],
-      };
-    }),
-  };
+/**
+ * One 2026 record: each section takes live rows when the live parse has any, else the snapshot's,
+ * and says which it used. QBs without observed weekly rows get no week strip (no synthesized week).
+ */
+export function resolveLabs(
+  feed: FeedState<SeasonLabs> | null | undefined,
+  snap: SeasonLabs = SNAP,
+): { labs: SeasonLabs; sections: LabsSections } {
+  return mergeLabs(feed ?? snapshotLabsFeed(snap), snap);
 }
 
 export function historyQbs(labs: SeasonLabs, hist: QbSeason[]): QbSeason[] {

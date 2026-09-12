@@ -1,16 +1,21 @@
-import type { BoxPlayer, CallSplit, GameDetail, LiveGame, ScoringPlay } from "./types";
+import type { BoxPlayer, CallSplit, FeedResponse, GameDetail, LiveGame, Scoreboard, ScoringPlay } from "./types";
 import { lookupPos, seedPosMap, type SkillPos } from "./names";
 import {
   nflAbbr,
   parsePlayerLines,
+  parseScoreboard,
   parseTeamBoxes,
   scoreEspnLine,
   stageOf,
   type EspnPlayerLine,
 } from "../football/espn";
 import { scoreMeta } from "../football/scoring";
+import { FEED_POLICY } from "./feed-state";
+import { createLoader, httpError, parseJsonObject, schemaError, toFeedResponse, type Loader, type LoadResult } from "./loader";
 
 export { nflAbbr, parseScoreboard } from "../football/espn";
+
+type Json = Record<string, unknown>;
 
 const SCOREBOARD =
   "https://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard";
@@ -19,15 +24,23 @@ const SUMMARY =
 
 const UA = { "User-Agent": "GridironLab/1.0 (analytics portfolio)" };
 
-const BOARD_TTL = 12_000;
-const SUM_TTL = 12_000;
-let boardCache: { at: number; data: Record<string, unknown> } | null = null;
-const summaryCache = new Map<string, { at: number; data: Record<string, unknown> }>();
+// 4 s per request as before; one quick retry for a dropped connection, never past 9 s in total.
+const ESPN_BOUNDS = {
+  attemptTimeoutMs: 4_000,
+  deadlineMs: 9_000,
+  maxAttempts: 2,
+  backoffMs: 400,
+  maxRetryWaitMs: 2_000,
+  failureCooldownMs: 3_000,
+};
 
-async function espnJson(url: string) {
-  const res = await fetch(url, { headers: UA, signal: AbortSignal.timeout(4000) });
-  if (!res.ok) throw new Error(`ESPN ${res.status}`);
-  return res.json();
+async function espnJson(url: string, signal: AbortSignal): Promise<Json> {
+  const res = await fetch(url, { headers: UA, signal });
+  if (!res.ok) {
+    await res.body?.cancel().catch(() => {});
+    throw httpError("ESPN", res.status, res.headers.get("retry-after"), Date.now());
+  }
+  return parseJsonObject(await res.text(), "ESPN");
 }
 
 function num(v: unknown): number {
@@ -178,18 +191,64 @@ export function parseSummary(
   };
 }
 
-export async function fetchScoreboardRaw() {
-  if (boardCache && Date.now() - boardCache.at < BOARD_TTL) return boardCache.data;
-  const data = (await espnJson(SCOREBOARD)) as Record<string, unknown>;
-  boardCache = { at: Date.now(), data };
-  return data;
+const boardLoader = createLoader<Json>({
+  ...ESPN_BOUNDS,
+  name: "ESPN scoreboard",
+  ttlMs: FEED_POLICY.scoreboard.serverTtlMs,
+  load: async (signal) => {
+    const raw = await espnJson(SCOREBOARD, signal);
+    if (raw.events != null && !Array.isArray(raw.events)) throw schemaError("ESPN scoreboard events is not a list");
+    return raw;
+  },
+});
+
+const MAX_SUMMARIES = 40;
+const summaryLoaders = new Map<string, Loader<Json>>();
+
+function summaryLoader(eventId: string): Loader<Json> {
+  let loader = summaryLoaders.get(eventId);
+  if (loader) {
+    summaryLoaders.delete(eventId);
+  } else {
+    loader = createLoader<Json>({
+      ...ESPN_BOUNDS,
+      name: `ESPN box score ${eventId}`,
+      ttlMs: FEED_POLICY.detail.serverTtlMs,
+      load: (signal) => espnJson(`${SUMMARY}${eventId}`, signal),
+    });
+  }
+  // Map order doubles as recency; the oldest loader goes first once the cap is reached.
+  summaryLoaders.set(eventId, loader);
+  if (summaryLoaders.size > MAX_SUMMARIES) summaryLoaders.delete(summaryLoaders.keys().next().value!);
+  return loader;
 }
 
-export async function fetchSummaryRaw(eventId: string) {
-  if (!/^\d{6,12}$/.test(eventId)) throw new Error("Bad event id");
-  const hit = summaryCache.get(eventId);
-  if (hit && Date.now() - hit.at < SUM_TTL) return hit.data;
-  const data = (await espnJson(`${SUMMARY}${eventId}`)) as Record<string, unknown>;
-  summaryCache.set(eventId, { at: Date.now(), data });
-  return data;
+export function loadScoreboardRaw(): Promise<LoadResult<Json>> {
+  return boardLoader.get();
+}
+
+export function loadSummaryRaw(eventId: string): Promise<LoadResult<Json>> {
+  if (!/^\d{6,12}$/.test(eventId)) {
+    return Promise.resolve({
+      ok: false,
+      error: { code: "not-found", message: "Bad event id", retryable: false, retryAfterMs: null },
+      stale: null,
+    });
+  }
+  return summaryLoader(eventId).get();
+}
+
+/** Scoreboard response; `fetchedAt` is the board's real retrieval time, not the parse time. */
+export async function scoreboardResponse(advancedKeys: Set<string>): Promise<FeedResponse<Scoreboard>> {
+  const result = await loadScoreboardRaw();
+  return toFeedResponse(
+    result,
+    (raw) => {
+      const board = parseScoreboard(raw, advancedKeys);
+      const retrieval = result.ok ? result.fetchedAt : result.stale!.fetchedAt;
+      return { ...board, fetchedAt: new Date(retrieval).toISOString() };
+    },
+    Date.now(),
+    (raw) => (parseScoreboard(raw, advancedKeys).weekKey ? [] : ["ESPN left out the season, season type or week"]),
+  );
 }

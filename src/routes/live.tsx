@@ -1,16 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { DataStatus, FeedStatus } from "@/components/DataStatus";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
 import { MatchHero, MatchTile } from "@/components/match/MatchFace";
 import { StatTip } from "@/components/StatTip";
 import { Badge } from "@/components/ui/badge";
-import { getGameDetail, getScoreboard } from "@/lib/live/functions";
-import type { GameDetail, GameStage, LiveGame, Scoreboard } from "@/lib/live/types";
+import { emptyFeed, fail, FEED_POLICY, receive, startAttempt, transportError, type FeedState } from "@/lib/live/feed-state";
+import { getGameDetail } from "@/lib/live/functions";
+import type { GameDetail, GameStage, LiveGame } from "@/lib/live/types";
 import { teamNick } from "@/lib/nfl";
-import { useSeason } from "@/lib/season-provider";
-import { cn, formatCpoe, formatEpa, formatPct } from "@/lib/utils";
+import { useFeedPoll, useSeason } from "@/lib/season-provider";
+import { cn, formatEpa, formatPct } from "@/lib/utils";
 
 type Search = { game?: string };
 
@@ -39,18 +41,50 @@ function stageIndex(s: GameStage) {
   return STAGES.findIndex((x) => x.id === s);
 }
 
+/**
+ * One game's box score as a feed. State is keyed by event id so another game's box never shows under
+ * this one; a poll or retry while a request runs joins it instead of stacking a second one.
+ */
+function useGameDetail(eventId: string | null, live: boolean) {
+  const [slot, setSlot] = useState<{ id: string | null; feed: FeedState<GameDetail> }>(() => ({
+    id: null,
+    feed: emptyFeed(),
+  }));
+  const inflight = useRef<{ id: string; promise: Promise<void> } | null>(null);
+
+  const load = useCallback(() => {
+    if (!eventId || inflight.current?.id === eventId) return;
+    const apply = (fn: (s: FeedState<GameDetail>) => FeedState<GameDetail>) =>
+      setSlot((prev) => ({ id: eventId, feed: fn(prev.id === eventId ? prev.feed : emptyFeed()) }));
+    const now = () => new Date().toISOString();
+    apply((s) => startAttempt(s, now()));
+    const promise: Promise<void> = getGameDetail({ data: { eventId } })
+      .then(
+        (res) => apply((s) => receive(s, res, now())),
+        (err) => apply((s) => fail(s, transportError(err))),
+      )
+      .finally(() => {
+        if (inflight.current?.promise === promise) inflight.current = null;
+      });
+    inflight.current = { id: eventId, promise };
+  }, [eventId]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    load();
+    const id = window.setInterval(load, live ? 15000 : 90000);
+    return () => window.clearInterval(id);
+  }, [eventId, live, load]);
+
+  return { feed: slot.id === eventId ? slot.feed : emptyFeed<GameDetail>(), retry: load };
+}
+
 function LiveLab() {
   const { game: selectedId } = Route.useSearch();
   const navigate = useNavigate({ from: "/live" });
-  const { scoreboard: seeded } = useSeason();
-  const [board, setBoard] = useState<Scoreboard | null>(seeded);
-  const [detail, setDetail] = useState<GameDetail | null>(null);
-  const [boardErr, setBoardErr] = useState<string | null>(null);
-  const [detailErr, setDetailErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (seeded) setBoard(seeded);
-  }, [seeded]);
+  const { scoreboard: board, feeds } = useSeason();
+  // The provider owns the scoreboard; this page only asks it to poll faster while games are on.
+  useFeedPoll("scoreboard", board?.anyLive ? 15000 : 60000);
 
   const selected = useMemo(() => {
     if (!board) return null;
@@ -58,50 +92,7 @@ function LiveLab() {
     return board.games.find((g) => g.status === "in") ?? board.games.find((g) => g.status === "post") ?? board.games[0] ?? null;
   }, [board, selectedId]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        const next = await getScoreboard();
-        if (!cancelled) {
-          setBoard(next);
-          setBoardErr(null);
-        }
-      } catch (err) {
-        if (!cancelled) setBoardErr(err instanceof Error ? err.message : "Live feed unavailable");
-      }
-    };
-    void tick();
-    const ms = board?.anyLive ? 15000 : 60000;
-    const id = window.setInterval(() => void tick(), ms);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [board?.anyLive]);
-
-  useEffect(() => {
-    if (!selected) return;
-    let cancelled = false;
-    const load = async () => {
-      try {
-        const next = await getGameDetail({ data: { eventId: selected.id } });
-        if (!cancelled) {
-          setDetail(next);
-          setDetailErr(null);
-        }
-      } catch (err) {
-        if (!cancelled) setDetailErr(err instanceof Error ? err.message : "Couldn't load this game");
-      }
-    };
-    void load();
-    const live = selected.status === "in";
-    const id = window.setInterval(() => void load(), live ? 15000 : 90000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [selected?.id, selected?.status]);
+  const detail = useGameDetail(selected?.id ?? null, selected?.status === "in");
 
   const pick = (id: string) => {
     void navigate({ search: { game: id } });
@@ -120,13 +111,14 @@ function LiveLab() {
           </p>
         </FirstLook>
 
-        {boardErr && (
-          <p className="mt-6 text-sm text-rust">Live feed is down. The 2023–2025 labs still work.</p>
+        <FeedStatus feed="scoreboard" className="mt-6" />
+        {!board && feeds.scoreboard.error && (
+          <p className="mt-2 text-sm text-muted">The 2023–2025 labs still work.</p>
         )}
 
-        {board && (
-          <p className="mt-6 text-[11px] tracking-[0.14em] text-subtle uppercase">
-            Week {board.week} · {board.anyLive ? "polling every 15s" : "idle poll"} ·{" "}
+        {board && board.games.length > 0 && (
+          <p className="mt-3 text-[11px] tracking-[0.14em] text-subtle uppercase">
+            {board.anyLive ? "Checking every 15s" : "Checking every minute"} ·{" "}
             {board.games.filter((g) => g.stage === "advanced").length} with advanced
           </p>
         )}
@@ -143,13 +135,7 @@ function LiveLab() {
           ))}
         </div>
 
-        {selected && (
-          <GamePanel
-            game={selected}
-            detail={detail?.game.id === selected.id ? detail : null}
-            error={detailErr}
-          />
-        )}
+        {selected && <GamePanel game={selected} feed={detail.feed} onRetry={detail.retry} />}
       </div>
     </AppShell>
   );
@@ -171,13 +157,14 @@ function StageBadge({ stage }: { stage: GameStage }) {
 
 function GamePanel({
   game,
-  detail,
-  error,
+  feed,
+  onRetry,
 }: {
   game: LiveGame;
-  detail: GameDetail | null;
-  error: string | null;
+  feed: FeedState<GameDetail>;
+  onRetry: () => void;
 }) {
+  const detail = feed.data;
   const idx = stageIndex(game.stage);
   const qbs = (detail?.players ?? []).filter((p) => p.pos === "QB");
   const skill = (detail?.players ?? []).filter((p) => p.pos !== "QB").slice(0, 8);
@@ -225,7 +212,18 @@ function GamePanel({
         </p>
       )}
 
-      {error && <p className="mt-4 text-sm text-rust">{error}</p>}
+      <DataStatus
+        name="detail"
+        feed={feed}
+        freshForMs={FEED_POLICY.detail.freshForMs}
+        upstream="ESPN box score"
+        coverage={game.statusText}
+        isEmpty={(d) => d.players.length === 0 && d.teamBox.length === 0}
+        emptyText={game.status === "pre" ? "No box score before kickoff." : "ESPN has no box score for this game yet."}
+        unavailableText="Couldn't load this game"
+        onRetry={onRetry}
+        className="mt-5"
+      />
 
       {detail && (
         <>
