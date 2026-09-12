@@ -1,14 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, Binary, LayoutDashboard, Radio, ScrollText, Users, Waypoints } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import qbsFile from "@/data/qbs.json";
 import playFile from "@/data/playcalling.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { SampleN } from "@/components/SampleN";
 import { MatchHero, MatchTile } from "@/components/match/MatchFace";
-import { getScoreboard } from "@/lib/live/functions";
-import type { Scoreboard } from "@/lib/live/types";
 import { formatEpa, formatPct } from "@/lib/utils";
 import { teamLogo, teamNick } from "@/lib/nfl";
 import { isThin } from "@/lib/season";
@@ -212,24 +210,26 @@ function dayLabel(iso: string) {
 }
 
 function LiveStrip() {
-  const [board, setBoard] = useState<Scoreboard | null>(null);
+  const { scoreboard: board } = useSeason();
   const [day, setDay] = useState<string>("all");
 
-  useEffect(() => {
-    let cancelled = false;
-    getScoreboard()
-      .then((b) => {
-        if (!cancelled) setBoard(b);
-      })
-      .catch(() => {
-        /* home still works without the live feed */
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (!board) return null;
+  if (!board) {
+    return (
+      <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">This NFL week · kickoff days</p>
+        <div className="mt-3 flex gap-2">
+          {["All", "—", "—", "—"].map((label, i) => (
+            <span
+              key={i}
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-elevated text-xs text-subtle"
+            >
+              {label}
+            </span>
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   const days = [...new Map(board.games.map((g) => {
     const lab = dayLabel(g.start);
@@ -248,7 +248,7 @@ function LiveStrip() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
       <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
-        2026 week {board.week} · kickoff day
+        Week {board.week} kickoffs · this week only
       </p>
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
         <button
@@ -300,3 +300,4 @@ function LiveStrip() {
     </section>
   );
 }
+

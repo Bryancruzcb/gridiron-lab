@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { getGameDetail, getScoreboard } from "@/lib/live/functions";
 import type { GameDetail, GameStage, LiveGame, Scoreboard } from "@/lib/live/types";
 import { teamNick } from "@/lib/nfl";
+import { useSeason } from "@/lib/season-provider";
 import { cn, formatCpoe, formatEpa, formatPct } from "@/lib/utils";
 
 type Search = { game?: string };
@@ -41,10 +42,15 @@ function stageIndex(s: GameStage) {
 function LiveLab() {
   const { game: selectedId } = Route.useSearch();
   const navigate = useNavigate({ from: "/live" });
-  const [board, setBoard] = useState<Scoreboard | null>(null);
+  const { scoreboard: seeded } = useSeason();
+  const [board, setBoard] = useState<Scoreboard | null>(seeded);
   const [detail, setDetail] = useState<GameDetail | null>(null);
   const [boardErr, setBoardErr] = useState<string | null>(null);
   const [detailErr, setDetailErr] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (seeded) setBoard(seeded);
+  }, [seeded]);
 
   const selected = useMemo(() => {
     if (!board) return null;
