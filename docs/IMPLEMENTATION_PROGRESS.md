@@ -212,6 +212,8 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries multip
 | b17b0b9 | typecheck; optimizer-flows against production preview | Windows, Chromium 153 | typecheck 0; 8/8 (production worker asset 200; 8 constructed / 8 terminated) |
 | Task 5B head (53d4fbf) | typecheck, test:domain (257), npm test, build, lint; /study and /guide rendered at 1280 and 400 px | Windows Node 26, Chromium | all exit 0; no console errors, no horizontal overflow (agent report) |
 | After Task 5B merge (4724f44) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 257, ui 37; lint 0 errors / 4 warnings; study client chunk 157.6 kB (36.7 kB gzip) |
+| Task 6 head (aeda864) | typecheck, test:ui (70), npm test, build, lint; `tests/e2e/analysis.mjs`; optimizer-flows; data-freshness | Windows Node 26, Chromium 153; test:ui also Docker node:22 | all exit 0; analysis 11/11, optimizer 8/8, data 11/11 (agent report) |
+| After Task 6 merge (0624bfb) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 257, ui 70; lint 0 errors / 4 warnings |
 
 GitHub Actions has not run on this branch (nothing pushed).
 
