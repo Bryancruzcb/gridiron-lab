@@ -1,0 +1,9 @@
+season,week,team,season_type,game_id,opponent_team,passing_interceptions,sacks_suffered,fumbles_lost_total,passing_tds,rushing_tds,special_teams_tds,def_tds,fumble_recovery_tds,def_safeties,def_2pt_made,def_punt_blocks,def_fg_blocks,def_pat_blocks,pat_made,fg_made,passing_2pt_conversions,rushing_2pt_conversions,def_sacks,def_interceptions,fumble_recovery_opp
+2040,1,AAA,REG,2040_01_AAA_BBB,BBB,0,2,0,0,1,0,0,0,0,0,0,0,0,1,2,0,0,3,1,0
+2040,1,BBB,REG,2040_01_AAA_BBB,AAA,1,3,0,2,0,0,0,0,0,0,0,0,0,2,0,0,0,2,0,0
+2040,1,CCC,REG,2040_01_CCC_DDD,DDD,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,1,1,1
+2040,1,DDD,REG,2040_01_CCC_DDD,CCC,1,1,1,2,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0
+2040,2,AAA,REG,2040_02_AAA_CCC,CCC,1,1,1,2,0,0,0,0,0,0,0,0,0,2,1,0,0,3,1,0
+2040,2,CCC,REG,2040_02_AAA_CCC,AAA,1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1
+2040,2,BBB,REG,2040_02_BBB_DDD,DDD,0,0,0,1,1,0,0,0,0,0,0,0,0,2,0,0,0,2,0,0
+2040,2,DDD,REG,2040_02_BBB_DDD,BBB,0,2,0,0,1,0,0,0,0,0,0,0,0,1,2,0,0,0,0,0
