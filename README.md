@@ -46,7 +46,7 @@ Synthetic salaries. Estimated DST points-allowed. Exact DP missed a legal roster
 
 ## Run it
 
-Node **20.19+ or 22.12+**.
+Node **22.12+**. CI runs Node 22. `npm test` runs TypeScript tests with Node's built-in type stripping, which Node 20 does not have.
 
 ```bash
 git clone https://github.com/Bryancruzcb/gridiron-lab.git
@@ -59,8 +59,9 @@ Open [http://localhost:8080](http://localhost:8080).
 
 | Command | |
 |---|---|
-| `npm run typecheck` | TypeScript (what CI runs) |
-| `npm run build` | Production |
+| `npm run typecheck` | TypeScript |
+| `npm test` | Every supported unit suite: scripts, auth and app-data, plus `test:domain` and `test:ui` when they exist |
+| `npm run build` | Production (the database migrator skips without `DATABASE_URL`) |
 | `node --experimental-strip-types scripts/build-study.ts` | Rebuild 2025 holdout JSON |
 | `node --experimental-strip-types scripts/compare-proj.ts` | Projection bake-off |
 | `node --experimental-strip-types scripts/compare-ewma.ts` | EWMA α sweep |
@@ -73,6 +74,7 @@ GitHub Actions on `main` and PRs:
 2. `npm ci` — fails if `package-lock.json` is out of date. After `npm install`, commit the lockfile.
 3. `npm run routes:generate` — rebuilds `src/routeTree.gen.ts` from `src/routes/` so a new page cannot typecheck-fail because Vite never ran.
 4. `npm run typecheck`
-
-`npm test` is **not** in CI. It still runs 8 failing Grok og-image scaffold tests.
+5. `npm test` — the full supported unit suite. The few tests that pin gitignored Grok workspace docs (`.grok/skills/`, `AGENTS.md`) report as skipped in a plain checkout.
+6. `npm run build` — production build with no `DATABASE_URL`, so the migrator skips.
+7. `npm run lint` — errors fail the job; warnings do not.
 
