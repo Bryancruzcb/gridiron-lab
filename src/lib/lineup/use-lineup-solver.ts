@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import type { FantasyPlayer } from "@/data/types";
+import { selectionKey, type SelectionLink } from "../analysis/state.ts";
 import {
   actualsVersion,
   autoRunKey,
+  emptySelection,
   initialLineupState,
   lineupReducer,
+  parseSelection,
   planCompare,
   planLineup,
   viewChannel,
@@ -12,22 +15,29 @@ import {
   type DataVersion,
   type LineupData,
   type LineupMode,
+  type LineupSelection,
   type Pending,
 } from "./selection.ts";
 import { parseWorkerResponse, PROTOCOL_VERSION, type SolveJob, type WorkerRequest } from "./worker-protocol.ts";
 
-/** Last selection used on the route in this tab. In memory only; URL and saved views are separate. */
+/** Last selection used on the route in this tab. In memory only, and used only when the URL carries no selection. */
 const MEMORY_KEY = "__gridironLabLineupSelection";
 
 type MemoryWindow = Window & { [MEMORY_KEY]?: unknown };
 
 type Slot = { worker: Worker | null; inflight: Pending | null };
 
+export type SelectionWrite = "push" | "replace";
+
 export type LineupSolverInput = {
   players: readonly FantasyPlayer[];
   cap: number;
   actuals: ReadonlyMap<string, number> | null;
   slate: string;
+  /** The selection the URL carries, or null when it carries none. The URL is the source of truth. */
+  link?: SelectionLink | null;
+  /** Called when the selection changes other than by following the URL, so the page can write it there. */
+  onSelectionChange?: (selection: LineupSelection, how: SelectionWrite) => void;
 };
 
 function errorText(err: unknown) {
@@ -39,7 +49,7 @@ function errorText(err: unknown) {
  * demand after mount and terminated to cancel. Monotonic request ids plus fingerprints decide
  * which replies may land; the reducer checks them again.
  */
-export function useLineupSolver({ players, cap, actuals, slate }: LineupSolverInput) {
+export function useLineupSolver({ players, cap, actuals, slate, link = null, onSelectionChange }: LineupSolverInput) {
   const data = useMemo<LineupData>(() => ({ players, cap, actuals }), [players, cap, actuals]);
   const version = useMemo<DataVersion>(() => ({ slate, actuals: actualsVersion(actuals) }), [slate, actuals]);
   const [state, dispatch] = useReducer(lineupReducer, version, initialLineupState);
@@ -55,6 +65,15 @@ export function useLineupSolver({ players, cap, actuals, slate }: LineupSolverIn
   });
   const lastId = useRef(0);
   const plans = useRef({ lineup: lineupPlan, compare: comparePlan });
+
+  // URL sync. `urlKey` is the selection the URL shows as far as this hook knows (undefined before
+  // mount); `written` holds keys this hook navigated to that the router has not reported back yet.
+  const linkRef = useRef(link);
+  const onChangeRef = useRef(onSelectionChange);
+  const urlKey = useRef<string | undefined>(undefined);
+  const written = useRef<string[]>([]);
+  const writeHow = useRef<SelectionWrite>("push");
+  const shownSelection = useRef(state.selection);
 
   const terminate = useCallback((channel: Channel) => {
     const slot = slots.current[channel];
@@ -144,16 +163,54 @@ export function useLineupSolver({ players, cap, actuals, slate }: LineupSolverIn
     [terminate],
   );
 
-  // Refs first, so the effects below read this commit's plans.
+  // Refs first, so the effects below read this commit's plans and link.
   useEffect(() => {
     plans.current = { lineup: lineupPlan, compare: comparePlan };
+    linkRef.current = link;
+    onChangeRef.current = onSelectionChange;
   });
 
+  // URL -> selection. On mount a link wins; without one the in-memory selection is restored. Later,
+  // a URL this hook did not write (back/forward, an opened saved view) is imported like a restore.
+  const linkKey = link?.key ?? null;
   useEffect(() => {
-    const raw = (window as MemoryWindow)[MEMORY_KEY];
-    if (raw !== undefined) dispatch({ type: "import", raw, source: "memory" });
-    setRestored(true);
-  }, []);
+    const current = linkRef.current;
+    const key = current?.key ?? selectionKey(emptySelection(slate));
+    const mounting = urlKey.current === undefined;
+    urlKey.current = key;
+    if (mounting) {
+      if (current) dispatch({ type: "import", raw: current.raw, source: "link" });
+      else {
+        const raw = (window as MemoryWindow)[MEMORY_KEY];
+        if (raw !== undefined) {
+          if (parseSelection(raw, slate).ok) writeHow.current = "replace";
+          dispatch({ type: "import", raw, source: "memory" });
+        }
+      }
+      setRestored(true);
+      return;
+    }
+    const mine = written.current.indexOf(key);
+    if (mine >= 0) {
+      written.current.splice(0, mine + 1);
+      return;
+    }
+    if (key === selectionKey(shownSelection.current)) return;
+    dispatch({ type: "import", raw: current ? current.raw : emptySelection(slate), source: "link" });
+  }, [linkKey, slate]);
+
+  // Selection -> URL, for every change that did not come from the URL itself.
+  useEffect(() => {
+    if (state.selection === shownSelection.current) return;
+    shownSelection.current = state.selection;
+    const how = writeHow.current;
+    writeHow.current = "push";
+    const key = selectionKey(state.selection);
+    if (key === urlKey.current) return;
+    urlKey.current = key;
+    written.current = [...written.current.slice(-19), key];
+    onChangeRef.current?.(state.selection, how);
+  }, [state.selection]);
 
   useEffect(() => {
     if (restored) (window as MemoryWindow)[MEMORY_KEY] = state.selection;

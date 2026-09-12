@@ -1,11 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { memo, useMemo, useState } from "react";
-import { Lock, Ban } from "lucide-react";
+import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
+import { memo, useCallback, useMemo, useState } from "react";
+import { Lock, Ban, Download } from "lucide-react";
 import fantasyFile from "@/data/fantasy.json";
+import { CopyLink } from "@/components/CopyLink";
 import { FeedStatus } from "@/components/DataStatus";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
+import { SavedAnalyses, type SavedEvent } from "@/components/SavedAnalyses";
 import { StatTip } from "@/components/StatTip";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -14,20 +16,39 @@ import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
-import { slateId, type ImportReport, type LineupMode, type PlanIssue } from "@/lib/lineup/selection";
-import { useLineupSolver } from "@/lib/lineup/use-lineup-solver";
-import type { WeekPpr } from "@/lib/live/types";
+import { buildLineupExport, exportFilename, lineupCsv, lineupJson } from "@/lib/analysis/export";
+import {
+  decodeOptimizerSearch,
+  encodeOptimizerSearch,
+  isEmptySelection,
+  selectionKey,
+  validateOptimizerSearch,
+} from "@/lib/analysis/state";
+import {
+  actualsVersion,
+  slateId,
+  type ImportReport,
+  type LineupMode,
+  type LineupSelection,
+  type PlanIssue,
+} from "@/lib/lineup/selection";
+import { useLineupSolver, type SelectionWrite } from "@/lib/lineup/use-lineup-solver";
+import type { WeekPpr, WeekSkill } from "@/lib/live/types";
 import { actualsByPlayer } from "@/lib/match";
 import { teamNick } from "@/lib/nfl";
 import { scoreLineup, type SolveFailure, type SolveResult, type SolverMethod } from "@/lib/optimizer";
 import { useSeason } from "@/lib/season-provider";
 import { cn, formatNum } from "@/lib/utils";
 
-export const Route = createFileRoute("/optimizer")({ component: OptimizerLab });
+export const Route = createFileRoute("/optimizer")({
+  validateSearch: (raw: Record<string, unknown>) => validateOptimizerSearch(raw, SLATE),
+  component: OptimizerLab,
+});
 
 const data = fantasyFile as FantasyFile;
 const players = data.players as FantasyPlayer[];
 const playerById = new Map(players.map((p) => [p.id, p]));
+const PROJECTIONS = new Map(players.map((p) => [p.id, p.proj]));
 const SLATE = slateId(data.season, players, data.cap);
 const POS: (FantasyPos | "ALL")[] = ["ALL", "QB", "RB", "WR", "TE", "DST"];
 
@@ -57,19 +78,42 @@ function failureText(result: SolveFailure, mode: LineupMode) {
   return `Solver error (${result.code}): ${result.message}`;
 }
 
-/** Players whose actual comes from a game still in progress or a partial box score. */
-function notFinalIds(week: WeekPpr, actuals: ReadonlyMap<string, number>) {
+/** Players whose actual comes from a week row matching `open`, matched the way the actuals map is. */
+function idsFrom(week: WeekPpr, actuals: ReadonlyMap<string, number>, open: (w: WeekSkill) => boolean) {
   const out = new Set<string>();
-  const open = week.players.filter((w) => w.status !== "post" || w.score.status !== "complete");
-  if (open.length === 0) return out;
-  for (const [id, pts] of actualsByPlayer(players, open)) if (actuals.get(id) === pts) out.add(id);
+  const rows = week.players.filter(open);
+  if (rows.length === 0) return out;
+  for (const [id, pts] of actualsByPlayer(players, rows)) if (actuals.get(id) === pts) out.add(id);
   return out;
 }
 
+function setupName(s: LineupSelection) {
+  return `${s.mode === "actual" ? "Hindsight" : "Projections"} · ${s.locked.length} locked · ${s.excluded.length} benched${s.stack ? " · stack" : ""}`;
+}
+
+function download(filename: string, type: string, text: string) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
 function ImportNotice({ report, onDismiss }: { report: ImportReport; onDismiss: () => void }) {
+  const fromLink = report.source !== "memory";
   return (
-    <div className={cn("rounded-md p-3 text-sm", report.applied ? "bg-elevated text-muted" : "bg-rust/10 text-rust")}>
-      <p className="font-medium">{report.applied ? "Restored your last setup, with a note." : "That lineup setup was not applied."}</p>
+    <div className={cn("rounded-md p-3 text-sm", report.applied ? "bg-elevated text-muted" : "bg-rust/10 text-rust")} data-import-source={report.source}>
+      <p className="font-medium">
+        {report.applied
+          ? fromLink
+            ? "Opened this setup, with a note."
+            : "Restored your last setup, with a note."
+          : "That lineup setup was not applied."}
+      </p>
+      {!report.applied && fromLink && <p className="mt-0.5">Nothing from the link was applied.</p>}
       <ul className="mt-1 list-disc space-y-0.5 pl-4">
         {report.issues.map((issue) => (
           <li key={issue.code + issue.message}>
@@ -225,19 +269,55 @@ const PlayerRows = memo(function PlayerRows({ rows, lockedIds, excludedIds, actu
 });
 
 function OptimizerLab() {
-  const { weekPpr } = useSeason();
+  const { weekPpr, feeds } = useSeason();
+  const navigate = useNavigate();
+  const router = useRouter();
   const [pos, setPos] = useState<(typeof POS)[number]>("ALL");
   const [q, setQ] = useState("");
   const week = weekPpr;
 
+  // The URL is the source of truth for the selection; the solver hook imports links and reports edits.
+  const search = Route.useSearch();
+  const link = useMemo(() => decodeOptimizerSearch(search, SLATE), [search]);
+  const writeSelection = useCallback(
+    (next: LineupSelection, how: SelectionWrite) => {
+      void navigate({
+        to: "/optimizer",
+        search: isEmptySelection(next) && next.slate === SLATE ? {} : encodeOptimizerSearch(next),
+        replace: how === "replace",
+        resetScroll: false,
+      });
+    },
+    [navigate],
+  );
+
   const actuals = useMemo(() => (week ? actualsByPlayer(players, week.players) : null), [week]);
-  const notFinal = useMemo(() => (week && actuals ? notFinalIds(week, actuals) : new Set<string>()), [week, actuals]);
-  const solver = useLineupSolver({ players, cap: data.cap, actuals, slate: SLATE });
+  const actualsV = useMemo(() => actualsVersion(actuals), [actuals]);
+  const notFinal = useMemo(
+    () => (week && actuals ? idsFrom(week, actuals, (w) => w.status !== "post" || w.score.status !== "complete") : new Set<string>()),
+    [week, actuals],
+  );
+  const partial = useMemo(
+    () => (week && actuals ? idsFrom(week, actuals, (w) => w.score.status !== "complete") : new Set<string>()),
+    [week, actuals],
+  );
+  const solver = useLineupSolver({ players, cap: data.cap, actuals, slate: SLATE, link, onSelectionChange: writeSelection });
   const { selection, lineup: lineupView, compare, lineupPlan, importReport } = solver;
   const { mode } = selection;
   const scoredCount = actuals?.size ?? 0;
   const lockedIds = useMemo(() => new Set(selection.locked), [selection.locked]);
   const excludedIds = useMemo(() => new Set(selection.excluded), [selection.excluded]);
+
+  // The saved view the setup came from, so an export can carry its name while the setup is unchanged.
+  const [savedRef, setSavedRef] = useState<{ id: string; name: string; key: string } | null>(null);
+  const savedName = savedRef && savedRef.key === selectionKey(selection) ? savedRef.name : null;
+  const onSavedEvent = (event: SavedEvent<"optimizer">) => {
+    if (event.type === "deleted") setSavedRef((r) => (r?.id === event.id ? null : r));
+    else if (event.type === "renamed") setSavedRef((r) => (r?.id === event.record.id ? { ...r, name: event.record.name } : r));
+    else setSavedRef({ id: event.record.id, name: event.record.name, key: selectionKey(event.record.state) });
+  };
+
+  const linkTo = (s: LineupSelection) => router.buildLocation({ to: "/optimizer", search: encodeOptimizerSearch(s) }).href;
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -276,6 +356,34 @@ function OptimizerLab() {
     cmp && actuals
       ? [cmp.exact, cmp.hillClimb, cmp.greedyValue].some((r) => r.status === "ok" && scoreLineup(r.lineup.players, actuals).missing.length > 0)
       : false;
+
+  /** Export the current result exactly as shown, with the inputs it was built on. */
+  const exportResult = (format: "json" | "csv") => {
+    const current = lineupView.current;
+    if (!current || current.outcome.best.status !== "ok") return;
+    const feed = feeds.weekPpr;
+    const exp = buildLineupExport({
+      exportedAt: new Date(),
+      slate: SLATE,
+      slateSeason: data.season,
+      cap: data.cap,
+      selection,
+      mode: current.outcome.mode,
+      result: current.outcome.best,
+      fingerprint: current.fingerprint,
+      projections: PROJECTIONS,
+      actuals,
+      actualsVersion: actualsV,
+      partialIds: partial,
+      notFinalIds: notFinal,
+      week: week ? { season: week.season, seasonType: week.seasonType, week: week.week } : null,
+      weekFeed: feed.data ? { source: feed.sourceKind, fetchedAt: feed.dataAsOf, partial: feed.partial, error: feed.error?.message ?? null } : null,
+      reopenPath: linkTo(selection),
+      savedName,
+    });
+    if (format === "json") download(exportFilename(exp, "json"), "application/json", lineupJson(exp));
+    else download(exportFilename(exp, "csv"), "text/csv;charset=utf-8", lineupCsv(exp));
+  };
 
   return (
     <AppShell>
@@ -431,6 +539,10 @@ function OptimizerLab() {
                   </p>
                 )}
               </div>
+              <CopyLink className="mt-4" label="Copy link to this setup" getUrl={() => `${window.location.origin}${linkTo(selection)}`} />
+              <p className="mt-1 text-xs text-subtle">
+                A link reopens these constraints and solves them again on whatever scores are loaded then.
+              </p>
             </div>
 
             {lineup && best && shown && outcome && (
@@ -443,6 +555,8 @@ function OptimizerLab() {
                 data-fingerprint={shown.fingerprint}
                 data-request-id={shown.requestId}
                 data-elapsed-ms={Math.round(shown.elapsedMs)}
+                data-slate={SLATE}
+                data-actuals-version={actualsV ?? ""}
                 className={cn("rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]", !isCurrent && "opacity-60")}
               >
                 <div className="flex items-baseline justify-between gap-2">
@@ -495,6 +609,27 @@ function OptimizerLab() {
                     );
                   })}
                 </ul>
+                {isCurrent && (
+                  <div className="mt-4 border-t border-border pt-3">
+                    <p data-testid="input-version" className="font-mono text-[10px] break-all text-subtle">
+                      Input · slate {SLATE} · {actualsV ? `week scores ${actualsV}` : "no week scores loaded"}
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <Button type="button" variant="secondary" size="sm" onClick={() => exportResult("json")}>
+                        <Download aria-hidden />
+                        Export JSON
+                      </Button>
+                      <Button type="button" variant="secondary" size="sm" onClick={() => exportResult("csv")}>
+                        <Download aria-hidden />
+                        Export CSV
+                      </Button>
+                    </div>
+                    <p className="mt-2 text-xs text-muted">
+                      An export keeps this exact lineup, its scores and the input version above, to inspect later. The setup link
+                      recomputes instead.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -505,6 +640,15 @@ function OptimizerLab() {
                 <p className="mt-1 text-xs text-muted">Pts/$ greedy on the same constraints · heuristic</p>
               </div>
             )}
+
+            <SavedAnalyses
+              kind="optimizer"
+              current={() => ({ state: selection, datasetRef: selection.slate })}
+              suggestedName={setupName(selection)}
+              onOpen={(record) => void navigate({ to: "/optimizer", search: encodeOptimizerSearch(record.state), resetScroll: false })}
+              onEvent={onSavedEvent}
+              datasetNote={(record) => (record.datasetRef && record.datasetRef !== SLATE ? "made for another slate" : null)}
+            />
 
             {actuals && actuals.size > 0 && (
               <div
