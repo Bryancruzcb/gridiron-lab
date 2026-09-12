@@ -27,4 +27,8 @@ jobs:
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: npm run routes:generate
       - run: npm run typecheck
-      - run: npm run test:domain
+      # Scripts, auth and app-data unit tests, then test:domain and test:ui.
+      - run: npm test
+      # This job has no DATABASE_URL, so the build's db:migrate step must skip cleanly.
+      - run: npm run build
+      - run: npm run lint

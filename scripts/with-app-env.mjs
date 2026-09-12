@@ -22,7 +22,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync, realpathSync } from "node:fs";
 import { constants as osConstants } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname, isAbsolute, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 export const APP_ENV_REL_PATH = ".grok/app-env.json";
@@ -111,6 +111,11 @@ export function resolveSpawnTarget(command, args, root = projectRoot()) {
       return { file: process.execPath, argv: [viteJs, ...args], found: true };
     }
   }
+  // An executable path needs no lookup. Routing it through cmd.exe (shell mode on
+  // win32) splits paths with spaces and runs `>`/`&` inside arguments as shell syntax.
+  if (isAbsolute(command) && existsSync(command)) {
+    return { file: command, argv: args, found: true };
+  }
   const unixBin = join(localBinDir(root), command);
   if (existsSync(unixBin)) {
     return { file: unixBin, argv: args, found: true };
@@ -159,7 +164,7 @@ function main(argv) {
       console.error(`[with-app-env] failed to run ${command}: not found.`);
       if (command === "vite") {
         console.error(
-          "Run `npm install` in the project root (Node 20.19+ or 22.12+), then `npm run dev` again.",
+          "Run `npm install` in the project root (Node 22.12+), then `npm run dev` again.",
         );
       }
       process.exit(127);
