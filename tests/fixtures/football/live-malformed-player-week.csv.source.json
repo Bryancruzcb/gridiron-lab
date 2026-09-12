@@ -1,0 +1,6 @@
+{
+  "file": "live-malformed-player-week.csv",
+  "synthetic": true,
+  "created": "2026-09-12",
+  "notes": "nflverse player-week CSV missing required columns, for schema-error classification."
+}

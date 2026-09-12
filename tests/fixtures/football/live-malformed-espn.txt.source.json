@@ -1,0 +1,6 @@
+{
+  "file": "live-malformed-espn.txt",
+  "synthetic": true,
+  "created": "2026-09-12",
+  "notes": "Truncated ESPN JSON body for schema-error classification."
+}
