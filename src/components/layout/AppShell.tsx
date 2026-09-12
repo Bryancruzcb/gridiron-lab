@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Binary, House, LayoutDashboard, Menu, Radio, ScrollText } from "lucide-react";
+import { Binary, House, LayoutDashboard, Menu, Radio, Users } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -9,6 +9,7 @@ const NAV = [
   { to: "/", label: "Home" },
   { to: "/live", label: "Live" },
   { to: "/qb", label: "QB" },
+  { to: "/players", label: "Players" },
   { to: "/optimizer", label: "Lineup" },
   { to: "/study", label: "Study" },
   { to: "/play-calling", label: "Play-calling" },
@@ -18,9 +19,9 @@ const NAV = [
 const DOCK = [
   { to: "/", label: "Home", icon: House },
   { to: "/live", label: "Live", icon: Radio },
-  { to: "/qb", label: "QB", icon: LayoutDashboard },
+  { to: "/players", label: "Players", icon: Users },
   { to: "/optimizer", label: "Lineup", icon: Binary },
-  { to: "/study", label: "Study", icon: ScrollText },
+  { to: "/qb", label: "QB", icon: LayoutDashboard },
 ] as const;
 
 function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolean }) {
@@ -101,11 +102,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={item.to}
                   aria-label={item.label}
                   className={cn(
-                    "grid size-12 place-items-center rounded-full transition-colors duration-150",
+                    "grid size-14 place-items-center rounded-full transition-colors duration-150",
                     active ? "bg-fg text-bg" : "bg-elevated text-fg shadow-[var(--shadow-border)]",
                   )}
                 >
-                  <Icon className="size-5" />
+                  <Icon className="size-6" />
                 </Link>
               </li>
             );

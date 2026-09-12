@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowUpRight, Binary, LayoutDashboard, Radio, ScrollText, Waypoints } from "lucide-react";
+import { ArrowUpRight, Binary, LayoutDashboard, Radio, ScrollText, Users, Waypoints } from "lucide-react";
 import { useEffect, useState } from "react";
 import qbsFile from "@/data/qbs.json";
 import playFile from "@/data/playcalling.json";
@@ -33,6 +33,12 @@ const LABS = [
     title: "QB",
     icon: LayoutDashboard,
     blurb: "EPA and CPOE, with down and distance filters.",
+  },
+  {
+    to: "/players" as const,
+    title: "Players",
+    icon: Users,
+    blurb: "This week’s box and last season’s line. Search, tap a name.",
   },
   {
     to: "/optimizer" as const,

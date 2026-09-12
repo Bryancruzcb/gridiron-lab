@@ -80,22 +80,23 @@
 
 /* Layered frost on the dark grey cards (QB filters, boards, labs). */
 .bg-surface {
-  background-color: color-mix(in oklab, var(--color-surface) 82%, transparent);
+  background-color: color-mix(in oklab, var(--color-surface) 48%, transparent);
   background-image: linear-gradient(
     165deg,
-    rgba(241, 240, 234, 0.14) 0%,
-    rgba(241, 240, 234, 0.04) 38%,
-    rgba(10, 11, 13, 0.25) 100%
+    rgba(241, 240, 234, 0.16) 0%,
+    rgba(241, 240, 234, 0.05) 36%,
+    rgba(10, 11, 13, 0.18) 100%
   );
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(22px);
 }
 .bg-elevated {
-  background-color: color-mix(in oklab, var(--color-elevated) 88%, transparent);
+  background-color: color-mix(in oklab, var(--color-elevated) 42%, transparent);
   background-image: linear-gradient(
     180deg,
-    rgba(241, 240, 234, 0.10) 0%,
-    rgba(241, 240, 234, 0.02) 100%
+    rgba(241, 240, 234, 0.12) 0%,
+    rgba(241, 240, 234, 0.03) 100%
   );
+  backdrop-filter: blur(16px);
 }
 
 .field-grid {
