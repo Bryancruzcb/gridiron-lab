@@ -197,8 +197,23 @@ function Home() {
   );
 }
 
+function localDayKey(iso: string) {
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  return {
+    key: localDayKey(iso),
+    wd: d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
+    n: d.getDate(),
+  };
+}
+
 function LiveStrip() {
   const [board, setBoard] = useState<Scoreboard | null>(null);
+  const [day, setDay] = useState<string>("all");
 
   useEffect(() => {
     let cancelled = false;
@@ -215,47 +230,62 @@ function LiveStrip() {
   }, []);
 
   if (!board) return null;
+
+  const days = [...new Map(board.games.map((g) => {
+    const lab = dayLabel(g.start);
+    return [lab.key, lab] as const;
+  })).values()];
+
+  const slate = board.games.filter((g) => day === "all" || localDayKey(g.start) === day);
   const featured = [
-    ...board.games.filter((g) => g.status === "in"),
-    ...board.games.filter((g) => g.status === "post"),
-    ...board.games.filter((g) => g.status === "pre"),
+    ...slate.filter((g) => g.status === "in"),
+    ...slate.filter((g) => g.status === "post"),
+    ...slate.filter((g) => g.status === "pre"),
   ];
   const hero = featured[0];
   const rest = featured.slice(1, 5);
 
-  const days = [...new Map(
-    board.games.map((g) => {
-      const d = new Date(g.start);
-      const key = d.toISOString().slice(0, 10);
-      return [key, d] as const;
-    }),
-  ).values()].sort((a, b) => a.getTime() - b.getTime());
-  const today = new Date().toISOString().slice(0, 10);
-
   return (
     <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+      <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
+        2026 week {board.week} · kickoff day
+      </p>
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <button
+          type="button"
+          onClick={() => setDay("all")}
+          className={cn(
+            "h-14 shrink-0 rounded-full px-4 text-xs font-medium tracking-wide uppercase",
+            day === "all" ? "bg-fg text-bg" : "bg-elevated text-muted",
+          )}
+        >
+          All
+        </button>
         {days.map((d) => {
-          const key = d.toISOString().slice(0, 10);
-          const on = key === today;
+          const on = day === d.key;
           return (
-            <span
-              key={key}
+            <button
+              key={d.key}
+              type="button"
+              onClick={() => setDay(d.key)}
               className={cn(
-                "grid size-11 shrink-0 place-items-center rounded-full text-xs font-medium",
+                "flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full",
                 on ? "bg-fg text-bg" : "bg-elevated text-muted",
               )}
             >
-              {d.getDate()}
-            </span>
+              <span className="text-[10px] tracking-wide">{d.wd}</span>
+              <span className="font-display text-lg leading-none">{d.n}</span>
+            </button>
           );
         })}
       </div>
       {hero ? (
-        <Link to="/live" search={{ game: hero.id }} className="block">
+        <Link to="/live" search={{ game: hero.id }} className="mt-4 block">
           <MatchHero game={hero} />
         </Link>
-      ) : null}
+      ) : (
+        <p className="mt-4 text-sm text-muted">No games that day.</p>
+      )}
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {rest.map((g) => (
           <Link key={g.id} to="/live" search={{ game: g.id }}>
