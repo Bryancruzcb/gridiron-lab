@@ -25,8 +25,13 @@ export function nflAbbr(espn: string) {
 
 const UA = { "User-Agent": "GridironLab/1.0 (analytics portfolio)" };
 
+const BOARD_TTL = 12_000;
+const SUM_TTL = 12_000;
+let boardCache: { at: number; data: Record<string, unknown> } | null = null;
+const summaryCache = new Map<string, { at: number; data: Record<string, unknown> }>();
+
 async function espnJson(url: string) {
-  const res = await fetch(url, { headers: UA });
+  const res = await fetch(url, { headers: UA, signal: AbortSignal.timeout(4000) });
   if (!res.ok) throw new Error(`ESPN ${res.status}`);
   return res.json();
 }
@@ -374,10 +379,17 @@ export function dstPpr(opts: { pa: number; sacks: number; ints: number; turnover
 }
 
 export async function fetchScoreboardRaw() {
-  return espnJson(SCOREBOARD) as Promise<Record<string, unknown>>;
+  if (boardCache && Date.now() - boardCache.at < BOARD_TTL) return boardCache.data;
+  const data = (await espnJson(SCOREBOARD)) as Record<string, unknown>;
+  boardCache = { at: Date.now(), data };
+  return data;
 }
 
 export async function fetchSummaryRaw(eventId: string) {
   if (!/^\d{6,12}$/.test(eventId)) throw new Error("Bad event id");
-  return espnJson(`${SUMMARY}${eventId}`) as Promise<Record<string, unknown>>;
+  const hit = summaryCache.get(eventId);
+  if (hit && Date.now() - hit.at < SUM_TTL) return hit.data;
+  const data = (await espnJson(`${SUMMARY}${eventId}`)) as Record<string, unknown>;
+  summaryCache.set(eventId, { at: Date.now(), data });
+  return data;
 }

@@ -760,6 +760,23 @@ async function pbpBundle(): Promise<PbpBundle> {
   return pbpInflight;
 }
 
+export function peekAdvancedKeys(): Set<string> {
+  return pbpCache ? new Set(pbpCache.games.keys()) : new Set();
+}
+
+export function peekAdvanced(key: string): AdvancedBlock | null {
+  return pbpCache?.games.get(key) ?? null;
+}
+
+export function peekPosMap() {
+  return weekCache?.pos ?? null;
+}
+
+export function warmNflverse() {
+  void pbpBundle().catch(() => {});
+  void playerWeek().catch(() => {});
+}
+
 export async function advancedIndex(): Promise<Map<string, AdvancedBlock>> {
   try {
     const b = await pbpBundle();

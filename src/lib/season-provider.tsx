@@ -18,16 +18,22 @@ export function SeasonProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getSeasonLabs().catch(() => null), getWeekPpr().catch(() => null)]).then(
-      ([labs, week]) => {
-        if (cancelled) return;
-        setLive(labs);
-        setWeekPpr(week);
-        setReady(true);
-      },
-    );
+    getSeasonLabs()
+      .catch(() => null)
+      .then((labs) => {
+        if (!cancelled && labs) setLive(labs);
+        if (!cancelled) setReady(true);
+      });
+    const idle = window.setTimeout(() => {
+      getWeekPpr()
+        .catch(() => null)
+        .then((week) => {
+          if (!cancelled && week) setWeekPpr(week);
+        });
+    }, 1200);
     return () => {
       cancelled = true;
+      window.clearTimeout(idle);
     };
   }, []);
 
