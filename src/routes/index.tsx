@@ -6,7 +6,7 @@ import playFile from "@/data/playcalling.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { SampleN } from "@/components/SampleN";
-import { Button } from "@/components/ui/button";
+import { MatchHero, MatchTile } from "@/components/match/MatchFace";
 import { getScoreboard } from "@/lib/live/functions";
 import type { Scoreboard } from "@/lib/live/types";
 import { formatEpa, formatPct } from "@/lib/utils";
@@ -80,27 +80,17 @@ function Home() {
 
   return (
     <AppShell>
-      <section className="relative overflow-hidden hash-mark">
-        <div className="mx-auto grid max-w-6xl gap-12 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
-          <div className="stagger-in max-w-2xl">
-            <h1 className="mt-4 font-display text-[clamp(3rem,10vw,6.5rem)] leading-[0.9] tracking-[0.02em] uppercase">
-              Gridiron Lab
-            </h1>
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-muted sm:text-lg">
-              QB stats, a $50k lineup, play-calling, and a live box. 2023–2026.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild>
-                <Link to="/live">
-                  Live
-                  <ArrowUpRight className="size-4" />
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/qb">QB</Link>
-              </Button>
-            </div>
-          </div>
+      <section className="px-4 pt-8 sm:px-6 sm:pt-10">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="font-display text-5xl uppercase tracking-[0.04em] sm:text-6xl">Gridiron</h1>
+          <p className="mt-2 text-sm text-muted">Match day first. Labs under that.</p>
+        </div>
+      </section>
+
+      <LiveStrip />
+
+      <section className="border-t border-border">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-10 sm:px-6 lg:grid-cols-2">
           <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
             <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
               {use26 ? `2026 EPA / dropback · week ${overlay.throughWeek}` : "2025 EPA / dropback"}
@@ -135,42 +125,12 @@ function Home() {
                 </li>
               ))}
             </ol>
+            <Link to="/qb" className="mt-4 inline-flex items-center gap-1 text-sm">
+              QB lab
+              <ArrowUpRight className="size-3.5" />
+            </Link>
           </div>
-        </div>
-      </section>
-
-      <LiveStrip />
-
-      <section className="border-t border-border">
-        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:px-6 lg:grid-cols-2">
-          {LABS.map((lab) => {
-            const Icon = lab.icon;
-            return (
-              <Link
-                key={lab.to}
-                to={lab.to}
-                className="group flex flex-col rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] transition-[box-shadow,transform] duration-200 ease-out hover:shadow-[var(--shadow-border-hover)]"
-              >
-                <div className="flex items-center justify-between">
-                  <Icon className="size-4 text-muted" />
-                </div>
-                <h2 className="mt-6 font-display text-3xl uppercase tracking-[0.04em]">
-                  {lab.title}
-                </h2>
-                <p className="mt-4 flex-1 text-sm leading-relaxed text-muted">{lab.blurb}</p>
-                <span className="mt-6 inline-flex items-center gap-1 text-sm text-fg">
-                  Open lab
-                  <ArrowUpRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6">
-          <div className="max-w-md rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
+          <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
             <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
               {use26 ? `2026 4th-down go · week ${overlay.throughWeek}` : "2025 4th-down go"}
             </p>
@@ -200,6 +160,33 @@ function Home() {
           </div>
         </div>
       </section>
+
+      <section className="border-t border-border">
+        <div className="mx-auto grid max-w-6xl gap-4 px-4 py-12 sm:px-6 lg:grid-cols-2">
+          {LABS.map((lab) => {
+            const Icon = lab.icon;
+            return (
+              <Link
+                key={lab.to}
+                to={lab.to}
+                className="group flex flex-col rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] transition-[box-shadow,transform] duration-200 ease-out hover:shadow-[var(--shadow-border-hover)]"
+              >
+                <div className="flex items-center justify-between">
+                  <Icon className="size-4 text-muted" />
+                </div>
+                <h2 className="mt-6 font-display text-3xl uppercase tracking-[0.04em]">
+                  {lab.title}
+                </h2>
+                <p className="mt-4 flex-1 text-sm leading-relaxed text-muted">{lab.blurb}</p>
+                <span className="mt-6 inline-flex items-center gap-1 text-sm text-fg">
+                  Open lab
+                  <ArrowUpRight className="size-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
     </AppShell>
   );
 }
@@ -226,63 +213,54 @@ function LiveStrip() {
     ...board.games.filter((g) => g.status === "in"),
     ...board.games.filter((g) => g.status === "post"),
     ...board.games.filter((g) => g.status === "pre"),
-  ].slice(0, 4);
+  ];
+  const hero = featured[0];
+  const rest = featured.slice(1, 5);
+
+  const days = [...new Map(
+    board.games.map((g) => {
+      const d = new Date(g.start);
+      const key = d.toISOString().slice(0, 10);
+      return [key, d] as const;
+    }),
+  ).values()].sort((a, b) => a.getTime() - b.getTime());
+  const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <section className="border-t border-border">
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <div className="mb-4 flex items-baseline justify-between gap-3">
-          <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
-            2026 week {board.week}
-          </p>
-          <Link to="/live" className="text-sm text-fg">
-            Full slate
-            <ArrowUpRight className="ml-1 inline size-3.5" />
-          </Link>
-        </div>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {featured.map((g) => (
-            <Link
-              key={g.id}
-              to="/live"
-              search={{ game: g.id }}
-              className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]"
+    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+      <div className="mb-4 flex gap-2 overflow-x-auto pb-1">
+        {days.map((d) => {
+          const key = d.toISOString().slice(0, 10);
+          const on = key === today;
+          return (
+            <span
+              key={key}
+              className={cn(
+                "grid size-11 shrink-0 place-items-center rounded-full text-xs font-medium",
+                on ? "bg-fg text-bg" : "bg-elevated text-muted",
+              )}
             >
-              <div className="flex items-center justify-between">
-                <span
-                  className={cn(
-                    "text-[11px] font-medium tracking-wide uppercase",
-                    g.status === "in" ? "text-sage" : "text-subtle",
-                  )}
-                >
-                  {g.status === "in" ? "Live" : g.stage === "advanced" ? "Advanced" : g.statusText}
-                </span>
-                {g.status === "in" ? <span className="live-dot" /> : null}
-              </div>
-              <div className="mt-3 space-y-1.5">
-                <StripSide side={g.away} />
-                <StripSide side={g.home} />
-              </div>
-            </Link>
-          ))}
-        </div>
+              {d.getDate()}
+            </span>
+          );
+        })}
       </div>
+      {hero ? (
+        <Link to="/live" search={{ game: hero.id }} className="block">
+          <MatchHero game={hero} />
+        </Link>
+      ) : null}
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {rest.map((g) => (
+          <Link key={g.id} to="/live" search={{ game: g.id }}>
+            <MatchTile game={g} />
+          </Link>
+        ))}
+      </div>
+      <Link to="/live" className="mt-4 inline-flex items-center gap-1 text-sm">
+        Full slate
+        <ArrowUpRight className="size-3.5" />
+      </Link>
     </section>
-  );
-}
-
-function StripSide({ side }: { side: Scoreboard["games"][number]["away"] }) {
-  return (
-    <p className="flex items-center justify-between gap-2">
-      <span className="flex min-w-0 items-center gap-2">
-        {side.logo ? (
-          <img src={side.logo} alt="" className="size-6 object-contain" />
-        ) : null}
-        <span className="truncate text-sm">{side.nick}</span>
-      </span>
-      <span className={cn("font-mono text-sm tabular-nums", side.winner && "text-sage")}>
-        {side.score}
-      </span>
-    </p>
   );
 }

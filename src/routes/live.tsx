@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
+import { MatchHero, MatchTile } from "@/components/match/MatchFace";
 import { StatTip } from "@/components/StatTip";
 import { Badge } from "@/components/ui/badge";
 import { getGameDetail, getScoreboard } from "@/lib/live/functions";
@@ -124,9 +125,15 @@ function LiveLab() {
           </p>
         )}
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {selected && (
+          <div className="mt-6">
+            <MatchHero game={selected} />
+          </div>
+        )}
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {(board?.games ?? []).map((g) => (
-            <GameCard key={g.id} game={g} active={selected?.id === g.id} onPick={() => pick(g.id)} />
+            <MatchTile key={g.id} game={g} active={selected?.id === g.id} onPick={() => pick(g.id)} />
           ))}
         </div>
 
@@ -139,52 +146,6 @@ function LiveLab() {
         )}
       </div>
     </AppShell>
-  );
-}
-
-function GameCard({
-  game,
-  active,
-  onPick,
-}: {
-  game: LiveGame;
-  active: boolean;
-  onPick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onPick}
-      className={cn(
-        "flex min-h-11 flex-col rounded-xl bg-surface p-4 text-left shadow-[var(--shadow-border)] transition-[box-shadow] duration-150",
-        active && "shadow-[var(--shadow-border-hover)]",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <StageBadge stage={game.stage} />
-        <span className="font-mono text-[11px] text-subtle">{game.statusText}</span>
-      </div>
-      <div className="mt-3 space-y-1.5">
-        <Row side={game.away} />
-        <Row side={game.home} />
-      </div>
-    </button>
-  );
-}
-
-function Row({ side }: { side: LiveGame["away"] }) {
-  return (
-    <div className="flex items-center justify-between gap-2">
-      <span className="flex min-w-0 items-center gap-2">
-        {side.logo ? (
-          <img src={side.logo} alt="" className="size-5 object-contain" />
-        ) : null}
-        <span className="truncate text-sm font-medium">{side.nick}</span>
-      </span>
-      <span className={cn("font-mono text-sm tabular-nums", side.winner && "text-sage")}>
-        {side.score}
-      </span>
-    </div>
   );
 }
 
