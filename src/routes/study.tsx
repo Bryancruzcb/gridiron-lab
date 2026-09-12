@@ -84,9 +84,9 @@ function StudyPage() {
             <section className="mt-10">
               <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Question</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                Does a cap-optimal $50k lineup beat picking the highest projections that still fit,
-                once you score it on actual PPR the following week? And does last week’s EPA or CPOE
-                tell you this week’s?
+                After the games, does the $50k solver score more real PPR than just taking the
+                highest projected names that still fit? And if a QB was good last week on EPA or
+                CPOE, is he good this week?
               </p>
             </section>
 
