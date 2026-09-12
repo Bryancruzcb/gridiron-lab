@@ -7,24 +7,58 @@ Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main 
 
 ## Current next action
 
-Two workstreams are running in parallel worktrees:
-- Task 5 part B (`wip/task5-study-results`, from 7493078): downloads 2022–2025 inputs, runs the multi-season studies, regenerates `src/data/study-*.json`, and aligns study.tsx, guide.tsx and the README with the regenerated numbers.
-- Task 6 (`wip/task6-analyses`, from b17b0b9): URL state, saved views, and lineup exports.
-
-After both merge: the final Task 4 wave (a `test:e2e` command and a CI browser job, the regression bite checks from handoff §5, and the README/study/artifact agreement check), then one three-lens review of the whole diff against ce5d6b1.
+Task 6 (`wip/task6-analyses`, from 764a4ba) is still running in its worktree. After it merges:
+- Run the final Task 4 wave: a `test:e2e` command and a CI browser job, the five deliberate-regression bite checks, and the README/guide agreement check.
+- Then run one three-lens review (correctness, runtime/security, honesty + handoff §11 checklist) of ce5d6b1..HEAD.
 
 ## Task status
 
 | Task | Status | Evidence / remaining work |
 |---|---|---|
 | 1 Optimizer | Verified (wave 1) | Both handoff fixtures, a 400-slate exhaustive oracle, validation codes, bite tests |
-| 2 Scoring | Core verified (wave 1) | Study consumers: the Task 5 library uses the ruleset; regeneration is in progress in Task 5B |
+| 2 Scoring | Verified | Ruleset + live adapters (wave 1); all study consumers use it and results are regenerated (Task 5B) |
 | 3 Constraints | Verified (wave 2) | Reducer + fingerprints, 37 ui tests, optimizer browser flows 8/8 on the production preview after the merge. URL/saved persistence is handled in Task 6 |
-| 4 CI/testing | Part 1 verified; final wave pending | npm test/build/lint gated. Pending: e2e command + CI browser job, deliberate-regression bite checks, docs agreement |
-| 5 Reproducibility | Library verified (wave 2); data run in progress | 62 offline study tests; 2023–2025 runs, regeneration and the report pending (5B) |
+| 4 CI/testing | Part 1 verified; final wave pending | npm test/build/lint gated. Pending: e2e command + CI browser job, bite checks, docs agreement |
+| 5 Reproducibility | Verified (wave 2 + 5B) | 2022–2025 inputs in docs/study/input-manifest.json; strict exact runs for 2023–2025 + shipped slate; pinned offline rerun byte-identical; docs/study/REGENERATION_REPORT.md |
 | 6 Sharing/saves | In progress (wave 3a) | |
 | 7 Data freshness | Verified (wave 2) | 57 pure tests, data-freshness browser checks 11/11 on the production preview after the merge |
 | 8 Worker | Verified (wave 2) | Worker for the initial, manual, comparison and hindsight solves; cancellation by terminate; perf evidence in docs/perf/optimizer-worker.md |
+
+## Task 5 part B (merged at 4724f44)
+
+Branch `wip/task5-study-results` has two commits: 27ab68d (results) and 53d4fbf (narrative).
+
+**Inputs and runs**
+- Inputs: 2022–2025 nflverse player-week and team-week files, nfldata `games.csv` and `fantasy.json`. All ten are hashed in `docs/study/input-manifest.json`. `games.csv` changed upstream after wave 1 (e5443356… → 63beda7e…), and the runs pin the new bytes.
+- Runs:
+  - 2023–2024: role development.
+  - 2025 on a pool built only from 2024: role retrospective.
+  - 2025 on the shipped `fantasy.json` slate: look-ahead, disclosed.
+  - Attribution-only legacy-scoring run and an exploratory EWMA sweep: not published.
+- A new `study:build -- publish` step writes `src/data/study-seasons.json` (143 KB, 15.6 KB gzip). It re-checks every run file and refuses mixed configurations. The four legacy page files were regenerated through the wrappers. `study-qb-lag.json` has the same 409 pairs; only the pair order changed.
+- Reproduction: a pinned offline rerun of every command was byte-identical for every artifact.
+
+**Findings**
+- Shipped-slate audit: the 114-player slate is built with look-ahead. Projection = 0.6 × full-season 2025 PPG + 0.4 × weeks 14–18 PPG for 114/114 players. Salary is linear in projection within each position (R² 0.996–0.998). The RB and WR pools are the top N by that projection.
+- Replaying the ce5d6b1 scripts on the cached bytes reproduces 116.5 / 115.8 / 80.1 exactly, so the attribution below is not explained by upstream data drift. The chain:
+
+  | Step | Result |
+  |---|---|
+  | Legacy published | 116.5 |
+  | Solver repair (old DP returned nothing on 178 of 510 solves) | 114.1 |
+  | Players on a bye removed from the slate | 122.1 |
+  | Rest of the pipeline policy | 122.1 (unchanged for the trailing mean) |
+  | Scoring repair (DST changed in about 45% of team-games) | 126.7 |
+  | 2025 pool built from 2024 | 139.7 |
+
+  No week was excluded in any run.
+- Pooled 2023–2025 (51 weeks): exact 133.5, greedy-proj 132.2, greedy-value 112.0.
+  - Exact − greedy = +1.4/week, with a 95% bootstrap range of −3.4 to +6.6.
+  - Projection overshot the actual score in 51/51 weeks, while player-level bias was −0.02 (a selection effect).
+  - Shrinkage has the best player MAE in every run.
+  - EWMA 0.35 vs trailing mean: +10.5 pooled (+4.2 to +16.8), but −5.5 on the shipped slate.
+- Narrative: study.tsx reads `study-seasons.json` (season picker, 95% ranges, and forecast/look-back/hindsight labels) with computed sentences. The guide and README were updated; "2025 holdout" became "retrospective".
+- Known limits: nflverse omits active players who recorded nothing, so they count as inactive = 0 (49 lineup slots over 51 weeks). The shared parser skips 22 player-week rows per season.
 
 ## Wave 2 (merged)
 
@@ -156,6 +190,8 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries multip
 | 316ed8d | `node tests/e2e/data-freshness.mjs` (production preview + fixture switch) | Windows, Chromium 153 | 11/11 |
 | 316ed8d | `node tests/e2e/optimizer-flows.mjs` against production preview | Windows, Chromium 153 | 5/8: a stale test stub (bare WeekPpr) left the actuals checkbox disabled |
 | b17b0b9 | typecheck; optimizer-flows against production preview | Windows, Chromium 153 | typecheck 0; 8/8 (production worker asset 200; 8 constructed / 8 terminated) |
+| Task 5B head (53d4fbf) | typecheck, test:domain (257), npm test, build, lint; /study and /guide rendered at 1280 and 400 px | Windows Node 26, Chromium | all exit 0; no console errors, no horizontal overflow (agent report) |
+| After Task 5B merge (4724f44) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 257, ui 37; lint 0 errors / 4 warnings; study client chunk 157.6 kB (36.7 kB gzip) |
 
 GitHub Actions has not run on this branch (nothing pushed).
 
