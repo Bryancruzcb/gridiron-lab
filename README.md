@@ -59,11 +59,16 @@ These numbers replace the first publication (116.5 / 115.8 / 80.1, an EWMA peak 
 | Route | What |
 |---|---|
 | `/study` | Lineup study, 2023–2025. Read this first. |
-| `/qb` | EPA / CPOE scatter, down filters, week strip |
-| `/optimizer` | $50k exact DP, lock / bench, this-week backtest |
+| `/qb` | EPA / CPOE scatter, down filters, week strip, pins. Copy link, saved views |
+| `/optimizer` | $50k lineup: lock / bench / QB stack, exact DP in a web worker (proven or labelled heuristic), hindsight, this-week backtest. Copy link, saved views, JSON / CSV export |
 | `/play-calling` | 4th-down go, 2nd-and-short, heatmap |
+| `/players` | This week's box and PPR per player: provisional ESPN lines vs published nflverse rows |
 | `/live` | In-game box → final whistle → next morning |
 | `/guide` | Definitions |
+
+Live numbers carry a status line: Live, Cached, Snapshot (the checked-in 2026 file) or unavailable, the time the data was retrieved, and Stale once it is older than that feed allows. A failed refresh keeps the last good rows and their original time; Retry asks again.
+
+Share and save analyses: the QB and Lineup pages keep their filters, pins and lineup constraints in the URL, so Copy link reopens the same view. Saved views live in this browser only (up to 50). Export JSON/CSV keeps the exact lineup shown, with its slate id, actuals version, ruleset and solver method; opening a link instead recomputes on whatever scores are loaded then.
 
 ## Run it
 
@@ -81,8 +86,11 @@ Open [http://localhost:8080](http://localhost:8080).
 | Command | |
 |---|---|
 | `npm run typecheck` | TypeScript |
-| `npm test` | Every supported unit suite: scripts, auth and app-data, plus `test:domain` and `test:ui` when they exist |
+| `npm test` | Every supported unit suite: scripts, auth and app-data, plus `test:domain` and `test:ui` |
+| `npm run test:domain` | Solver, scoring, study pipeline, live-data parsing and freshness, and the study numbers quoted in this README |
+| `npm run test:ui` | Lineup controller, worker protocol, links, saved views and exports |
 | `npm run build` | Production (the database migrator skips without `DATABASE_URL`) |
+| `npm run test:e2e` | Browser checks against the production build. Run `npm run build` and `npx playwright install chromium` first |
 | `npm run study:build -- --help` | Reproducible study runs: versioned inputs, strict solver, per-week records |
 | `node --experimental-strip-types scripts/build-study.ts` | Shipped-slate 2025 backtest and QB lag JSON |
 | `node --experimental-strip-types scripts/compare-proj.ts` | Shipped-slate projection bake-off |
@@ -119,3 +127,5 @@ GitHub Actions on `main` and PRs:
 5. `npm test` — the full supported unit suite. The few tests that pin gitignored Grok workspace docs (`.grok/skills/`, `AGENTS.md`) report as skipped in a plain checkout.
 6. `npm run build` — production build with no `DATABASE_URL`, so the migrator skips.
 7. `npm run lint` — errors fail the job; warnings do not.
+8. Chromium for the Playwright version in the lockfile, cached in `~/.cache/ms-playwright`.
+9. `npm run test:e2e` — builds nothing. It starts one `vite preview` of that build with `GRIDIRON_LIVE_FIXTURE=cookie`, so every live feed answers from `tests/fixtures/football/`, and preloads a guard that fails any server request to a host other than loopback. Then it runs a page smoke over the eight routes at 1280 and 390 px (HTTP 200, no page or console errors, no sideways scroll) and the data-freshness, lineup and shared-analysis scripts in `tests/e2e/`. The browser aborts requests to other hosts, so fonts and team logos don't load there. The server is stopped even when a check fails.
