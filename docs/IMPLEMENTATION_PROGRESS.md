@@ -1,139 +1,183 @@
 # Gridiron Lab implementation progress
 
-Updated: 2026-09-12
+Updated: 2026-09-12 (after wave 2 merges)
 Branch: handoff/eight-improvements (local only, not pushed)
-Current HEAD: see `git log -1` (wave 1 merged at ceeb198)
+Current HEAD: see `git log -1` (wave 2 merged; last verified commit b17b0b9)
 Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main matched it exactly)
 
 ## Current next action
 
-Wave 2 runs in parallel worktrees: Tasks 3+8 (constraint controller + worker solver), Task 7 (data freshness), Task 5 (study pipeline, then data run and regeneration). The owner merges and verifies, then wave 3 (Task 6, final Task 4 browser smokes and documentation check).
+Two workstreams are running in parallel worktrees:
+- Task 5 part B (`wip/task5-study-results`, from 7493078): downloads 2022–2025 inputs, runs the multi-season studies, regenerates `src/data/study-*.json`, and aligns study.tsx, guide.tsx and the README with the regenerated numbers.
+- Task 6 (`wip/task6-analyses`, from b17b0b9): URL state, saved views, and lineup exports.
+
+After both merge: the final Task 4 wave (a `test:e2e` command and a CI browser job, the regression bite checks from handoff §5, and the README/study/artifact agreement check), then one three-lens review of the whole diff against ce5d6b1.
 
 ## Task status
 
 | Task | Status | Evidence / remaining work |
 |---|---|---|
-| 1 Optimizer | Verified (wave 1) | Both handoff fixtures, 400-slate exhaustive oracle, validation codes, bite tests. See "Wave 1" below |
-| 2 Scoring | Core verified (wave 1) | Ruleset, nflverse/ESPN normalizers, weekly isolation, ESPN DST orientation fixed. Study consumers + regeneration move to Task 5 |
-| 3 Constraints | Not started (wave 2) | Initial auto-solve still ignores constraints |
-| 4 CI/testing | Part 1 verified (wave 1) | Scaffold failures fixed at the root, npm test honest on Windows, CI gates test+build+lint. Remaining: browser smokes with deterministic data, final docs check |
-| 5 Reproducibility | Not started (wave 2) | Study scripts already call strict exact-dp |
-| 6 Sharing/saves | Not started (wave 3) | |
-| 7 Data freshness | Not started (wave 2) | |
-| 8 Worker | Not started (wave 2) | |
+| 1 Optimizer | Verified (wave 1) | Both handoff fixtures, a 400-slate exhaustive oracle, validation codes, bite tests |
+| 2 Scoring | Core verified (wave 1) | Study consumers: the Task 5 library uses the ruleset; regeneration is in progress in Task 5B |
+| 3 Constraints | Verified (wave 2) | Reducer + fingerprints, 37 ui tests, optimizer browser flows 8/8 on the production preview after the merge. URL/saved persistence is handled in Task 6 |
+| 4 CI/testing | Part 1 verified; final wave pending | npm test/build/lint gated. Pending: e2e command + CI browser job, deliberate-regression bite checks, docs agreement |
+| 5 Reproducibility | Library verified (wave 2); data run in progress | 62 offline study tests; 2023–2025 runs, regeneration and the report pending (5B) |
+| 6 Sharing/saves | In progress (wave 3a) | |
+| 7 Data freshness | Verified (wave 2) | 57 pure tests, data-freshness browser checks 11/11 on the production preview after the merge |
+| 8 Worker | Verified (wave 2) | Worker for the initial, manual, comparison and hindsight solves; cancellation by terminate; perf evidence in docs/perf/optimizer-worker.md |
+
+## Wave 2 (merged)
+
+Merges into this branch:
+- `wip/task7-freshness` (cf7f6f6) as e48b066
+- `wip/task5-study-lib` (0ff719a) as 7493078
+- `wip/task3-8-lineup-worker` (42c45e8 + 470a938) as b636d13
+
+Owner commits on top:
+- 316ed8d: FeedStatus on the lineup page, which Task 7 was not allowed to edit.
+- b17b0b9: fixes the optimizer browser stub, which still returned a bare WeekPpr instead of Task 7's FeedResponse envelope. Test-only; product behavior was correct.
+
+Agents ran on Opus 5 (Fable 5.1 out of credits). The Tasks 3+8 agent and the first Task 5B attempt hit the Opus session limit (reset 3pm PT). The owner finished Tasks 3+8 from the agent's verified logs: wrote the perf doc, re-ran typecheck/test:ui/eslint and committed. Task 5B was relaunched.
+
+### Tasks 3 + 8: constraint controller and worker solver
+
+Modules:
+- `src/lib/lineup/selection.ts`:
+  - `LineupSelection {version 1, slate, mode, locked[], excluded[], stack}`, where locked and excluded are sorted, unique and never overlap.
+  - `parseSelection` reports lock-exclude-overlap, too-many-ids (250), unsupported-version and malformed input, plus a slate-mismatch warning. It never picks a winner.
+  - `slateId`, `actualsVersion`, `planLineup`/`planCompare` with request fingerprints over every solve input.
+  - A reducer for selection edits, data, request start/result/failure, cancel, reset and import.
+  - `autoRunKey`: mode, data or epoch changes recompute on their own; plain edits wait for Run and mark the old result outdated.
+- `worker-protocol.ts`: validated request/response messages, and a pure `handleWorkerRequest` that Node tests exercise.
+- `use-lineup-solver.ts`: one module worker per channel (lineup, compare), created after mount. Cancel = terminate + recreate, with monotonic request ids + fingerprint checks. Construction, runtime and malformed-reply failures become recoverable errors with no synchronous fallback. The last selection is kept in an in-memory window global for leave/re-enter.
+- `src/workers/optimizer.worker.ts`: the worker entry.
+
+Page (`src/routes/optimizer.tsx`):
+- Shows the solver method and whether the result is proven or heuristic.
+- A lock without an actual score is marked in hindsight mode.
+- Outdated results are dimmed.
+- Hindsight is labelled a retrospective upper bound; not-final scores are marked; missing actuals are not counted as zero.
+- The "Value greedy" card now really shows greedy-value.
+
+Browser flows: `tests/e2e/optimizer-flows.mjs --base <url>` covers 8 scenarios (worker asset served in production; rapid runs construct 8 and terminate 8). Perf: `tests/e2e/optimizer-perf.mjs`.
+- On the 300-player fixture the main-thread solve produced 10 long tasks up to 263 ms; the worker produced 0 long tasks with frame gaps under 30 ms.
+- On the real 114-player slate the solve takes about 20 ms and was never the bottleneck. Typing latency is React table rendering, and no improvement is claimed there.
+
+### Task 7: data provenance and refresh
+
+- `src/lib/live/feed-state.ts`: pure transitions. A failed attempt never stamps data with a time it wasn't retrieved. Freshness is derived from `FEED_POLICY`.
+- `loader.ts`: owned AbortController, per-attempt timeout and deadline covering the gzip stream. Bounded retries with backoff, 429 Retry-After honored, no schema retries, one upstream call per concurrent group.
+- `feed-store.ts`: independent feeds, lease-based shared polling (live.tsx no longer runs its own loop), bounded follow-ups on pending answers.
+- Server functions return `FeedResponse<T> {data, source live|cache|none, fetchedAt, respondedAt, error, partial[]}`.
+- `mergeLabs` keeps per-section provenance. `withWeekFallback` was removed.
+- DataStatus/FeedStatus appear on /, /qb, /play-calling, /players, /live and /optimizer.
+- The server-only fixture switch is `GRIDIRON_LIVE_FIXTURE` (spec or `cookie`; scenarios fresh, cached, stale, snapshot-only, partial, empty, unavailable, malformed, recovered; header of `src/lib/live/fixtures.server.ts`).
+- Browser checks: `npm run build && node tests/e2e/data-freshness.mjs` (starts its own preview on 8081).
+- A real-network smoke through the built app worked: live week 1 scoreboard, live pbp, 48 nflverse-published + 5 provisional ESPN lines.
+
+### Task 5 part A: study pipeline library
+
+- `scripts/lib/study/*.ts` (18 modules), a `scripts/study.ts` CLI and `npm run study:build`. The three old scripts are thin wrappers.
+- Content-addressed input cache `.study-cache/` (gitignored) with a SHA-256-verified manifest, offline mode, and input pins.
+- Causal projection snapshots (future rows and scores stripped); opponents come from the schedule.
+- Universes: `legacy-fantasy-json` (flagged look-ahead) and `synthetic-prior-season@1` (prior-season-only pool and salaries).
+- One common slate per week; strict exact-dp solves with method requested/used; a common week set with exclusion reasons.
+- Run id = hash of inputs/config/policies; operational metadata lives in a separate .meta.json.
+- Summaries are recomputed from week records, with a paired weekly difference and a fixed-seed bootstrap over weeks.
+- The legacy DST scoring variant `legacy-study-dst@ce5d6b1` is attribution-only.
+- 62 offline tests.
 
 ## Wave 1 (merged into this branch at ceeb198)
 
-Branches `wip/task1-optimizer` (0834cbd), `wip/task2-scoring` (814bfb7) and `wip/task4-ci-baseline` (6aa53bc) were merged with `--no-ff`. The only conflicts were in `package.json` and `ci.yml`. CI keeps one `npm test` step, which already runs `test:domain`, so the domain suite is not run twice.
-
-The wave 1 agents ran on Opus 5, because Fable 5.1 was out of usage credits at launch.
+Branches `wip/task1-optimizer` (0834cbd), `wip/task2-scoring` (814bfb7) and `wip/task4-ci-baseline` (6aa53bc).
 
 ### Task 1: solver contract (src/lib/optimizer.ts, src/lib/football/lineup-validation.ts)
 
-- `solveLineup({players, cap, locked?, excluded?, requireStack?, method})` runs exactly one method (`exact-dp | hill-climb | greedy-proj | greedy-value`) with no fallback. It returns `SolveOk {status:"ok", method, optimality:"proven"|"heuristic", lineup, fallbackReason?}` or a failure:
-  - `invalid-input` with codes invalid-cap, duplicate-player-id, invalid-position, invalid-salary, non-finite-projection, lock-exclude-overlap, unknown-lock, incompatible-locks, locks-over-cap, insufficient-pool, salary-precision.
-  - `infeasible/no-legal-roster`, which only exact DP can report.
-  - `error` with codes stack-not-proven, heuristic-no-lineup, reconstruction-failed, illegal-lineup, solver-limit.
-- `optimizeLineup(...)` runs exact DP. When a stack is required and the DP optimum is unstacked, it returns a hill-climb lineup labelled heuristic with `fallbackReason`. Internal errors are returned, never masked.
-- An ok `Lineup` has `slots` (QB, RB, RB, WR, WR, WR, TE, FLEX, DST), `players`, `salary`, `proj` and `remaining`. `validateRoster` checks every ok result. `scoreLineup` returns `{pts, n, missing}`.
-- The DP state counts players per position (240 states). Decisions are stored as one take bit per player layer × state × salary cell. Salaries are indexed in their GCD unit, capped at 2000 units per cap, and never rounded. The pool is sorted by id; ties go to lower salary, then to lower ids.
-- Measured on Node 26: the real 114-player slate uses 3.64 MB and solves in about 16–20 ms, with an optimum of 146.02 at $50,000, proven. The deterministic 300-player fixture uses 6.43 MB and solves in about 50–60 ms.
-- Stack: the wrapper result on the real slate is a 144.49 hill-climb heuristic. An exact stacked DP was not built (estimated about 18 × the work).
-- Known UI leftovers for Task 3: the "Value greedy" card still shows the greedy-proj result (baseline behavior), and the initial auto-solve ignores constraints.
+- `solveLineup({players, cap, locked?, excluded?, requireStack?, method})` runs exactly one method with no fallback. It returns `SolveOk {status:"ok", method, optimality, lineup, fallbackReason?}` or one of:
+  - `invalid-input` (invalid-cap, duplicate-player-id, invalid-position, invalid-salary, non-finite-projection, lock-exclude-overlap, unknown-lock, incompatible-locks, locks-over-cap, insufficient-pool, salary-precision)
+  - `infeasible/no-legal-roster` (exact DP only)
+  - `error` (stack-not-proven, heuristic-no-lineup, reconstruction-failed, illegal-lineup, solver-limit)
+- `optimizeLineup` runs exact DP. The hill-climb heuristic (labelled, with fallbackReason) is used only when a stack is required and the DP optimum is unstacked.
+- A `Lineup` has `slots`, `players`, `salary`, `proj` and `remaining`. `scoreLineup` returns `{pts, n, missing}`.
+- The DP state counts players per position (240 states) and stores one take bit per layer × state × salary cell. Salaries are counted in their GCD unit (≤ 2000 units) and never rounded. The pool is sorted by id; ties go to lower salary, then lower ids.
+- The real slate solves to 146.02, proven, in about 16–20 ms / 3.64 MB. The 300-player fixture takes about 50–60 ms / 6.43 MB.
 
 ### Task 2: scoring and weekly isolation (src/lib/football/*)
 
-- Ruleset `gridiron-lab-ppr-dst@1` (`RULESET`, `RULESET_REF`):
-  - Offense uses standard PPR weights: pass yd 0.04, pass TD 4, INT −2, rush/rec yd 0.1, rush/rec TD 6, reception 1, fumble lost −2, 2-pt 2, special-teams TD 6.
-  - DST: sacks 1, INT 2, fumble recoveries 2, TD 6, safeties/defensive 2-pt 2, blocked kicks 2, plus DraftKings-style points-allowed tiers. Points allowed is the opponent's final score.
-  - Each result is complete, partial (lists what's unavailable) or missing. There is no zero fill and no 24 fill.
-- Real 2025 checks:
-  - Offense scorer = nflverse `fantasy_points_ppr` on 18,540/18,540 REG rows.
-  - All 272 REG games in nfldata `games.csv` have final scores.
-  - Team points derived from team-week counts = final score on 544/544 team-games.
-  - Team-week `def_sacks` is never fractional.
-- ESPN team-box `interceptions`, `fumblesLost`, `sacksYardsLost` and `turnovers` are the team's own giveaways. This held on 28/28 team boxes in 2025 week 5. The live DST adapter was reversed and now reads takeaways from the opponent's box. On DET@CIN, event 401772854, the legacy adapter scored DET 6 / CIN 4; corrected: DET 10 / CIN 2, matching nflverse.
-- nflverse DST takeaways come from the opponent's giveaway columns (`sacks_suffered`, `passing_interceptions`, `fumbles_lost_total`). The team's own `def_*` columns undercount sacks in 9/544 team-games and fumble recoveries in 3.
-- Modules:
-  - `csv.ts`: RFC 4180 parsing plus required-column errors.
-  - `nflverse.ts`: `parsePlayerWeeks`, `parseTeamWeeks`, `parseSchedule`, `pointsAllowed`, `defenseWeeks`, `teamPointsFromCounts`.
-  - `player-weeks.ts`: per-week rows keyed season + seasonType + week + player, and `aggregateSeason`.
-  - `week-merge.ts`: `mergeCurrentWeek` joins only on the full week key, and a final zero counts.
-  - `espn.ts`: pure ESPN parsing.
-- `WeekSkill` gained `source` (`espn`/`nflverse`) and `score` meta. `WeekPpr`/`Scoreboard`/`LiveGame` gained `seasonType`, and `Scoreboard` gained `weekKey`.
-- Fixtures in `tests/fixtures/football/` have `.source.json` sidecars (URL, retrieval date, original SHA-256).
-- Not run: the live 2026 endpoints through the running app.
+- Ruleset `gridiron-lab-ppr-dst@1`: standard PPR offense (equals nflverse `fantasy_points_ppr` on 18,540/18,540 2025 REG rows) and DraftKings-style DST. Points allowed is the opponent's final score from nfldata `games.csv`. Results are complete, partial or missing, never filled.
+- ESPN team-box takeaway fields are the team's own giveaways (28/28 in 2025 week 5). The live DST adapter was reversed; on DET@CIN 401772854 it scored DET 6 / CIN 4, corrected to 10 / 2. nflverse DST takeaways come from the opponent's giveaway columns.
+- Per-week rows are keyed season + seasonType + week + player and kept separate from `aggregateSeason`. `mergeCurrentWeek` joins only on the full week key; a final zero counts.
 
 ### Task 4 part 1: scaffold tests and CI
 
-- Root causes of the baseline failures:
-  - 8 grok-pwa tests read the repo's real `site.json`/`og.jpg` through `process.cwd()`. They now run in an empty workspace; there is no production bug.
-  - 4 tests read gitignored Grok platform docs. They now skip with a stated reason when those docs are absent.
-  - A real Windows bug in `with-app-env.mjs`: absolute executable paths went through cmd.exe unescaped, and that also created the stray `{}` file. Fixed, with a regression test.
-  - Windows symlink EPERM, fixed with junctions, and a POSIX-only path assertion.
-- `engines` is now `>=22.12.0`, verified on docker node:22.12.0 and node:22.23.2.
-- The one lint error (empty catch) got a comment. CI now runs `npm test`, `npm run build` and `npm run lint` after typecheck.
-- Leftover note: the root `packages[""]` engines field in package-lock.json still says `>=20.19.0`. It syncs on the next intentional lockfile update, and npm ci ignores it.
+- Root causes:
+  - 8 grok-pwa tests read the repo's real site identity; they now run in an empty workspace.
+  - 4 tests read gitignored Grok docs; they skip with a reason when the docs are absent.
+  - A Windows spawn bug in with-app-env (fixed with a regression test) was also the source of the `{}` file leak.
+  - Windows symlink EPERM, fixed with junctions.
+- engines is `>=22.12.0`. CI runs routes:generate, typecheck, `npm test` (scripts, TS scaffold, test:domain, test:ui), build without DATABASE_URL, and lint (0 errors).
 
 ## Stage A baseline (2026-09-12, Windows 11, Node 26.3.0, npm 11.17.0)
 
-Local checkout was on `main` at ce5d6b1 with one uncommitted user change: `package-lock.json` (67 deleted lines, optional peer entries ajv/fast-uri/json-schema-traverse/require-from-string). It is the user's change. Never stage or commit it.
+Local checkout was on `main` at ce5d6b1 with one uncommitted user change: `package-lock.json` (67 deleted lines, optional peer entries). It is the user's change. Never stage or commit it.
 
-No `AGENTS.md` or `CLAUDE.md` in the checkout (`AGENTS.md` and `.grok/*` are gitignored). GitHub Actions CI was green on ce5d6b1 (typecheck job only).
-
-Installed versions: @tanstack/react-router 1.170.33, @tanstack/react-start 1.168.50, @tanstack/react-query 5.102.8, vite 8.2.2, zod 4.5.4, playwright 1.63.0 (Chromium 1243 installed locally), typescript 5.9.3, react 19.2.8. Docker 29.7.2 is available for Linux parity runs; WSL Ubuntu has no Node.
+No `AGENTS.md` or `CLAUDE.md` in the checkout. GitHub Actions CI was green on ce5d6b1 (typecheck only). Installed: @tanstack/react-router 1.170.33, @tanstack/react-start 1.168.50, vite 8.2.2, zod 4.5.4, playwright 1.63.0, typescript 5.9.3, react 19.2.8. Docker 29.7.2 for Linux parity.
 
 | Command | Baseline result |
 |---|---|
 | `npm run typecheck` | exit 0 |
-| `npm test` | exit 0 but misleading on Windows: the single-quoted scripts glob matched 0 files under cmd.exe |
-| `node --test scripts/*.test.mjs` | Windows 197 tests / 18 fail; Linux (docker node:22) 197 / 12 fail |
+| `npm test` | exit 0 but misleading on Windows (single-quoted glob matched 0 script tests) |
+| `node --test scripts/*.test.mjs` | Windows 197 / 18 fail; Linux 197 / 12 fail |
 | `npm run lint` | exit 1: 1 error, 5 warnings |
-| `npm run build` (no DATABASE_URL) | exit 0, migrator skipped |
+| `npm run build` (no DATABASE_URL) | exit 0 |
 
-Fantasy slate facts: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), every salary a multiple of $100 ($2,000–$9,200), no duplicate IDs, no negative projections.
+Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries multiples of $100 ($2,000–$9,200), no duplicate IDs.
 
 ## Decisions every task follows
 
-1. **Test runner.** Native `node:test` with `node --experimental-strip-types --test`. Pure domain tests live in `tests/domain/**/*.test.ts`, pure controller/state tests in `tests/ui/**/*.test.ts`, small checked-in fixtures in `tests/fixtures/football/`. `tests` is in the tsconfig `include`. Quote globs with double quotes in package.json.
-2. **Import rule for anything Node executes** (scripts, tests, the pure solver/scoring/state modules): relative imports with explicit `.ts` extensions, runtime imports never use the `@/` alias, `@/` is allowed only in `import type`. No runtime JSON imports in those modules; scripts read JSON with `fs`, and callers pass data in.
-3. **Node version.** Node 22.12+ (engines), CI on Node 22.
-4. **No new dependencies** unless a task cannot be done sensibly without one; no lockfile churn.
-5. **Solver contract** is the Task 1 API above. Every caller uses it.
-6. **Scoring** is `gridiron-lab-ppr-dst@1`, documented as the project's simplified DraftKings-inspired rules, not exact platform scoring. Missing inputs stay missing.
-7. **Study regeneration happens once, in Task 5**, with a before/after report that attributes changes to solver, scoring, included weeks, and universe/multi-season separately.
-8. **Git.** Each wave task works on its own branch off this integration branch and makes coherent local commits. Nothing is pushed, merged to `main`, or deployed.
+1. **Test runner.** Native `node:test` with `--experimental-strip-types`. Domain tests in `tests/domain/**/*.test.ts`, controller/state tests in `tests/ui/**/*.test.ts`, fixtures in `tests/fixtures/football/`, browser checks as plain Playwright scripts in `tests/e2e/*.mjs`. tsconfig includes `tests` and `scripts/**/*.ts` with checkJs, so e2e scripts need JSDoc types. Quote globs with double quotes in package.json.
+2. **Import rule for anything Node executes:** relative imports with explicit `.ts` extensions; `@/` only in `import type`; no runtime JSON imports.
+3. **Node 22.12+** (engines), CI on Node 22.
+4. **No new dependencies**; no lockfile churn.
+5. **Solver contract** = the Task 1 API.
+6. **Scoring** = `gridiron-lab-ppr-dst@1`, documented as simplified DraftKings-inspired rules; missing inputs stay missing.
+7. **Study regeneration happens once, in Task 5B**, with attribution to solver, scoring, week policy, and universe/multi-season separately.
+8. **Git.** Task branches off this integration branch, local commits only. Nothing is pushed, merged to `main`, or deployed.
 9. Only the owner thread edits this file.
 
 ## Verification
 
 | When | Command | Environment | Result |
 |---|---|---|---|
-| Wave 1 merge (ceeb198) | `npm run typecheck` | Windows, Node 26.3.0 | exit 0 |
-| Wave 1 merge | `npm test` | Windows, Node 26.3.0 | scripts 198 tests: 194 pass, 0 fail, 4 skipped; TS scaffold 55/55; domain 131/131; exit 0 |
-| Wave 1 merge | `npx eslint . --ignore-pattern ".claude/**"` | Windows | 0 errors, 5 warnings (the ignore only skips local agent worktrees) |
-| Wave 1 merge | `npm run build` (no DATABASE_URL) | Windows | exit 0 |
-| Wave 1 merge | clean `git archive` of HEAD: `npm ci`, routes:generate, typecheck, `npm test`, build, lint | Docker node:22.23.2 | all exit 0; same test counts; lint 0 errors |
+| Wave 1 merge (ceeb198) | typecheck, npm test, build, lint | Windows Node 26 + clean Docker node:22.23.2 | all exit 0; scripts 194 pass + 4 skipped, TS 55, domain 131; lint 0 errors |
+| After Task 7 + 5A merge (7493078) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 250; lint 0 errors / 4 warnings |
+| After Tasks 3+8 merge (b636d13) | same | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 250, ui 37; lint 0 errors |
+| 316ed8d | typecheck, eslint optimizer.tsx, npm test, build | Windows Node 26 | all exit 0; same counts |
+| 316ed8d | `node tests/e2e/data-freshness.mjs` (production preview + fixture switch) | Windows, Chromium 153 | 11/11 |
+| 316ed8d | `node tests/e2e/optimizer-flows.mjs` against production preview | Windows, Chromium 153 | 5/8: a stale test stub (bare WeekPpr) left the actuals checkbox disabled |
+| b17b0b9 | typecheck; optimizer-flows against production preview | Windows, Chromium 153 | typecheck 0; 8/8 (production worker asset 200; 8 constructed / 8 terminated) |
 
 GitHub Actions has not run on this branch (nothing pushed).
 
 ## Data artifacts
 
-- Input cache path and hashes: pending Task 5 (Task 2 verified 2025 source bytes: stats_player_week_2025.csv sha256 e5e0615b…, stats_team_week_2025.csv 91058a59…, nfldata games.csv e5443356…, retrieved 2026-09-12)
-- Ruleset: `gridiron-lab-ppr-dst@1`
-- Generated outputs: `src/data/study-*.json` unchanged from baseline so far
-- Regeneration status: not started (Task 5)
+- Input cache: `.study-cache/` (gitignored, content-addressed). Task 2 verified 2025 bytes: stats_player_week_2025.csv sha256 e5e0615b…, stats_team_week_2025.csv 91058a59…, nfldata games.csv e5443356… (retrieved 2026-09-12). Task 5B commits the full manifest.
+- Ruleset: `gridiron-lab-ppr-dst@1`; study solver ref `gridiron-lab-solveLineup@1`.
+- Generated outputs: `src/data/study-*.json` still baseline (legacy numbers).
+- Regeneration status: in progress (Task 5B).
 
 ## Uncommitted work
 
 - `package-lock.json`: user's pre-existing change, deliberately left unstaged.
+- Worktrees under `.claude/worktrees/` for running agents (excluded via `.git/info/exclude`). While they exist, run lint as `npx eslint . --ignore-pattern ".claude/**"`.
 
 ## Blockers
 
-None.
+None. Usage limits: Fable 5.1 has no credits; Opus hit a session limit once (reset 3pm PT).
 
 ## Decisions not to repeat
 
-- The broad source audit is done (handoff + Stage A reads). Do not repeat it; read the task section and the files it names.
-- ESPN team-box takeaway orientation is settled (giveaways); do not re-derive it.
+- The broad source audit is done. Do not repeat it.
+- ESPN team-box takeaway orientation is settled (giveaways).
 - Do not duplicate `test:domain` as its own CI step; `npm test` runs it.
+- Browser stubs of server functions must use the `FeedResponse` envelope.
