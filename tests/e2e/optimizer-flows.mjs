@@ -20,6 +20,8 @@ const args = parseArgs(process.argv.slice(2));
 const base = args.base ?? "http://127.0.0.1:8080";
 const only = args.only ? new Set(args.only.split(",")) : null;
 const TIMEOUT = 60000;
+/** The lineup route with or without its selection in the query string. */
+const OPTIMIZER_URL = /\/optimizer(\?.*)?$/;
 
 const slate = readSlate();
 const pool = slate.players;
@@ -263,14 +265,14 @@ await scenario("constraints-mode-and-restore", async () => {
     await page.waitForURL("**/study", { timeout: TIMEOUT });
     await waitNoLiveWorkers(page, `a worker survived leaving the route (cycle ${i})`);
     await page.goBack();
-    await page.waitForURL("**/optimizer", { timeout: TIMEOUT });
+    await page.waitForURL(OPTIMIZER_URL, { timeout: TIMEOUT });
     const again = await waitForResult(page);
     assert.match(await counts(page), /^2 locked · 1 excluded/);
     assert.deepEqual(again.ids.slice().sort(), back.ids.slice().sort());
     await page.goForward();
     await page.waitForURL("**/study", { timeout: TIMEOUT });
     await page.goBack();
-    await page.waitForURL("**/optimizer", { timeout: TIMEOUT });
+    await page.waitForURL(OPTIMIZER_URL, { timeout: TIMEOUT });
     await waitForResult(page);
   }
   const stats = await workerStats(page);
