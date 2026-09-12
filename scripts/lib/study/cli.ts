@@ -52,7 +52,65 @@ export const STUDY_USAGE = `Usage: npm run study:build -- --seasons <list> --rol
   --resamples <n>                       bootstrap resamples (default ${DEFAULT_RUN_SETTINGS.uncertainty.resamples})
   --min-history <n>                     scored games before the cutoff to join a slate (default 1)
   --qb-lag                              also write the QB week-to-week lag artifact
+  --help
+
+Publishing written runs for the study page: npm run study:build -- publish --help`;
+
+export type StudyPublishOptions = {
+  runs: string[];
+  shippedSlate: string | null;
+  qbLag: string[];
+  out: string;
+  manifest: string | null;
+  help: boolean;
+};
+
+export const PUBLISH_USAGE = `Usage: npm run study:build -- publish --runs <run.json>[,<run.json>] --out <file> [options]
+
+  --runs <files>              season run artifacts from study:build, one locked configuration and universe rule
+  --shipped-slate <run.json>  a legacy-fantasy-json run with the same configuration, kept as a look-ahead comparison
+  --qb-lag <files>            study-qb-lag-<season>.json artifacts for those seasons
+  --out <file>                the page file (src/data/study-seasons.json)
+  --manifest <file>           also merge every run's .meta.json inputs into an input manifest
   --help`;
+
+function pathList(raw: string | undefined, cwd: string): string[] {
+  return raw ? raw.split(",").map((p) => p.trim()).filter(Boolean).map((p) => resolve(cwd, p)) : [];
+}
+
+export function parsePublishArgs(argv: string[], ctx: { cwd?: string } = {}): StudyPublishOptions {
+  const cwd = ctx.cwd ?? process.cwd();
+  let values;
+  try {
+    ({ values } = parseArgs({
+      args: argv,
+      strict: true,
+      allowPositionals: false,
+      options: {
+        runs: { type: "string" },
+        "shipped-slate": { type: "string" },
+        "qb-lag": { type: "string" },
+        out: { type: "string" },
+        manifest: { type: "string" },
+        help: { type: "boolean" },
+      },
+    }));
+  } catch (e) {
+    throw new StudyConfigError((e as Error).message);
+  }
+  const help = values.help === true;
+  const runs = pathList(values.runs, cwd);
+  if (!help && !runs.length) throw new StudyConfigError("publish needs --runs");
+  if (!help && !values.out) throw new StudyConfigError("publish needs --out");
+  return {
+    runs,
+    shippedSlate: values["shipped-slate"] ? resolve(cwd, values["shipped-slate"]) : null,
+    qbLag: pathList(values["qb-lag"], cwd),
+    out: values.out ? resolve(cwd, values.out) : "",
+    manifest: values.manifest ? resolve(cwd, values.manifest) : null,
+    help,
+  };
+}
 
 export type WrapperDefaults = { models: string; qbLag: boolean; season: number };
 

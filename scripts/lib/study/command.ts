@@ -4,20 +4,23 @@
 
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, extname, join, relative, sep } from "node:path";
+import { basename, dirname, extname, join, relative, sep } from "node:path";
 import type {
   StudyInputIdentity,
   StudyInputManifestEntry,
+  StudyInputManifestFile,
   StudyMultiSeasonArtifact,
   StudyQbLagArtifact,
   StudyRunArtifact,
   StudyRunMeta,
+  StudySeasonsFile,
   StudyUniverse,
 } from "../../../src/data/types.ts";
 import { RULESET_REF } from "../../../src/lib/football/scoring.ts";
-import type { StudyCliOptions } from "./cli.ts";
+import type { StudyCliOptions, StudyPublishOptions } from "./cli.ts";
 import { isRecord, StudyConfigError } from "./errors.ts";
-import { hashJson, sha256OfText } from "./hash.ts";
+import { canonicalJson, hashJson, sha256OfText } from "./hash.ts";
+import { buildInputManifest, buildSeasonsFile } from "./publish.ts";
 import { acquireInputs, describeInput, type AcquireOptions, type AcquiredInput, type FetchLike } from "./inputs.ts";
 import { LEGACY_SCORING_REF } from "./legacy-scoring.ts";
 import { MODEL_PRESETS, validateModelConfig, type ModelConfig } from "./models.ts";
@@ -332,4 +335,63 @@ export async function runStudyCommand(opts: StudyCliOptions, ctx: StudyCommandCo
     multi = { artifact, path };
   }
   return { runs, multi, qbLag: lags };
+}
+
+function readJsonFile(path: string, what: string): unknown {
+  if (!existsSync(path)) throw new StudyConfigError(`${what} ${path} does not exist`);
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch (e) {
+    throw new StudyConfigError(`${what} ${path}: not valid JSON (${(e as Error).message})`);
+  }
+}
+
+function readSchema<T>(path: string, what: string, schemaVersion: string): T {
+  const value = readJsonFile(path, what);
+  if (!isRecord(value) || value.schemaVersion !== schemaVersion) {
+    throw new StudyConfigError(`${what} ${path}: expected schemaVersion ${schemaVersion}`);
+  }
+  return value as T;
+}
+
+/** The meta file the study command writes next to a run artifact. */
+export function metaPathOf(runPath: string): string {
+  return runPath.replace(/\.json$/, ".meta.json");
+}
+
+/** JSON with keys sorted at every level, indented so reviews can read the diff. */
+export function sortedJson(value: unknown): string {
+  return `${JSON.stringify(JSON.parse(canonicalJson(value)), null, 2)}\n`;
+}
+
+/** Writes the page's multi-season file (and optionally the input manifest) from written runs. */
+export function runPublishCommand(
+  opts: StudyPublishOptions,
+  ctx: Pick<StudyCommandContext, "log">,
+): { file: StudySeasonsFile; manifest: StudyInputManifestFile | null } {
+  const runs = opts.runs.map((p) => readSchema<StudyRunArtifact>(p, "run", "gridiron-lab-study-run@1"));
+  const shipped = opts.shippedSlate ? readSchema<StudyRunArtifact>(opts.shippedSlate, "run", "gridiron-lab-study-run@1") : null;
+  const qbLags = opts.qbLag.map((p) => readSchema<StudyQbLagArtifact>(p, "QB lag", "gridiron-lab-study-qb-lag@1"));
+  const file = buildSeasonsFile({ runs, shippedSlate: shipped, qbLags });
+  let manifest: StudyInputManifestFile | null = null;
+  if (opts.manifest) {
+    const paths = shipped ? [...opts.runs, opts.shippedSlate!] : opts.runs;
+    const artifacts = shipped ? [...runs, shipped] : runs;
+    const previous = existsSync(opts.manifest)
+      ? readSchema<StudyInputManifestFile>(opts.manifest, "manifest", "gridiron-lab-study-input-manifest@1")
+      : null;
+    manifest = buildInputManifest(
+      paths.map((p, i) => ({ artifact: artifacts[i]!, meta: readSchema<StudyRunMeta>(metaPathOf(p), "meta", "gridiron-lab-study-run-meta@1") })),
+      previous,
+    );
+  }
+  mkdirSync(dirname(opts.out), { recursive: true });
+  writeFileSync(opts.out, sortedJson(file));
+  ctx.log(`wrote ${opts.out} (seasons ${file.seasons.map((s) => s.season).join(", ")}, ${file.resultSha256})`);
+  if (manifest && opts.manifest) {
+    mkdirSync(dirname(opts.manifest), { recursive: true });
+    writeFileSync(opts.manifest, sortedJson(manifest));
+    ctx.log(`wrote ${opts.manifest} (${manifest.inputs.length} inputs)`);
+  }
+  return { file, manifest };
 }

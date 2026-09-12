@@ -532,4 +532,55 @@ export type StudyQbLagArtifact = QbLagFile & {
   resultSha256: string;
 };
 
+/** One season run as published for the study page: its stored summary plus weekly lineup totals. */
+export type StudySeasonRow = {
+  season: number;
+  role: StudyRole;
+  runId: string;
+  resultSha256: string;
+  universe: StudyUniverseRef;
+  cap: number;
+  weeks: { from: number; to: number };
+  summary: StudyRunSummary;
+  /** Common weeks only; lineup projection and actual keyed by model id. */
+  weekly: { week: number; slate: number; lineups: Record<string, { proj: number; actual: number }> }[];
+  qbLag: { n: number; minAttempts: number; corrEpa: number | null; corrCpoe: number | null; resultSha256: string } | null;
+};
+
+export type StudySeasonPool = {
+  seasons: number[];
+  roles: StudyRole[];
+  runIds: string[];
+  /** resultSha256 of the multi-season artifact the pool summarizes. */
+  resultSha256: string;
+  summary: StudyRunSummary;
+};
+
+/** src/data/study-seasons.json, written by `npm run study:build -- publish`. */
+export type StudySeasonsFile = {
+  schemaVersion: "gridiron-lab-study-seasons@1";
+  pipeline: string;
+  scoring: string;
+  solver: string;
+  models: StudyModelSpec[];
+  baselineModel: string;
+  uncertainty: StudyRun["uncertainty"];
+  minHistoryGames: number;
+  policies: string[];
+  /** One locked configuration and one universe rule, sorted by season. */
+  seasons: StudySeasonRow[];
+  /** The development seasons pooled (when some seasons are not development), then every season. */
+  pools: StudySeasonPool[];
+  /** The shipped fantasy.json slate run, kept for continuity; its pool and salaries use look-ahead. */
+  shippedSlate: StudySeasonRow | null;
+  resultSha256: string;
+};
+
+/** docs/study/input-manifest.json: every input behind the published runs, by content hash. */
+export type StudyInputManifestFile = {
+  schemaVersion: "gridiron-lab-study-input-manifest@1";
+  cache: string;
+  inputs: (StudyInputManifestEntry & { usedBy: string[] })[];
+};
+
 

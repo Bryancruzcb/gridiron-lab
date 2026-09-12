@@ -95,6 +95,13 @@ describe("multi-season pooling", () => {
     });
     assert.throws(() => buildMultiSeason([y2041, other]), /one locked configuration/);
     assert.throws(() => buildMultiSeason([y2041, y2041]), /appears in two runs/);
+    const moreHistory = runFixture({ config: { season: 2040, weeks: { from: 2, to: 3 }, allowUniverseSeasonMismatch: true, minHistoryGames: 2 } });
+    assert.throws(() => buildMultiSeason([y2041, moreHistory]), /one locked configuration/);
+    const prior = prepareSeason(2040, seasonTexts(2040), { scoring: RULESET_REF });
+    const params = { ...defaultSyntheticParams(2040), minGames: 2, counts: { QB: 3, RB: 6, WR: 6, TE: 3, DST: 3 } };
+    const synthetic = syntheticUniverse(prior, params, { cap: 40000, sourceInputs: [] });
+    const syntheticRun = runFixture({ universe: synthetic });
+    assert.throws(() => buildMultiSeason([y2040, syntheticRun]), /universe rule/);
   });
 });
 
