@@ -34,7 +34,7 @@ import {
   type DownFilter,
   type SitFilter,
 } from "@/lib/splits";
-import { cn, formatCpoe, formatEpa, formatPct } from "@/lib/utils";
+import { cn, formatCpoe, formatEpa, formatPasser, formatPct, passerRating } from "@/lib/utils";
 
 export const Route = createFileRoute("/qb")({ component: QbLab });
 
@@ -404,7 +404,7 @@ function QbLab() {
                       [
                         ["EPA", (s: SplitStats) => formatEpa(s.epa)],
                         ["CPOE", (s: SplitStats) => formatCpoe(s.cpoe)],
-                        ["n", (s: SplitStats) => String(s.plays)],
+                        ["Dropbacks", (s: SplitStats) => String(s.plays)],
                         ["Comp", (s: SplitStats) => formatPct(s.comp)],
                         ["Press", (s: SplitStats) => formatPct(s.press)],
                       ] as const
@@ -418,6 +418,14 @@ function QbLab() {
                         ))}
                       </tr>
                     ))}
+                    <tr className="border-t border-border/70">
+                      <td className="py-1.5 text-subtle">Passer</td>
+                      {pinnedRows.map((r) => (
+                        <td key={r.qb.id} className="px-2 py-1.5">
+                          {formatPasser(passerRating(r.qb.box))}
+                        </td>
+                      ))}
+                    </tr>
                   </tbody>
                 </table>
               </div>
@@ -457,6 +465,9 @@ function QbLab() {
                   <th className="px-3 py-2 text-right font-medium">
                     <StatTip metric="cpoe" />
                   </th>
+                  <th className="px-3 py-2 text-right font-medium">
+                    <StatTip metric="passer" />
+                  </th>
                   <th className="px-3 py-2 text-right font-medium">Comp</th>
                   <th className="px-3 py-2 text-right font-medium">
                     <StatTip metric="success" />
@@ -470,7 +481,7 @@ function QbLab() {
               <tbody>
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={9} className="px-4 py-10 text-center text-sm text-muted">
+                    <td colSpan={10} className="px-4 py-10 text-center text-sm text-muted">
                       No quarterbacks pass the min on {label.toLowerCase()}. Drop the slider.
                     </td>
                   </tr>
@@ -511,6 +522,9 @@ function QbLab() {
                       </td>
                       <td className="px-3 py-2.5 text-right font-mono tabular-nums">
                         {formatCpoe(r.stats.cpoe)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-muted">
+                        {formatPasser(passerRating(r.qb.box))}
                       </td>
                       <td className="px-3 py-2.5 text-right font-mono tabular-nums">
                         {formatPct(r.stats.comp)}

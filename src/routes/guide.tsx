@@ -34,6 +34,10 @@ function GuidePage() {
               Completion percentage over expected. +5 means five points above a throw of that
               difficulty.
             </Item>
+            <Item term="Passer">
+              NFL box passer rating, 0–158.3. Completions, yards, TDs, INTs only. It does not move
+              when you change down. That is the point — it is not EPA.
+            </Item>
             <Item term="The scatter">
               Each dot is one quarterback. Right = more accurate. Up = more EPA. Tap a dot to pin.
               Names live in the tooltip and the pin list — not on the plot.

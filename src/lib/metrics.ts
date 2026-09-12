@@ -7,6 +7,10 @@ export const METRICS = {
     label: "CPOE",
     def: "Completion percentage over expected, from nflfastR’s completion-probability model. +5 means five percentage points above a typical throw of that difficulty.",
   },
+  passer: {
+    label: "Passer",
+    def: "NFL box passer rating (0–158.3) from completions, yards, TDs, and INTs. Ignores down, sacks, and rushing. Not EPA and not ESPN QBR. Stays the season total when you filter downs.",
+  },
   proe: {
     label: "PROE",
     def: "Pass rate over expected: called pass rate minus xpass (the model’s pass probability given down, distance, score, and clock), in percentage points.",
