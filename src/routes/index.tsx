@@ -83,7 +83,7 @@ function Home() {
       <section className="px-4 pt-8 sm:px-6 sm:pt-10">
         <div className="mx-auto max-w-6xl">
           <h1 className="font-display text-5xl uppercase tracking-[0.04em] sm:text-6xl">Gridiron</h1>
-          <p className="mt-2 text-sm text-muted">Match day first. Labs under that.</p>
+          <p className="mt-2 text-sm text-muted">NFL. Live box. EPA when the file posts.</p>
         </div>
       </section>
 

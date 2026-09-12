@@ -138,7 +138,7 @@ function QbLab() {
           </p>
         </FirstLook>
 
-        <div className="mt-8 flex flex-col gap-4">
+        <div className="mt-8 flex flex-col gap-4 rounded-xl bg-surface p-4 sm:p-5">
           <div className="flex flex-wrap items-center gap-3">
             <Segmented
               value={String(season)}
@@ -152,7 +152,7 @@ function QbLab() {
                 : ""}
             </span>
           </div>
-          <div className="flex flex-col gap-3 rounded-lg bg-surface p-4 shadow-[var(--shadow-border)]">
+          <div className="flex flex-col gap-3 rounded-lg bg-elevated p-4">
             <div className="grid gap-3 lg:grid-cols-3">
               <Field label="Down">
                 <Segmented

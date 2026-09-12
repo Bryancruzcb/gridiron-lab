@@ -25,8 +25,8 @@
   --radius-lg: 18px;
   --radius-xl: 28px;
 
-  --shadow-border: 0 0 0 1px rgba(241, 240, 234, 0.08);
-  --shadow-border-hover: 0 0 0 1px rgba(241, 240, 234, 0.14);
+  --shadow-border: inset 0 1px 0 rgba(241, 240, 234, 0.12), 0 0 0 1px rgba(241, 240, 234, 0.07);
+  --shadow-border-hover: inset 0 1px 0 rgba(241, 240, 234, 0.18), 0 0 0 1px rgba(241, 240, 234, 0.14);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 }
@@ -76,6 +76,26 @@
   font-family: var(--font-display);
   font-weight: 600;
   letter-spacing: 0.02em;
+}
+
+/* Layered frost on the dark grey cards (QB filters, boards, labs). */
+.bg-surface {
+  background-color: color-mix(in oklab, var(--color-surface) 82%, transparent);
+  background-image: linear-gradient(
+    165deg,
+    rgba(241, 240, 234, 0.14) 0%,
+    rgba(241, 240, 234, 0.04) 38%,
+    rgba(10, 11, 13, 0.25) 100%
+  );
+  backdrop-filter: blur(18px);
+}
+.bg-elevated {
+  background-color: color-mix(in oklab, var(--color-elevated) 88%, transparent);
+  background-image: linear-gradient(
+    180deg,
+    rgba(241, 240, 234, 0.10) 0%,
+    rgba(241, 240, 234, 0.02) 100%
+  );
 }
 
 .field-grid {

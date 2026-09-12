@@ -86,12 +86,12 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </SheetContent>
       </Sheet>
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main className="flex-1 pb-24 md:pb-0">{children}</main>
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-bg/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md md:hidden"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(1rem,env(safe-area-inset-bottom))] md:hidden"
         aria-label="Primary"
       >
-        <ul className="mx-auto grid max-w-lg grid-cols-5 px-2 pt-1">
+        <ul className="pointer-events-auto mx-auto flex max-w-sm items-center justify-center gap-3 px-4">
           {DOCK.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
@@ -99,13 +99,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               <li key={item.to}>
                 <Link
                   to={item.to}
+                  aria-label={item.label}
                   className={cn(
-                    "flex min-h-12 flex-col items-center justify-center gap-0.5 text-[10px] font-medium tracking-wide uppercase",
-                    active ? "text-fg" : "text-muted",
+                    "grid size-12 place-items-center rounded-full transition-colors duration-150",
+                    active ? "bg-fg text-bg" : "bg-elevated text-fg shadow-[var(--shadow-border)]",
                   )}
                 >
                   <Icon className="size-5" />
-                  {item.label}
                 </Link>
               </li>
             );
