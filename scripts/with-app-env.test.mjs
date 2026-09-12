@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -115,11 +115,14 @@ test("a signal-killed command is never reported as success", async () => {
   );
 });
 
-test("the CLI still runs when invoked through a symlinked path", async () => {
+test("the CLI still runs when invoked through a symlinked path", async (t) => {
   // node realpaths import.meta.url but not process.argv[1], so a raw comparison
   // turns the wrapper into a no-op that exits 0 without starting anything.
-  const link = join(mkdtempSync(join(tmpdir(), "app-env-link-")), "scripts");
-  symlinkSync(join(projectRoot(), "scripts"), link);
+  // "junction" only matters on Windows, where directory symlinks need admin rights.
+  const dir = mkdtempSync(join(tmpdir(), "app-env-link-"));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const link = join(dir, "scripts");
+  symlinkSync(join(projectRoot(), "scripts"), link, "junction");
   const { stdout } = await execFileAsync(process.execPath, [
     join(link, "with-app-env.mjs"),
     process.execPath,
@@ -133,8 +136,15 @@ test("vite is launched via the local package, not a global PATH binary", () => {
   const target = resolveSpawnTarget("vite", ["dev", "--host", "0.0.0.0"]);
   assert.equal(target.found, true);
   assert.equal(target.file, process.execPath);
-  assert.equal(target.argv[0].endsWith("vite/bin/vite.js"), true);
+  assert.equal(target.argv[0].endsWith(join("vite", "bin", "vite.js")), true);
   assert.deepEqual(target.argv.slice(1), ["dev", "--host", "0.0.0.0"]);
+});
+
+test("an executable path is spawned as-is, not looked up through a shell", () => {
+  // Unresolved commands run under cmd.exe on win32, which split "C:\Program Files\..."
+  // and turned `() => {}` in an argument into a redirect that created a file named {}.
+  const target = resolveSpawnTarget(process.execPath, ["-e", "() => {}"]);
+  assert.deepEqual(target, { file: process.execPath, argv: ["-e", "() => {}"], found: true });
 });
 
 test("local node_modules/.bin is prepended to PATH", () => {
