@@ -15,7 +15,15 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
 import { actualsByPlayer } from "@/lib/match";
 import { teamNick } from "@/lib/nfl";
-import { exactLineup, greedyLineup, hillClimbLineup, optimizeLineup, orderedLineup, scoreLineup, type Lineup } from "@/lib/optimizer";
+import {
+  optimizeLineup,
+  scoreLineup,
+  solveLineup,
+  type Lineup,
+  type SolveFailure,
+  type SolveOk,
+  type SolveResult,
+} from "@/lib/optimizer";
 import { useSeason } from "@/lib/season-provider";
 import { cn, formatNum } from "@/lib/utils";
 
@@ -23,6 +31,18 @@ export const Route = createFileRoute("/optimizer")({ component: OptimizerLab });
 
 const data = fantasyFile as FantasyFile;
 const POS: (FantasyPos | "ALL")[] = ["ALL", "QB", "RB", "WR", "TE", "DST"];
+
+function lineupOf(result: SolveResult): Lineup | null {
+  return result.status === "ok" ? result.lineup : null;
+}
+
+function solveErrorText(result: SolveFailure, mode: "proj" | "actual") {
+  if (mode === "actual" && (result.status === "infeasible" || result.code === "insufficient-pool"))
+    return "Not enough scored players yet for a legal roster. Wait for more finals, or switch back to projections.";
+  if (result.status === "infeasible")
+    return "No feasible lineup with those locks and the salary cap. Unlock someone or raise the cap in your head — this slate is $50k.";
+  return result.message;
+}
 
 function OptimizerLab() {
   const { weekPpr } = useSeason();
@@ -39,13 +59,11 @@ function OptimizerLab() {
 
   const backtest = useMemo(() => {
     if (actuals.size < 1) return null;
-    const empty = { locked: new Set<string>(), excluded: new Set<string>() };
-    const exact = exactLineup({ players, cap: data.cap, ...empty });
-    const hill = hillClimbLineup({ players, cap: data.cap, ...empty });
-    const value = greedyLineup({ players, cap: data.cap, ...empty, by: "value" });
+    const exact = lineupOf(solveLineup({ players, cap: data.cap, method: "exact-dp" }));
+    const hill = lineupOf(solveLineup({ players, cap: data.cap, method: "hill-climb" }));
+    const value = lineupOf(solveLineup({ players, cap: data.cap, method: "greedy-value" }));
     const scored = players.filter((p) => actuals.has(p.id)).map((p) => ({ ...p, proj: actuals.get(p.id) ?? 0 }));
-    const hindsight = exactLineup({ players: scored, cap: data.cap, ...empty })
-      ?? optimizeLineup({ players: scored, cap: data.cap, ...empty });
+    const hindsight = lineupOf(optimizeLineup({ players: scored, cap: data.cap }));
     return {
       exact: { proj: exact?.proj ?? 0, actual: scoreLineup(exact?.players ?? [], actuals) },
       hill: { proj: hill?.proj ?? 0, actual: scoreLineup(hill?.players ?? [], actuals) },
@@ -61,19 +79,15 @@ function OptimizerLab() {
       .map((p) => ({ ...p, proj: actuals.get(p.id) ?? 0 }));
   }, [players, mode, actuals]);
 
-  const [lineup, setLineup] = useState<Lineup | null>(null);
+  const [solved, setSolved] = useState<SolveOk | null>(null);
   const [alt, setAlt] = useState<Lineup | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const lineup = solved?.lineup ?? null;
 
   useEffect(() => {
-    const best = optimizeLineup({
-      players: slate,
-      cap: data.cap,
-      locked: new Set(),
-      excluded: new Set(),
-    });
-    setLineup(best);
+    const best = optimizeLineup({ players: slate, cap: data.cap });
+    setSolved(best.status === "ok" ? best : null);
     setAlt(null);
   }, [slate]);
 
@@ -97,34 +111,31 @@ function OptimizerLab() {
     setBusy(true);
     setError(null);
     window.setTimeout(() => {
-      const lockedSet = new Set(locked);
-      const excludedSet = new Set(excluded);
       const best = optimizeLineup({
         players: slate,
         cap: data.cap,
-        locked: lockedSet,
-        excluded: excludedSet,
+        locked,
+        excluded,
         requireStack: stack,
       });
-      const value = greedyLineup({
-        players: slate,
-        cap: data.cap,
-        locked: lockedSet,
-        excluded: excludedSet,
-      });
-      setLineup(best);
-      setAlt(value && best && Math.abs(value.proj - best.proj) > 0.2 ? value : null);
-      if (!best)
-        setError(
-          mode === "actual"
-            ? "Not enough scored players yet for a legal roster. Wait for more finals, or switch back to projections."
-            : "No feasible lineup with those locks and the salary cap. Unlock someone or raise the cap in your head — this slate is $50k.",
-        );
+      const value = lineupOf(
+        solveLineup({
+          players: slate,
+          cap: data.cap,
+          locked,
+          excluded,
+          method: "greedy-proj",
+        }),
+      );
+      const bestOk = best.status === "ok" ? best : null;
+      setSolved(bestOk);
+      setAlt(value && bestOk && Math.abs(value.proj - bestOk.lineup.proj) > 0.2 ? value : null);
+      if (best.status !== "ok") setError(solveErrorText(best, mode));
       setBusy(false);
     }, 20);
   };
 
-  const slots = lineup ? orderedLineup(lineup.players) : [];
+  const slots = lineup ? lineup.slots : [];
   const usedPct = lineup ? lineup.salary / data.cap : 0;
   const actualTotal = lineup
     ? lineup.players.reduce((s, p) => s + (actuals.get(p.id) ?? 0), 0)
@@ -319,14 +330,19 @@ function OptimizerLab() {
               {error && <p className="mt-3 text-sm text-rust">{error}</p>}
             </div>
 
-            {lineup && (
+            {solved && lineup && (
               <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
                 <div className="flex items-baseline justify-between gap-2">
                   <h2 className="font-display text-xl uppercase tracking-[0.06em]">
-                    {mode === "actual" ? "Hindsight" : "Optimal"}
+                    {mode === "actual" ? "Hindsight" : solved.optimality === "proven" ? "Optimal" : "Best found"}
                   </h2>
                   <Badge variant="sage">{lineup.proj.toFixed(1)} pts</Badge>
                 </div>
+                {solved.optimality === "heuristic" && (
+                  <p className="mt-1 text-xs text-muted">
+                    {solved.method} heuristic, not proven optimal{solved.fallbackReason ? `. ${solved.fallbackReason}` : ""}
+                  </p>
+                )}
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-elevated">
                   <div className="h-full bg-accent" style={{ width: `${Math.min(100, usedPct * 100)}%` }} />
                 </div>

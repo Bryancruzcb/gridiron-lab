@@ -3,7 +3,7 @@
  * No future weeks, no 2026 peek. Writes src/data/study-projections.json
  */
 import { readFileSync, writeFileSync } from "node:fs";
-import { exactLineup, hillClimbLineup } from "../src/lib/optimizer.ts";
+import { solveLineup } from "../src/lib/optimizer.ts";
 import { fnum, parseCsvLine, round, UA } from "../src/lib/live/csv.ts";
 import type { FantasyFile, FantasyPlayer } from "../src/data/types.ts";
 
@@ -158,8 +158,6 @@ async function main() {
   }
   for (const arr of dstByTeam.values()) arr.sort((a, b) => a.week - b.week);
 
-  const empty = { locked: new Set<string>(), excluded: new Set<string>() };
-
   const errors: Record<Method, { y: number; yhat: number }[]> = {
     trail: [],
     last1: [],
@@ -287,12 +285,14 @@ async function main() {
         act.set(p.id, y ?? 0);
         if (y != null) errors[method].push({ y, yhat });
       }
-      const lu =
-        exactLineup({ players: slate, cap: fantasy.cap, ...empty }) ??
-        hillClimbLineup({ players: slate, cap: fantasy.cap, ...empty });
-      if (!lu) continue;
+      const solved = solveLineup({ players: slate, cap: fantasy.cap, method: "exact-dp" });
+      if (solved.status !== "ok") {
+        // Strict exact study: the week is invalid for this model, never filled by a heuristic.
+        console.log(`\nw${w} ${method}: exact-dp ${solved.status}/${solved.code}, week invalid`);
+        continue;
+      }
       let pts = 0;
-      for (const p of lu.players) pts += act.get(p.id) ?? 0;
+      for (const p of solved.lineup.players) pts += act.get(p.id) ?? 0;
       lineupActual[method].push(pts);
     }
     process.stdout.write(`w${w} `);
