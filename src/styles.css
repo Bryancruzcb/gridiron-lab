@@ -106,7 +106,12 @@
       rgb(196 80 72 / 0.16),
       transparent 52%
     ),
-    radial-gradient(36vmax 30vmax at 86% 82%, rgb(197 204 214 / 0.1), transparent 50%);
+    radial-gradient(
+      32vmax 26vmax at calc(var(--spec-x) + 8%) calc(var(--spec-y) + 6%),
+      rgb(241 240 234 / 0.22),
+      transparent 48%
+    ),
+    radial-gradient(36vmax 30vmax at 86% 82%, rgb(197 204 214 / 0.12), transparent 50%);
 }
 .atmosphere::after {
   content: "";
