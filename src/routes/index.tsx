@@ -47,7 +47,7 @@ const LABS = [
     to: "/study" as const,
     title: "Study",
     icon: ScrollText,
-    blurb: "2025 holdout. Solver vs greedy. EPA this week vs next.",
+    blurb: "2025 test. Did the Lineup computer beat grabbing the top names?",
   },
   {
     to: "/play-calling" as const,

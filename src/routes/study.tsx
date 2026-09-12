@@ -27,31 +27,11 @@ const lag = lagFile as QbLagFile;
 const projections = projFile as ProjectionFile;
 const ewma = ewmaFile as EwmaFile;
 
-function pearson(xs: number[], ys: number[]) {
-  const n = xs.length;
-  if (n < 3) return null;
-  const mx = xs.reduce((s, x) => s + x, 0) / n;
-  const my = ys.reduce((s, y) => s + y, 0) / n;
-  let num = 0;
-  let dx = 0;
-  let dy = 0;
-  for (let i = 0; i < n; i++) {
-    const a = xs[i]! - mx;
-    const b = ys[i]! - my;
-    num += a * b;
-    dx += a * a;
-    dy += b * b;
-  }
-  const den = Math.sqrt(dx * dy);
-  return den === 0 ? null : num / den;
-}
-
 const guessXs = backtest.weeks.map((w) => w.exact.proj);
 const guessYs = backtest.weeks.map((w) => w.exact.actual);
 const guessMean = guessXs.reduce((s, x) => s + x, 0) / guessXs.length;
 const realMean = guessYs.reduce((s, y) => s + y, 0) / guessYs.length;
 const guessBias = guessMean - realMean;
-const guessR = pearson(guessXs, guessYs);
 const guessHigh = backtest.weeks.filter((w) => w.exact.proj > w.exact.actual).length;
 const guessDots = backtest.weeks.map((w) => ({
   week: w.week,
@@ -74,58 +54,68 @@ function StudyPage() {
         </p>
         <h1 className="mt-3 font-display text-5xl uppercase tracking-[0.03em]">Study</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-          Two questions on 2025, plus which projection actually scores.
+          A check on last season. Did the Lineup computer actually help, and does last week’s QB
+          number predict this week?
         </p>
 
         {!ready ? (
-          <p className="mt-10 text-sm text-muted">Computing the 2025 holdout…</p>
+          <p className="mt-10 text-sm text-muted">Loading 2025…</p>
         ) : (
           <>
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Question</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">What this is</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                After the games, does the $50k solver score more real PPR than just taking the
-                highest projected names that still fit? And if a QB was good last week on EPA or
-                CPOE, is he good this week?
+                Fantasy lineups here have a <strong className="font-medium text-fg">$50,000 budget</strong>,
+                like DraftKings. You pick 9 players. Stars cost more. The Lineup page has a computer
+                that builds a team under that budget. This page is not a live tool. It is a test
+                from the 2025 season: we locked the prices, let the computer pick, then scored the
+                team on points the players actually got that week.
               </p>
             </section>
 
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Data</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Two questions</h2>
+              <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm leading-relaxed">
+                <li>
+                  After the games, did the computer’s $50k team score more points than just taking
+                  the highest-projected names that still fit the budget?
+                </li>
+                <li>
+                  If a quarterback looked good last week (EPA or CPOE), did he look good this week
+                  too?
+                </li>
+              </ol>
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">How we tested</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                nflverse 2025 regular season, player week and team week. Frozen 114-player slate.
-                Salaries are synthetic DraftKings-style prices — not live DK. Projection is trailing
-                mean PPR from weeks 1 through w−1. Week 1 is dropped. DST points-allowed is estimated
-                from opponent TDs, field goals, and PATs.
+                17 weeks in 2025 (week 1 skipped — no history yet). Same fake prices all year, not
+                live DraftKings. “Projected” means each player’s average fantasy points so far. Then
+                we scored whoever got picked on the points they really scored that Sunday.
               </p>
             </section>
 
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Method</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Did the computer help?</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                Each week: exact DP (hill-climb if DP misses a legal roster) vs projection-greedy vs
-                pts/$ greedy. Score the nine names on that week’s actual PPR. For QBs: consecutive
-                weeks with ≥15 attempts. EPA is passing EPA per attempt. Pearson r on 409 pairs.
+                Barely. The computer averaged <strong className="font-medium text-fg">{s.exactMean}</strong>{" "}
+                real points a week. Grabbing the top projected names averaged {s.greedyProjMean}.
+                That’s a { (s.exactMean - s.greedyProjMean).toFixed(1) }-point gap — inside the noise.
+                It only won {s.exactBeatsProj} of {s.weeks} weeks. Picking “cheap production” (most
+                projected points per dollar) was worse: {s.greedyValueMean}.
               </p>
-            </section>
-
-            <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Lineup result</h2>
-              <p className="mt-3 text-sm leading-relaxed">
-                Exact averaged {s.exactMean} actual points (median {s.exactMedian}). Projection-greedy
-                averaged {s.greedyProjMean}. Pts/$ greedy averaged {s.greedyValueMean}. Exact beat
-                projection-greedy in {s.exactBeatsProj} of {s.weeks} weeks, and beat value-greedy in{" "}
-                {s.exactBeatsValue} of {s.weeks}. A 0.7-point edge over greedy-proj is not a product.
-                It is a small, noisy holdout.
+              <p className="mt-3 text-sm text-muted">
+                Green = computer beat the top-names pick that week.
               </p>
               <div className="mt-6 overflow-x-auto rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
                 <table className="w-full min-w-[28rem] text-left text-sm">
                   <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
                     <tr className="border-b border-border">
                       <th className="py-2 font-medium">Week</th>
-                      <th className="py-2 text-right font-medium">Exact</th>
-                      <th className="py-2 text-right font-medium">Greedy proj</th>
-                      <th className="py-2 text-right font-medium">Pts/$</th>
+                      <th className="py-2 text-right font-medium">Computer</th>
+                      <th className="py-2 text-right font-medium">Top names</th>
+                      <th className="py-2 text-right font-medium">Cheap picks</th>
                     </tr>
                   </thead>
                   <tbody className="font-mono tabular-nums">
@@ -156,14 +146,14 @@ function StudyPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Guess vs real</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">The computer was too optimistic</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                The Exact column above is actual PPR. The solver’s own sum of projections averaged{" "}
-                {guessMean.toFixed(1)}. Real was {realMean.toFixed(1)}. High by{" "}
-                {guessBias.toFixed(1)} every week ({guessHigh}/{backtest.weeks.length}). Correlation
-                between guessed total and real total is r = {guessR == null ? "—" : guessR.toFixed(2)}.
-                Trailing mean per player is only off ~6.6 PPR. The $50k roster is nine of the fattest
-                means — players who already got lucky — so the packed total is ~60 points of fiction.
+                The table above is <em>real</em> points after the games. Before kickoff the computer
+                thought its team would score about {guessMean.toFixed(0)}. They actually scored about{" "}
+                {realMean.toFixed(0)}. It overshot every single week ({guessHigh} of{" "}
+                {backtest.weeks.length}), by ~{guessBias.toFixed(0)} points. It packed the roster
+                with players who had been hot, and hot streaks cool off. That’s the hole — not the
+                picker math.
               </p>
               <div className="mt-6 h-[240px] rounded-xl bg-surface p-3 shadow-[var(--shadow-border)] sm:p-4">
                 <ResponsiveContainer width="100%" height="100%">
@@ -202,27 +192,26 @@ function StudyPage() {
                 </ResponsiveContainer>
               </div>
               <p className="mt-2 text-xs text-muted">
-                X = solver guess · Y = actual · dashed is perfect. All 17 weeks sit below it.
+                Each dot is a week. Perfect guesses would sit on the dashed line. Every week is under
+                it — the computer always thought it would score more than it did.
               </p>
             </section>
 
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Projections</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Better guesses?</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                Same slate, same cap, same weeks. Only the guess of next week’s PPR changes. MAE is
-                error per player who played. Lineup is actual PPR of exact-DP using that guess.
-                Shrinkage is the most accurate player-level forecast and a worse lineup — it flattens
-                stars. EWMA is a little noisier per player and the only model that moved the lineup
-                table (+2.4 vs trailing mean). Opponent-adjust with thin splits broke the solver.
-                α=0.35 was one point on a noisy ridge — see the sweep below.
+                Same budget, same weeks. We only changed how we guess next week’s points. “Miss” is
+                how far off we were on each player. “Team score” is what the computer’s 9-man roster
+                actually got with that guess. Closer on every player is not the same as a better
+                team — flattening stars looks accurate and still loses Sundays.
               </p>
               <div className="mt-6 overflow-x-auto rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
                 <table className="w-full min-w-[28rem] text-left text-sm">
                   <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
                     <tr className="border-b border-border">
-                      <th className="py-2 font-medium">Model</th>
-                      <th className="py-2 text-right font-medium">MAE</th>
-                      <th className="py-2 text-right font-medium">Lineup</th>
+                      <th className="py-2 font-medium">Guess method</th>
+                      <th className="py-2 text-right font-medium">Miss / player</th>
+                      <th className="py-2 text-right font-medium">Team score</th>
                     </tr>
                   </thead>
                   <tbody className="font-mono tabular-nums">
@@ -250,14 +239,11 @@ function StudyPage() {
             </section>
 
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">EWMA α</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">How much to trust last week</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                α=1 is last week only. Small α is not the season mean — it sticks to week 1. Trailing
-                mean MAE is {ewma.trail.mae}, lineup {ewma.trail.lineupMean}. Best lineup on this
-                sweep is α={ewma.bestLineup.alpha} at {ewma.bestLineup.lineupMean} actual points. Best
-                MAE is α={ewma.bestMae.alpha} at {ewma.bestMae.mae}. Neighbors of the lineup peak
-                drop several points. 17 weeks is not enough to treat {ewma.bestLineup.alpha} as a
-                fitted parameter.
+                Far left = mostly the season so far. Far right = only last week. The dashed line is
+                “just use their average so far.” One setting looked a couple of points better on
+                this season. 17 weeks is too small to treat that as a discovery.
               </p>
               <div className="mt-6 h-[240px] rounded-xl bg-surface p-3 shadow-[var(--shadow-border)] sm:p-4">
                 <ResponsiveContainer width="100%" height="100%">
@@ -295,16 +281,18 @@ function StudyPage() {
                 </ResponsiveContainer>
               </div>
               <p className="mt-2 text-xs text-muted">
-                Lineup actual vs α. Dashed line is trailing mean ({ewma.trail.lineupMean}).
+                Team’s real points vs how hard we weight last week. Dashed = season average so far (
+                {ewma.trail.lineupMean}).
               </p>
             </section>
 
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">QB lag</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Do hot QBs stay hot?</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                r = {lag.corrEpa ?? "—"} for EPA/attempt, r = {lag.corrCpoe ?? "—"} for CPOE,{" "}
-                {lag.n} consecutive-week pairs. Last week’s number is a weak forecast of this week.
-                The QB lab describes what already happened. It does not pick next week’s winner.
+                Almost no. Last week’s EPA barely lines up with this week’s (r = {lag.corrEpa ?? "—"}
+                , {lag.n} QB-weeks with 15+ throws). CPOE is the same story (r = {lag.corrCpoe ?? "—"}
+                ). The QB page is a report card on what already happened. It is not a crystal ball
+                for next Sunday.
               </p>
               <div className="mt-6 h-[320px] rounded-xl bg-surface p-3 shadow-[var(--shadow-border)] sm:p-4">
                 <ResponsiveContainer width="100%" height="100%">
@@ -334,33 +322,38 @@ function StudyPage() {
                   </ScatterChart>
                 </ResponsiveContainer>
               </div>
-              <p className="mt-2 text-xs text-muted">X last week EPA/att · Y this week · 15+ attempts</p>
+              <p className="mt-2 text-xs text-muted">
+                Left = last week’s EPA per throw. Up = this week. A tight diagonal would mean last
+                week predicts this week. This is a cloud.
+              </p>
             </section>
 
             <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">What failed</h2>
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">What went wrong</h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
-                {backtest.notes.map((n) => (
-                  <li key={n}>{n}</li>
-                ))}
                 <li>
-                  Shrinkage wins MAE (6.23) and loses lineup (112.9). Ranking stars is not the same
-                  job as predicting every player.
+                  Prices are fake DraftKings-style numbers we froze all year — not the real weekly
+                  salary board.
                 </li>
                 <li>
-                  A naive opponent adjustment averaged 67.8 lineup points. Thin splits are worse than
-                  no opponent term.
+                  The computer thought it would score ~{guessMean.toFixed(0)} and scored ~
+                  {realMean.toFixed(0)}. That’s packing last week’s luck, not a bug in the picker.
                 </li>
                 <li>
-                  EWMA α=0.30 peaked at {ewma.bestLineup.lineupMean} on this sweep; α=0.40 is 114.3.
-                  Do not fit α on 17 weeks.
+                  Guessing “closer on every player” (shrink) missed less per name and still built a
+                  worse team. Stars got flattened.
                 </li>
                 <li>
-                  Exact’s guessed total averaged {guessMean.toFixed(1)} against {realMean.toFixed(1)}{" "}
-                  actual. High every week. That is winner’s curse on trailing means, not a solver bug.
+                  Tweaking for opponent looked smart and built terrible teams. Thin samples hurt more
+                  than they help.
                 </li>
                 <li>
-                  EPA and CPOE persist only a little (r ≈ 0.16). Week 1 of 2026 is still a thin sample.
+                  One “weight last week” setting looked a couple of points better. Don’t trust a
+                  setting fitted on 17 weeks.
+                </li>
+                <li>
+                  A good EPA week barely predicts the next one. Week 1 of 2026 is still a tiny sample
+                  in the live labs.
                 </li>
               </ul>
             </section>
@@ -384,9 +377,9 @@ function GuessTip({
     <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
       <p className="font-medium">Week {d.week}</p>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
-        <dt className="text-muted">Guess</dt>
+        <dt className="text-muted">Thought</dt>
         <dd>{d.proj.toFixed(1)}</dd>
-        <dt className="text-muted">Real</dt>
+        <dt className="text-muted">Scored</dt>
         <dd>{d.actual.toFixed(1)}</dd>
       </dl>
     </div>
@@ -406,13 +399,13 @@ function AlphaTip({
   const d = payload[0].payload;
   return (
     <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
-      <p className="font-medium">α {d.alpha.toFixed(2)}</p>
+      <p className="font-medium">Last-week weight {d.alpha.toFixed(2)}</p>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
-        <dt className="text-muted">Lineup</dt>
+        <dt className="text-muted">Team score</dt>
         <dd>{d.lineupMean.toFixed(1)}</dd>
-        <dt className="text-muted">MAE</dt>
+        <dt className="text-muted">Miss / player</dt>
         <dd>{d.mae.toFixed(2)}</dd>
-        <dt className="text-muted">Trail</dt>
+        <dt className="text-muted">Season avg</dt>
         <dd>{trail.toFixed(1)}</dd>
       </dl>
     </div>
