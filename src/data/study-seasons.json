@@ -1,0 +1,5851 @@
+{
+  "baselineModel": "trail",
+  "minHistoryGames": 1,
+  "models": [
+    {
+      "id": "trail",
+      "label": "Trailing mean",
+      "method": "trail",
+      "params": {},
+      "solver": "exact-dp"
+    },
+    {
+      "id": "last1",
+      "label": "Last week",
+      "method": "last1",
+      "params": {},
+      "solver": "exact-dp"
+    },
+    {
+      "id": "last3",
+      "label": "Last 3",
+      "method": "last3",
+      "params": {
+        "windowWeeks": 3
+      },
+      "solver": "exact-dp"
+    },
+    {
+      "id": "blend",
+      "label": "60/40 season + last 3",
+      "method": "blend",
+      "params": {
+        "seasonWeight": 0.6,
+        "windowWeeks": 3
+      },
+      "solver": "exact-dp"
+    },
+    {
+      "id": "ewma",
+      "label": "EWMA α=0.35",
+      "method": "ewma",
+      "params": {
+        "alpha": 0.35
+      },
+      "solver": "exact-dp"
+    },
+    {
+      "id": "shrink",
+      "label": "Shrink to position",
+      "method": "shrink",
+      "params": {
+        "k": 4
+      },
+      "solver": "exact-dp"
+    },
+    {
+      "id": "usage",
+      "label": "Usage × rate",
+      "method": "usage",
+      "params": {
+        "windowWeeks": 3
+      },
+      "solver": "exact-dp"
+    },
+    {
+      "id": "opp",
+      "label": "Opponent-adjusted trail",
+      "method": "opp",
+      "params": {
+        "clampHigh": 1.3,
+        "clampLow": 0.7
+      },
+      "solver": "exact-dp"
+    },
+    {
+      "id": "trail-greedy-proj",
+      "label": "Trailing mean, greedy by projection",
+      "method": "trail",
+      "params": {},
+      "solver": "greedy-proj"
+    },
+    {
+      "id": "trail-greedy-value",
+      "label": "Trailing mean, greedy by value",
+      "method": "trail",
+      "params": {},
+      "solver": "greedy-value"
+    }
+  ],
+  "pipeline": "gridiron-lab-study-pipeline@1",
+  "policies": [
+    "Cutoff: a week-w forecast reads only rows with (season, week) before (S, w) and schedule scores of earlier weeks; history is ordered by season, week, game id.",
+    "Position priors, opponent features and recency models read the same pre-cutoff snapshot; the position prior falls back to positionPriorFallback when the pool has no history (or a mean of exactly 0).",
+    "Scheduled opponents come from the schedule, for the player's latest team before the cutoff (else the universe team), never from a postgame row.",
+    "Slate: universe players whose team has a game in week w and who have at least minHistoryGames scored games before the cutoff. A missing postgame row never removes a player.",
+    "Actuals: played = a scored stat row (a zero is kept); inactive = final game, source covers the week, no row: 0 in a lineup, left out of player error; not-final, missing-source and unknown-identity stay missing.",
+    "Unscored rows (a required stat or points allowed missing) are excluded from history and missing as actuals; nothing is filled with zero or 24 points allowed.",
+    "Strict solver: each model calls solveLineup once with its method; a non-ok result, or an ok result from another method (or a heuristic exact-dp result), invalidates the week. No fallback.",
+    "Common weeks: a week counts only when every model solved and every lineup actual is complete; all summaries use that set and excluded weeks keep their reasons.",
+    "Player error: slate player-weeks with status played over the common weeks, using the stored projections and actuals.",
+    "Uncertainty: percentile bootstrap of the mean paired weekly lineup difference, resampling weeks with replacement (the week is the unit, lineup players are not independent). Descriptive, not a significance test.",
+    "unknown-identity on the off-slate list is a label from the whole season's sources; it never changes eligibility."
+  ],
+  "pools": [
+    {
+      "resultSha256": "ae7a13d474057d3ca7c21512eb591f1a2f98c8a88fd10a336b3f076b1fb8f2d7",
+      "roles": [
+        "development",
+        "development"
+      ],
+      "runIds": [
+        "run-ccd95ce80683a5be",
+        "run-9bb334f25c8c50d0"
+      ],
+      "seasons": [
+        2023,
+        2024
+      ],
+      "summary": {
+        "commonWeeks": [
+          {
+            "season": 2023,
+            "week": 2
+          },
+          {
+            "season": 2023,
+            "week": 3
+          },
+          {
+            "season": 2023,
+            "week": 4
+          },
+          {
+            "season": 2023,
+            "week": 5
+          },
+          {
+            "season": 2023,
+            "week": 6
+          },
+          {
+            "season": 2023,
+            "week": 7
+          },
+          {
+            "season": 2023,
+            "week": 8
+          },
+          {
+            "season": 2023,
+            "week": 9
+          },
+          {
+            "season": 2023,
+            "week": 10
+          },
+          {
+            "season": 2023,
+            "week": 11
+          },
+          {
+            "season": 2023,
+            "week": 12
+          },
+          {
+            "season": 2023,
+            "week": 13
+          },
+          {
+            "season": 2023,
+            "week": 14
+          },
+          {
+            "season": 2023,
+            "week": 15
+          },
+          {
+            "season": 2023,
+            "week": 16
+          },
+          {
+            "season": 2023,
+            "week": 17
+          },
+          {
+            "season": 2023,
+            "week": 18
+          },
+          {
+            "season": 2024,
+            "week": 2
+          },
+          {
+            "season": 2024,
+            "week": 3
+          },
+          {
+            "season": 2024,
+            "week": 4
+          },
+          {
+            "season": 2024,
+            "week": 5
+          },
+          {
+            "season": 2024,
+            "week": 6
+          },
+          {
+            "season": 2024,
+            "week": 7
+          },
+          {
+            "season": 2024,
+            "week": 8
+          },
+          {
+            "season": 2024,
+            "week": 9
+          },
+          {
+            "season": 2024,
+            "week": 10
+          },
+          {
+            "season": 2024,
+            "week": 11
+          },
+          {
+            "season": 2024,
+            "week": 12
+          },
+          {
+            "season": 2024,
+            "week": 13
+          },
+          {
+            "season": 2024,
+            "week": 14
+          },
+          {
+            "season": 2024,
+            "week": 15
+          },
+          {
+            "season": 2024,
+            "week": 16
+          },
+          {
+            "season": 2024,
+            "week": 17
+          },
+          {
+            "season": 2024,
+            "week": 18
+          }
+        ],
+        "excludedWeeks": [],
+        "models": [
+          {
+            "label": "Trailing mean",
+            "lineupActualMean": 130.449,
+            "lineupActualMedian": 135.11,
+            "lineupProjMean": 187.738,
+            "model": "trail",
+            "playerError": {
+              "bias": -0.084,
+              "mae": 6.207,
+              "n": 2995,
+              "rmse": 8.107
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "Last week",
+            "lineupActualMean": 130.309,
+            "lineupActualMedian": 126.91,
+            "lineupProjMean": 252.881,
+            "model": "last1",
+            "playerError": {
+              "bias": 0.046,
+              "mae": 7.783,
+              "n": 2995,
+              "rmse": 10.08
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "Last 3",
+            "lineupActualMean": 135.724,
+            "lineupActualMedian": 134.23,
+            "lineupProjMean": 209.301,
+            "model": "last3",
+            "playerError": {
+              "bias": -0.013,
+              "mae": 6.484,
+              "n": 2995,
+              "rmse": 8.469
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "60/40 season + last 3",
+            "lineupActualMean": 130.718,
+            "lineupActualMedian": 132.37,
+            "lineupProjMean": 192.086,
+            "model": "blend",
+            "playerError": {
+              "bias": -0.056,
+              "mae": 6.224,
+              "n": 2995,
+              "rmse": 8.125
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "EWMA α=0.35",
+            "lineupActualMean": 141.596,
+            "lineupActualMedian": 141.19,
+            "lineupProjMean": 199.82,
+            "model": "ewma",
+            "playerError": {
+              "bias": -0.075,
+              "mae": 6.288,
+              "n": 2995,
+              "rmse": 8.239
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "Shrink to position",
+            "lineupActualMean": 134.044,
+            "lineupActualMedian": 138.51,
+            "lineupProjMean": 157.185,
+            "model": "shrink",
+            "playerError": {
+              "bias": -0.081,
+              "mae": 5.992,
+              "n": 2995,
+              "rmse": 7.689
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "Usage × rate",
+            "lineupActualMean": 131.689,
+            "lineupActualMedian": 130.83,
+            "lineupProjMean": 203.706,
+            "model": "usage",
+            "playerError": {
+              "bias": 0.121,
+              "mae": 6.374,
+              "n": 2995,
+              "rmse": 8.285
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "Opponent-adjusted trail",
+            "lineupActualMean": 132.192,
+            "lineupActualMedian": 126.5,
+            "lineupProjMean": 142.298,
+            "model": "opp",
+            "playerError": {
+              "bias": -3.212,
+              "mae": 6.445,
+              "n": 2995,
+              "rmse": 8.613
+            },
+            "solver": "exact-dp",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "Trailing mean, greedy by projection",
+            "lineupActualMean": 128.426,
+            "lineupActualMedian": 120.51,
+            "lineupProjMean": 181.396,
+            "model": "trail-greedy-proj",
+            "playerError": {
+              "bias": -0.084,
+              "mae": 6.207,
+              "n": 2995,
+              "rmse": 8.107
+            },
+            "solver": "greedy-proj",
+            "validWeeks": 34,
+            "weeks": 34
+          },
+          {
+            "label": "Trailing mean, greedy by value",
+            "lineupActualMean": 107.599,
+            "lineupActualMedian": 107.01,
+            "lineupProjMean": 166.233,
+            "model": "trail-greedy-value",
+            "playerError": {
+              "bias": -0.084,
+              "mae": 6.207,
+              "n": 2995,
+              "rmse": 8.107
+            },
+            "solver": "greedy-value",
+            "validWeeks": 34,
+            "weeks": 34
+          }
+        ],
+        "paired": [
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 8.694,
+              "level": 0.95,
+              "low": -8.449
+            },
+            "losses": 16,
+            "meanDiff": -0.14,
+            "medianDiff": 0,
+            "model": "last1",
+            "n": 34,
+            "ties": 2,
+            "wins": 16
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 13.631,
+              "level": 0.95,
+              "low": -3.109
+            },
+            "losses": 12,
+            "meanDiff": 5.274,
+            "medianDiff": 0,
+            "model": "last3",
+            "n": 34,
+            "ties": 6,
+            "wins": 16
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 7.355,
+              "level": 0.95,
+              "low": -6.175
+            },
+            "losses": 14,
+            "meanDiff": 0.269,
+            "medianDiff": 0,
+            "model": "blend",
+            "n": 34,
+            "ties": 7,
+            "wins": 13
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 19.834,
+              "level": 0.95,
+              "low": 2.971
+            },
+            "losses": 10,
+            "meanDiff": 11.147,
+            "medianDiff": 9.66,
+            "model": "ewma",
+            "n": 34,
+            "ties": 3,
+            "wins": 21
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 9.862,
+              "level": 0.95,
+              "low": -2.167
+            },
+            "losses": 8,
+            "meanDiff": 3.595,
+            "medianDiff": 0,
+            "model": "shrink",
+            "n": 34,
+            "ties": 17,
+            "wins": 9
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 8.975,
+              "level": 0.95,
+              "low": -6.502
+            },
+            "losses": 15,
+            "meanDiff": 1.24,
+            "medianDiff": 0,
+            "model": "usage",
+            "n": 34,
+            "ties": 4,
+            "wins": 15
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 9.556,
+              "level": 0.95,
+              "low": -5.423
+            },
+            "losses": 16,
+            "meanDiff": 1.742,
+            "medianDiff": 0,
+            "model": "opp",
+            "n": 34,
+            "ties": 4,
+            "wins": 14
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 4.928,
+              "level": 0.95,
+              "low": -9.38
+            },
+            "losses": 11,
+            "meanDiff": -2.024,
+            "medianDiff": 0,
+            "model": "trail-greedy-proj",
+            "n": 34,
+            "ties": 17,
+            "wins": 6
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": -12.871,
+              "level": 0.95,
+              "low": -33.177
+            },
+            "losses": 27,
+            "meanDiff": -22.85,
+            "medianDiff": -24.1,
+            "model": "trail-greedy-value",
+            "n": 34,
+            "ties": 0,
+            "wins": 7
+          }
+        ],
+        "rounding": {
+          "points": 2,
+          "projection": 4,
+          "summary": 3
+        }
+      }
+    },
+    {
+      "resultSha256": "0f11b3819fd6d21cfa37518afca309b9d3399a85c1a99edeb695bd06be753c9b",
+      "roles": [
+        "development",
+        "development",
+        "retrospective"
+      ],
+      "runIds": [
+        "run-ccd95ce80683a5be",
+        "run-9bb334f25c8c50d0",
+        "run-2a18ed7b1af9319f"
+      ],
+      "seasons": [
+        2023,
+        2024,
+        2025
+      ],
+      "summary": {
+        "commonWeeks": [
+          {
+            "season": 2023,
+            "week": 2
+          },
+          {
+            "season": 2023,
+            "week": 3
+          },
+          {
+            "season": 2023,
+            "week": 4
+          },
+          {
+            "season": 2023,
+            "week": 5
+          },
+          {
+            "season": 2023,
+            "week": 6
+          },
+          {
+            "season": 2023,
+            "week": 7
+          },
+          {
+            "season": 2023,
+            "week": 8
+          },
+          {
+            "season": 2023,
+            "week": 9
+          },
+          {
+            "season": 2023,
+            "week": 10
+          },
+          {
+            "season": 2023,
+            "week": 11
+          },
+          {
+            "season": 2023,
+            "week": 12
+          },
+          {
+            "season": 2023,
+            "week": 13
+          },
+          {
+            "season": 2023,
+            "week": 14
+          },
+          {
+            "season": 2023,
+            "week": 15
+          },
+          {
+            "season": 2023,
+            "week": 16
+          },
+          {
+            "season": 2023,
+            "week": 17
+          },
+          {
+            "season": 2023,
+            "week": 18
+          },
+          {
+            "season": 2024,
+            "week": 2
+          },
+          {
+            "season": 2024,
+            "week": 3
+          },
+          {
+            "season": 2024,
+            "week": 4
+          },
+          {
+            "season": 2024,
+            "week": 5
+          },
+          {
+            "season": 2024,
+            "week": 6
+          },
+          {
+            "season": 2024,
+            "week": 7
+          },
+          {
+            "season": 2024,
+            "week": 8
+          },
+          {
+            "season": 2024,
+            "week": 9
+          },
+          {
+            "season": 2024,
+            "week": 10
+          },
+          {
+            "season": 2024,
+            "week": 11
+          },
+          {
+            "season": 2024,
+            "week": 12
+          },
+          {
+            "season": 2024,
+            "week": 13
+          },
+          {
+            "season": 2024,
+            "week": 14
+          },
+          {
+            "season": 2024,
+            "week": 15
+          },
+          {
+            "season": 2024,
+            "week": 16
+          },
+          {
+            "season": 2024,
+            "week": 17
+          },
+          {
+            "season": 2024,
+            "week": 18
+          },
+          {
+            "season": 2025,
+            "week": 2
+          },
+          {
+            "season": 2025,
+            "week": 3
+          },
+          {
+            "season": 2025,
+            "week": 4
+          },
+          {
+            "season": 2025,
+            "week": 5
+          },
+          {
+            "season": 2025,
+            "week": 6
+          },
+          {
+            "season": 2025,
+            "week": 7
+          },
+          {
+            "season": 2025,
+            "week": 8
+          },
+          {
+            "season": 2025,
+            "week": 9
+          },
+          {
+            "season": 2025,
+            "week": 10
+          },
+          {
+            "season": 2025,
+            "week": 11
+          },
+          {
+            "season": 2025,
+            "week": 12
+          },
+          {
+            "season": 2025,
+            "week": 13
+          },
+          {
+            "season": 2025,
+            "week": 14
+          },
+          {
+            "season": 2025,
+            "week": 15
+          },
+          {
+            "season": 2025,
+            "week": 16
+          },
+          {
+            "season": 2025,
+            "week": 17
+          },
+          {
+            "season": 2025,
+            "week": 18
+          }
+        ],
+        "excludedWeeks": [],
+        "models": [
+          {
+            "label": "Trailing mean",
+            "lineupActualMean": 133.549,
+            "lineupActualMedian": 140.9,
+            "lineupProjMean": 188.116,
+            "model": "trail",
+            "playerError": {
+              "bias": -0.018,
+              "mae": 6.194,
+              "n": 4517,
+              "rmse": 8.097
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "Last week",
+            "lineupActualMean": 131.489,
+            "lineupActualMedian": 122.62,
+            "lineupProjMean": 253.714,
+            "model": "last1",
+            "playerError": {
+              "bias": 0.078,
+              "mae": 7.782,
+              "n": 4517,
+              "rmse": 10.197
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "Last 3",
+            "lineupActualMean": 136.028,
+            "lineupActualMedian": 134.72,
+            "lineupProjMean": 208.918,
+            "model": "last3",
+            "playerError": {
+              "bias": 0.032,
+              "mae": 6.513,
+              "n": 4517,
+              "rmse": 8.52
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "60/40 season + last 3",
+            "lineupActualMean": 134.666,
+            "lineupActualMedian": 138.02,
+            "lineupProjMean": 192.856,
+            "model": "blend",
+            "playerError": {
+              "bias": 0.002,
+              "mae": 6.229,
+              "n": 4517,
+              "rmse": 8.141
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "EWMA α=0.35",
+            "lineupActualMean": 144.026,
+            "lineupActualMedian": 143.12,
+            "lineupProjMean": 199.452,
+            "model": "ewma",
+            "playerError": {
+              "bias": -0.036,
+              "mae": 6.296,
+              "n": 4517,
+              "rmse": 8.26
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "Shrink to position",
+            "lineupActualMean": 136.29,
+            "lineupActualMedian": 142.86,
+            "lineupProjMean": 157.668,
+            "model": "shrink",
+            "playerError": {
+              "bias": -0.023,
+              "mae": 5.992,
+              "n": 4517,
+              "rmse": 7.705
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "Usage × rate",
+            "lineupActualMean": 136.706,
+            "lineupActualMedian": 140.9,
+            "lineupProjMean": 202.656,
+            "model": "usage",
+            "playerError": {
+              "bias": 0.178,
+              "mae": 6.377,
+              "n": 4517,
+              "rmse": 8.309
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "Opponent-adjusted trail",
+            "lineupActualMean": 137.26,
+            "lineupActualMedian": 133.84,
+            "lineupProjMean": 143.011,
+            "model": "opp",
+            "playerError": {
+              "bias": -3.133,
+              "mae": 6.386,
+              "n": 4517,
+              "rmse": 8.599
+            },
+            "solver": "exact-dp",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "Trailing mean, greedy by projection",
+            "lineupActualMean": 132.184,
+            "lineupActualMedian": 127.14,
+            "lineupProjMean": 183.185,
+            "model": "trail-greedy-proj",
+            "playerError": {
+              "bias": -0.018,
+              "mae": 6.194,
+              "n": 4517,
+              "rmse": 8.097
+            },
+            "solver": "greedy-proj",
+            "validWeeks": 51,
+            "weeks": 51
+          },
+          {
+            "label": "Trailing mean, greedy by value",
+            "lineupActualMean": 111.965,
+            "lineupActualMedian": 108.54,
+            "lineupProjMean": 165.486,
+            "model": "trail-greedy-value",
+            "playerError": {
+              "bias": -0.018,
+              "mae": 6.194,
+              "n": 4517,
+              "rmse": 8.097
+            },
+            "solver": "greedy-value",
+            "validWeeks": 51,
+            "weeks": 51
+          }
+        ],
+        "paired": [
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 6.637,
+              "level": 0.95,
+              "low": -10.302
+            },
+            "losses": 25,
+            "meanDiff": -2.06,
+            "medianDiff": 0,
+            "model": "last1",
+            "n": 51,
+            "ties": 3,
+            "wins": 23
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 9.341,
+              "level": 0.95,
+              "low": -4.371
+            },
+            "losses": 21,
+            "meanDiff": 2.479,
+            "medianDiff": 0,
+            "model": "last3",
+            "n": 51,
+            "ties": 9,
+            "wins": 21
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 6.328,
+              "level": 0.95,
+              "low": -4.096
+            },
+            "losses": 20,
+            "meanDiff": 1.116,
+            "medianDiff": 0,
+            "model": "blend",
+            "n": 51,
+            "ties": 12,
+            "wins": 19
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 16.775,
+              "level": 0.95,
+              "low": 4.211
+            },
+            "losses": 15,
+            "meanDiff": 10.476,
+            "medianDiff": 8.58,
+            "model": "ewma",
+            "n": 51,
+            "ties": 4,
+            "wins": 32
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 7.16,
+              "level": 0.95,
+              "low": -1.278
+            },
+            "losses": 11,
+            "meanDiff": 2.741,
+            "medianDiff": 0,
+            "model": "shrink",
+            "n": 51,
+            "ties": 25,
+            "wins": 15
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 8.999,
+              "level": 0.95,
+              "low": -2.569
+            },
+            "losses": 21,
+            "meanDiff": 3.157,
+            "medianDiff": 0,
+            "model": "usage",
+            "n": 51,
+            "ties": 7,
+            "wins": 23
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 9.391,
+              "level": 0.95,
+              "low": -2.003
+            },
+            "losses": 21,
+            "meanDiff": 3.711,
+            "medianDiff": 0,
+            "model": "opp",
+            "n": 51,
+            "ties": 5,
+            "wins": 25
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 3.428,
+              "level": 0.95,
+              "low": -6.628
+            },
+            "losses": 15,
+            "meanDiff": -1.365,
+            "medianDiff": 0,
+            "model": "trail-greedy-proj",
+            "n": 51,
+            "ties": 25,
+            "wins": 11
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": -14.06,
+              "level": 0.95,
+              "low": -28.739
+            },
+            "losses": 41,
+            "meanDiff": -21.584,
+            "medianDiff": -24.2,
+            "model": "trail-greedy-value",
+            "n": 51,
+            "ties": 0,
+            "wins": 10
+          }
+        ],
+        "rounding": {
+          "points": 2,
+          "projection": 4,
+          "summary": 3
+        }
+      }
+    }
+  ],
+  "resultSha256": "3483f5176058996e886d1bd72e276ca85fd276062292928e8aace1a250e2afb5",
+  "schemaVersion": "gridiron-lab-study-seasons@1",
+  "scoring": "gridiron-lab-ppr-dst@1",
+  "seasons": [
+    {
+      "cap": 50000,
+      "qbLag": {
+        "corrCpoe": 0.109,
+        "corrEpa": 0.141,
+        "minAttempts": 15,
+        "n": 433,
+        "resultSha256": "de1436b85bceec77ed9419e72910c69fc3a906141fc0a10e2026c0208a379852"
+      },
+      "resultSha256": "7f52eda7adb19a8cfa0e70bf91be79050b259db9b31de4b30bee9a26537140aa",
+      "role": "development",
+      "runId": "run-ccd95ce80683a5be",
+      "season": 2023,
+      "summary": {
+        "commonWeeks": [
+          {
+            "season": 2023,
+            "week": 2
+          },
+          {
+            "season": 2023,
+            "week": 3
+          },
+          {
+            "season": 2023,
+            "week": 4
+          },
+          {
+            "season": 2023,
+            "week": 5
+          },
+          {
+            "season": 2023,
+            "week": 6
+          },
+          {
+            "season": 2023,
+            "week": 7
+          },
+          {
+            "season": 2023,
+            "week": 8
+          },
+          {
+            "season": 2023,
+            "week": 9
+          },
+          {
+            "season": 2023,
+            "week": 10
+          },
+          {
+            "season": 2023,
+            "week": 11
+          },
+          {
+            "season": 2023,
+            "week": 12
+          },
+          {
+            "season": 2023,
+            "week": 13
+          },
+          {
+            "season": 2023,
+            "week": 14
+          },
+          {
+            "season": 2023,
+            "week": 15
+          },
+          {
+            "season": 2023,
+            "week": 16
+          },
+          {
+            "season": 2023,
+            "week": 17
+          },
+          {
+            "season": 2023,
+            "week": 18
+          }
+        ],
+        "excludedWeeks": [],
+        "models": [
+          {
+            "label": "Trailing mean",
+            "lineupActualMean": 131.933,
+            "lineupActualMedian": 143.38,
+            "lineupProjMean": 189.07,
+            "model": "trail",
+            "playerError": {
+              "bias": -0.05,
+              "mae": 6.236,
+              "n": 1500,
+              "rmse": 8.173
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Last week",
+            "lineupActualMean": 130.239,
+            "lineupActualMedian": 124.9,
+            "lineupProjMean": 256.924,
+            "model": "last1",
+            "playerError": {
+              "bias": -0.031,
+              "mae": 7.759,
+              "n": 1500,
+              "rmse": 10.124
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Last 3",
+            "lineupActualMean": 136.593,
+            "lineupActualMedian": 130.66,
+            "lineupProjMean": 211.12,
+            "model": "last3",
+            "playerError": {
+              "bias": -0.097,
+              "mae": 6.525,
+              "n": 1500,
+              "rmse": 8.565
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "60/40 season + last 3",
+            "lineupActualMean": 132.809,
+            "lineupActualMedian": 139.94,
+            "lineupProjMean": 193.561,
+            "model": "blend",
+            "playerError": {
+              "bias": -0.069,
+              "mae": 6.264,
+              "n": 1500,
+              "rmse": 8.204
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "EWMA α=0.35",
+            "lineupActualMean": 145.369,
+            "lineupActualMedian": 154.38,
+            "lineupProjMean": 201.2,
+            "model": "ewma",
+            "playerError": {
+              "bias": -0.141,
+              "mae": 6.313,
+              "n": 1500,
+              "rmse": 8.316
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Shrink to position",
+            "lineupActualMean": 137.134,
+            "lineupActualMedian": 147,
+            "lineupProjMean": 157.263,
+            "model": "shrink",
+            "playerError": {
+              "bias": -0.04,
+              "mae": 6.024,
+              "n": 1500,
+              "rmse": 7.734
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Usage × rate",
+            "lineupActualMean": 128.113,
+            "lineupActualMedian": 126.94,
+            "lineupProjMean": 200.161,
+            "model": "usage",
+            "playerError": {
+              "bias": 0.037,
+              "mae": 6.402,
+              "n": 1500,
+              "rmse": 8.387
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Opponent-adjusted trail",
+            "lineupActualMean": 137.842,
+            "lineupActualMedian": 127.74,
+            "lineupProjMean": 144.287,
+            "model": "opp",
+            "playerError": {
+              "bias": -3.119,
+              "mae": 6.421,
+              "n": 1500,
+              "rmse": 8.558
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Trailing mean, greedy by projection",
+            "lineupActualMean": 128.462,
+            "lineupActualMedian": 117.58,
+            "lineupProjMean": 176.788,
+            "model": "trail-greedy-proj",
+            "playerError": {
+              "bias": -0.05,
+              "mae": 6.236,
+              "n": 1500,
+              "rmse": 8.173
+            },
+            "solver": "greedy-proj",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Trailing mean, greedy by value",
+            "lineupActualMean": 112.515,
+            "lineupActualMedian": 109.6,
+            "lineupProjMean": 162.583,
+            "model": "trail-greedy-value",
+            "playerError": {
+              "bias": -0.05,
+              "mae": 6.236,
+              "n": 1500,
+              "rmse": 8.173
+            },
+            "solver": "greedy-value",
+            "validWeeks": 17,
+            "weeks": 17
+          }
+        ],
+        "paired": [
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 13.577,
+              "level": 0.95,
+              "low": -16.477
+            },
+            "losses": 7,
+            "meanDiff": -1.694,
+            "medianDiff": 1.02,
+            "model": "last1",
+            "n": 17,
+            "ties": 1,
+            "wins": 9
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 18.401,
+              "level": 0.95,
+              "low": -8.63
+            },
+            "losses": 6,
+            "meanDiff": 4.66,
+            "medianDiff": 0,
+            "model": "last3",
+            "n": 17,
+            "ties": 3,
+            "wins": 8
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 12.751,
+              "level": 0.95,
+              "low": -9.54
+            },
+            "losses": 7,
+            "meanDiff": 0.876,
+            "medianDiff": 0,
+            "model": "blend",
+            "n": 17,
+            "ties": 3,
+            "wins": 7
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 28.256,
+              "level": 0.95,
+              "low": -0.153
+            },
+            "losses": 5,
+            "meanDiff": 13.436,
+            "medianDiff": 10.66,
+            "model": "ewma",
+            "n": 17,
+            "ties": 1,
+            "wins": 11
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 16.121,
+              "level": 0.95,
+              "low": -4.659
+            },
+            "losses": 1,
+            "meanDiff": 5.201,
+            "medianDiff": 0,
+            "model": "shrink",
+            "n": 17,
+            "ties": 13,
+            "wins": 3
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 7.242,
+              "level": 0.95,
+              "low": -15.438
+            },
+            "losses": 9,
+            "meanDiff": -3.82,
+            "medianDiff": -0.2,
+            "model": "usage",
+            "n": 17,
+            "ties": 2,
+            "wins": 6
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 19.385,
+              "level": 0.95,
+              "low": -7.099
+            },
+            "losses": 8,
+            "meanDiff": 5.909,
+            "medianDiff": 4.5,
+            "model": "opp",
+            "n": 17,
+            "ties": 0,
+            "wins": 9
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 10.24,
+              "level": 0.95,
+              "low": -17.641
+            },
+            "losses": 10,
+            "meanDiff": -3.471,
+            "medianDiff": -1.1,
+            "model": "trail-greedy-proj",
+            "n": 17,
+            "ties": 1,
+            "wins": 6
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": -5.066,
+              "level": 0.95,
+              "low": -33.028
+            },
+            "losses": 13,
+            "meanDiff": -19.418,
+            "medianDiff": -20.5,
+            "model": "trail-greedy-value",
+            "n": 17,
+            "ties": 0,
+            "wins": 4
+          }
+        ],
+        "rounding": {
+          "points": 2,
+          "projection": 4,
+          "summary": 3
+        }
+      },
+      "universe": {
+        "id": "synthetic-prior-season@1:2023",
+        "lookAhead": false,
+        "players": 114,
+        "rule": "synthetic-prior-season@1",
+        "season": 2023,
+        "sha256": "f462cf7709cb9195573a5b9a395e308a1f7f2d0e6936b46b2b8d9c7f1cad2e72"
+      },
+      "weekly": [
+        {
+          "lineups": {
+            "blend": {
+              "actual": 88.76,
+              "proj": 258.94
+            },
+            "ewma": {
+              "actual": 88.76,
+              "proj": 258.94
+            },
+            "last1": {
+              "actual": 88.76,
+              "proj": 258.94
+            },
+            "last3": {
+              "actual": 88.76,
+              "proj": 258.94
+            },
+            "opp": {
+              "actual": 96.36,
+              "proj": 202.4855
+            },
+            "shrink": {
+              "actual": 88.76,
+              "proj": 141.131
+            },
+            "trail": {
+              "actual": 88.76,
+              "proj": 258.94
+            },
+            "trail-greedy-proj": {
+              "actual": 88.76,
+              "proj": 258.94
+            },
+            "trail-greedy-value": {
+              "actual": 77.16,
+              "proj": 251.84
+            },
+            "usage": {
+              "actual": 88.76,
+              "proj": 258.94
+            }
+          },
+          "slate": 101,
+          "week": 2
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 103.68,
+              "proj": 222.96
+            },
+            "ewma": {
+              "actual": 106.36,
+              "proj": 230.257
+            },
+            "last1": {
+              "actual": 115.64,
+              "proj": 243.84
+            },
+            "last3": {
+              "actual": 103.68,
+              "proj": 222.96
+            },
+            "opp": {
+              "actual": 155.88,
+              "proj": 177.9358
+            },
+            "shrink": {
+              "actual": 160.6,
+              "proj": 147.9477
+            },
+            "trail": {
+              "actual": 103.68,
+              "proj": 222.96
+            },
+            "trail-greedy-proj": {
+              "actual": 107.08,
+              "proj": 201.26
+            },
+            "trail-greedy-value": {
+              "actual": 93.34,
+              "proj": 204.55
+            },
+            "usage": {
+              "actual": 99.04,
+              "proj": 224.4637
+            }
+          },
+          "slate": 105,
+          "week": 3
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 85.48,
+              "proj": 213.9734
+            },
+            "ewma": {
+              "actual": 154.38,
+              "proj": 220.0277
+            },
+            "last1": {
+              "actual": 89.08,
+              "proj": 278.06
+            },
+            "last3": {
+              "actual": 85.48,
+              "proj": 213.9734
+            },
+            "opp": {
+              "actual": 114.28,
+              "proj": 158.1728
+            },
+            "shrink": {
+              "actual": 152.08,
+              "proj": 157.197
+            },
+            "trail": {
+              "actual": 85.48,
+              "proj": 213.9734
+            },
+            "trail-greedy-proj": {
+              "actual": 115.52,
+              "proj": 182.3334
+            },
+            "trail-greedy-value": {
+              "actual": 109.98,
+              "proj": 197.5067
+            },
+            "usage": {
+              "actual": 85.48,
+              "proj": 214.2044
+            }
+          },
+          "slate": 105,
+          "week": 4
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 139.94,
+              "proj": 190.2073
+            },
+            "ewma": {
+              "actual": 176.06,
+              "proj": 202.8422
+            },
+            "last1": {
+              "actual": 178.76,
+              "proj": 287.8
+            },
+            "last3": {
+              "actual": 148.04,
+              "proj": 198.4333
+            },
+            "opp": {
+              "actual": 182.24,
+              "proj": 137.9248
+            },
+            "shrink": {
+              "actual": 133.64,
+              "proj": 152.1801
+            },
+            "trail": {
+              "actual": 177.74,
+              "proj": 191.2233
+            },
+            "trail-greedy-proj": {
+              "actual": 154.14,
+              "proj": 167.09
+            },
+            "trail-greedy-value": {
+              "actual": 157.24,
+              "proj": 171.2816
+            },
+            "usage": {
+              "actual": 126.94,
+              "proj": 192.5195
+            }
+          },
+          "slate": 92,
+          "week": 5
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 140.38,
+              "proj": 203.3918
+            },
+            "ewma": {
+              "actual": 133.38,
+              "proj": 207.0127
+            },
+            "last1": {
+              "actual": 117.22,
+              "proj": 314.48
+            },
+            "last3": {
+              "actual": 125.96,
+              "proj": 226.0801
+            },
+            "opp": {
+              "actual": 137.62,
+              "proj": 150.2123
+            },
+            "shrink": {
+              "actual": 143.38,
+              "proj": 161.3359
+            },
+            "trail": {
+              "actual": 143.38,
+              "proj": 195.795
+            },
+            "trail-greedy-proj": {
+              "actual": 135.58,
+              "proj": 194.345
+            },
+            "trail-greedy-value": {
+              "actual": 128.98,
+              "proj": 170.035
+            },
+            "usage": {
+              "actual": 143.18,
+              "proj": 201.8942
+            }
+          },
+          "slate": 105,
+          "week": 6
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 164.86,
+              "proj": 192.7276
+            },
+            "ewma": {
+              "actual": 173.26,
+              "proj": 188.8279
+            },
+            "last1": {
+              "actual": 151.94,
+              "proj": 204.48
+            },
+            "last3": {
+              "actual": 148,
+              "proj": 210.7267
+            },
+            "opp": {
+              "actual": 127.74,
+              "proj": 143.9151
+            },
+            "shrink": {
+              "actual": 160.76,
+              "proj": 157.7769
+            },
+            "trail": {
+              "actual": 160.76,
+              "proj": 185.7927
+            },
+            "trail-greedy-proj": {
+              "actual": 119.76,
+              "proj": 184.156
+            },
+            "trail-greedy-value": {
+              "actual": 106.26,
+              "proj": 161.1693
+            },
+            "usage": {
+              "actual": 144.36,
+              "proj": 195.311
+            }
+          },
+          "slate": 88,
+          "week": 7
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 171.18,
+              "proj": 192.6815
+            },
+            "ewma": {
+              "actual": 169.18,
+              "proj": 197.0375
+            },
+            "last1": {
+              "actual": 142.28,
+              "proj": 239.18
+            },
+            "last3": {
+              "actual": 159.2,
+              "proj": 211.6667
+            },
+            "opp": {
+              "actual": 157.3,
+              "proj": 143.7303
+            },
+            "shrink": {
+              "actual": 186.32,
+              "proj": 159.5466
+            },
+            "trail": {
+              "actual": 186.32,
+              "proj": 186.5709
+            },
+            "trail-greedy-proj": {
+              "actual": 185.22,
+              "proj": 163.0466
+            },
+            "trail-greedy-value": {
+              "actual": 146.12,
+              "proj": 156.7258
+            },
+            "usage": {
+              "actual": 161.38,
+              "proj": 205.1154
+            }
+          },
+          "slate": 110,
+          "week": 8
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 79.94,
+              "proj": 177.4605
+            },
+            "ewma": {
+              "actual": 136.94,
+              "proj": 185.2412
+            },
+            "last1": {
+              "actual": 141.18,
+              "proj": 249.72
+            },
+            "last3": {
+              "actual": 129.58,
+              "proj": 199.06
+            },
+            "opp": {
+              "actual": 125.86,
+              "proj": 133.4086
+            },
+            "shrink": {
+              "actual": 80.44,
+              "proj": 159.2789
+            },
+            "trail": {
+              "actual": 80.44,
+              "proj": 182.3185
+            },
+            "trail-greedy-proj": {
+              "actual": 103.32,
+              "proj": 164.5625
+            },
+            "trail-greedy-value": {
+              "actual": 81.24,
+              "proj": 146.4915
+            },
+            "usage": {
+              "actual": 96.84,
+              "proj": 193.785
+            }
+          },
+          "slate": 95,
+          "week": 9
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 176.66,
+              "proj": 178.8239
+            },
+            "ewma": {
+              "actual": 176.66,
+              "proj": 185.3848
+            },
+            "last1": {
+              "actual": 167.46,
+              "proj": 239.06
+            },
+            "last3": {
+              "actual": 176.66,
+              "proj": 198.8601
+            },
+            "opp": {
+              "actual": 191.12,
+              "proj": 135.4881
+            },
+            "shrink": {
+              "actual": 164.78,
+              "proj": 154.4586
+            },
+            "trail": {
+              "actual": 155.78,
+              "proj": 174.8385
+            },
+            "trail-greedy-proj": {
+              "actual": 86.18,
+              "proj": 161.6223
+            },
+            "trail-greedy-value": {
+              "actual": 90.02,
+              "proj": 141.4467
+            },
+            "usage": {
+              "actual": 172.38,
+              "proj": 193.632
+            }
+          },
+          "slate": 94,
+          "week": 10
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 124.96,
+              "proj": 189.6807
+            },
+            "ewma": {
+              "actual": 123.06,
+              "proj": 199.7159
+            },
+            "last1": {
+              "actual": 142.56,
+              "proj": 269.66
+            },
+            "last3": {
+              "actual": 130.66,
+              "proj": 213.4933
+            },
+            "opp": {
+              "actual": 124.18,
+              "proj": 133.8893
+            },
+            "shrink": {
+              "actual": 169,
+              "proj": 160.0534
+            },
+            "trail": {
+              "actual": 169,
+              "proj": 178.3854
+            },
+            "trail-greedy-proj": {
+              "actual": 144.7,
+              "proj": 171.1099
+            },
+            "trail-greedy-value": {
+              "actual": 109.6,
+              "proj": 143.3076
+            },
+            "usage": {
+              "actual": 127.14,
+              "proj": 199.0695
+            }
+          },
+          "slate": 98,
+          "week": 11
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 165.44,
+              "proj": 183.4767
+            },
+            "ewma": {
+              "actual": 166.34,
+              "proj": 190.5115
+            },
+            "last1": {
+              "actual": 106.66,
+              "proj": 236.98
+            },
+            "last3": {
+              "actual": 166.34,
+              "proj": 204.16
+            },
+            "opp": {
+              "actual": 193.36,
+              "proj": 140.4124
+            },
+            "shrink": {
+              "actual": 157.68,
+              "proj": 160.9467
+            },
+            "trail": {
+              "actual": 157.68,
+              "proj": 179.4669
+            },
+            "trail-greedy-proj": {
+              "actual": 182.16,
+              "proj": 166.0299
+            },
+            "trail-greedy-value": {
+              "actual": 128.38,
+              "proj": 151.2976
+            },
+            "usage": {
+              "actual": 173.84,
+              "proj": 193.6228
+            }
+          },
+          "slate": 111,
+          "week": 12
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 167.66,
+              "proj": 181.057
+            },
+            "ewma": {
+              "actual": 167.66,
+              "proj": 185.1035
+            },
+            "last1": {
+              "actual": 158.86,
+              "proj": 221.54
+            },
+            "last3": {
+              "actual": 168.86,
+              "proj": 205.8199
+            },
+            "opp": {
+              "actual": 151.2,
+              "proj": 127.2806
+            },
+            "shrink": {
+              "actual": 152.36,
+              "proj": 159.0095
+            },
+            "trail": {
+              "actual": 152.36,
+              "proj": 175.9746
+            },
+            "trail-greedy-proj": {
+              "actual": 195.42,
+              "proj": 163.5836
+            },
+            "trail-greedy-value": {
+              "actual": 127.96,
+              "proj": 153.5306
+            },
+            "usage": {
+              "actual": 118.48,
+              "proj": 196.4371
+            }
+          },
+          "slate": 91,
+          "week": 13
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 109.24,
+              "proj": 184.6022
+            },
+            "ewma": {
+              "actual": 147.74,
+              "proj": 200.4091
+            },
+            "last1": {
+              "actual": 171.42,
+              "proj": 276.56
+            },
+            "last3": {
+              "actual": 129.88,
+              "proj": 203.12
+            },
+            "opp": {
+              "actual": 133.84,
+              "proj": 140.7415
+            },
+            "shrink": {
+              "actual": 119.84,
+              "proj": 162.4753
+            },
+            "trail": {
+              "actual": 119.84,
+              "proj": 178.1782
+            },
+            "trail-greedy-proj": {
+              "actual": 110.92,
+              "proj": 169.7251
+            },
+            "trail-greedy-value": {
+              "actual": 160.34,
+              "proj": 151.335
+            },
+            "usage": {
+              "actual": 148.92,
+              "proj": 194.8708
+            }
+          },
+          "slate": 106,
+          "week": 14
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 144.36,
+              "proj": 184.3604
+            },
+            "ewma": {
+              "actual": 155.26,
+              "proj": 190.1552
+            },
+            "last1": {
+              "actual": 109.24,
+              "proj": 254.24
+            },
+            "last3": {
+              "actual": 145.16,
+              "proj": 205.7267
+            },
+            "opp": {
+              "actual": 106.3,
+              "proj": 131.4058
+            },
+            "shrink": {
+              "actual": 82.16,
+              "proj": 160.4575
+            },
+            "trail": {
+              "actual": 82.16,
+              "proj": 174.2016
+            },
+            "trail-greedy-proj": {
+              "actual": 121.26,
+              "proj": 165.7897
+            },
+            "trail-greedy-value": {
+              "actual": 108.96,
+              "proj": 143.7495
+            },
+            "usage": {
+              "actual": 120.26,
+              "proj": 191.4077
+            }
+          },
+          "slate": 112,
+          "week": 15
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 134.38,
+              "proj": 183.1697
+            },
+            "ewma": {
+              "actual": 132.28,
+              "proj": 185.6231
+            },
+            "last1": {
+              "actual": 94.18,
+              "proj": 241.72
+            },
+            "last3": {
+              "actual": 126.78,
+              "proj": 202.5467
+            },
+            "opp": {
+              "actual": 117.18,
+              "proj": 132.5029
+            },
+            "shrink": {
+              "actual": 118.52,
+              "proj": 160.0264
+            },
+            "trail": {
+              "actual": 118.52,
+              "proj": 172.9813
+            },
+            "trail-greedy-proj": {
+              "actual": 117.58,
+              "proj": 165.7873
+            },
+            "trail-greedy-value": {
+              "actual": 78.52,
+              "proj": 140.561
+            },
+            "usage": {
+              "actual": 117.58,
+              "proj": 184.9816
+            }
+          },
+          "slate": 112,
+          "week": 16
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 155.74,
+              "proj": 174.6826
+            },
+            "ewma": {
+              "actual": 157.66,
+              "proj": 192.7276
+            },
+            "last1": {
+              "actual": 113.92,
+              "proj": 262.6
+            },
+            "last3": {
+              "actual": 193.14,
+              "proj": 203.0535
+            },
+            "opp": {
+              "actual": 120.6,
+              "proj": 133.0757
+            },
+            "shrink": {
+              "actual": 147,
+              "proj": 159.3547
+            },
+            "trail": {
+              "actual": 147,
+              "proj": 171.2044
+            },
+            "trail-greedy-proj": {
+              "actual": 109.5,
+              "proj": 163.7442
+            },
+            "trail-greedy-value": {
+              "actual": 139.1,
+              "proj": 138.9969
+            },
+            "usage": {
+              "actual": 153.44,
+              "proj": 179.0238
+            }
+          },
+          "slate": 113,
+          "week": 17
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 105.1,
+              "proj": 178.3383
+            },
+            "ewma": {
+              "actual": 106.3,
+              "proj": 200.591
+            },
+            "last1": {
+              "actual": 124.9,
+              "proj": 288.84
+            },
+            "last3": {
+              "actual": 95.9,
+              "proj": 210.4201
+            },
+            "opp": {
+              "actual": 108.26,
+              "proj": 130.3025
+            },
+            "shrink": {
+              "actual": 113.96,
+              "proj": 160.2967
+            },
+            "trail": {
+              "actual": 113.96,
+              "proj": 171.386
+            },
+            "trail-greedy-proj": {
+              "actual": 106.76,
+              "proj": 162.2775
+            },
+            "trail-greedy-value": {
+              "actual": 69.56,
+              "proj": 140.0847
+            },
+            "usage": {
+              "actual": 99.9,
+              "proj": 183.457
+            }
+          },
+          "slate": 113,
+          "week": 18
+        }
+      ],
+      "weeks": {
+        "from": 2,
+        "to": 18
+      }
+    },
+    {
+      "cap": 50000,
+      "qbLag": {
+        "corrCpoe": 0.121,
+        "corrEpa": 0.152,
+        "minAttempts": 15,
+        "n": 425,
+        "resultSha256": "509e0ae13a2fa35f05992d70fcf8d2145c5ee79fa2e37091dfe52aac250a1730"
+      },
+      "resultSha256": "d6140bd4c2bcf0f4e20960119950e300b2e9098ba1dc6340885c6cfafd4dbc7b",
+      "role": "development",
+      "runId": "run-9bb334f25c8c50d0",
+      "season": 2024,
+      "summary": {
+        "commonWeeks": [
+          {
+            "season": 2024,
+            "week": 2
+          },
+          {
+            "season": 2024,
+            "week": 3
+          },
+          {
+            "season": 2024,
+            "week": 4
+          },
+          {
+            "season": 2024,
+            "week": 5
+          },
+          {
+            "season": 2024,
+            "week": 6
+          },
+          {
+            "season": 2024,
+            "week": 7
+          },
+          {
+            "season": 2024,
+            "week": 8
+          },
+          {
+            "season": 2024,
+            "week": 9
+          },
+          {
+            "season": 2024,
+            "week": 10
+          },
+          {
+            "season": 2024,
+            "week": 11
+          },
+          {
+            "season": 2024,
+            "week": 12
+          },
+          {
+            "season": 2024,
+            "week": 13
+          },
+          {
+            "season": 2024,
+            "week": 14
+          },
+          {
+            "season": 2024,
+            "week": 15
+          },
+          {
+            "season": 2024,
+            "week": 16
+          },
+          {
+            "season": 2024,
+            "week": 17
+          },
+          {
+            "season": 2024,
+            "week": 18
+          }
+        ],
+        "excludedWeeks": [],
+        "models": [
+          {
+            "label": "Trailing mean",
+            "lineupActualMean": 128.966,
+            "lineupActualMedian": 130.22,
+            "lineupProjMean": 186.406,
+            "model": "trail",
+            "playerError": {
+              "bias": -0.119,
+              "mae": 6.179,
+              "n": 1495,
+              "rmse": 8.04
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Last week",
+            "lineupActualMean": 130.38,
+            "lineupActualMedian": 128.92,
+            "lineupProjMean": 248.839,
+            "model": "last1",
+            "playerError": {
+              "bias": 0.123,
+              "mae": 7.807,
+              "n": 1495,
+              "rmse": 10.036
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Last 3",
+            "lineupActualMean": 134.854,
+            "lineupActualMedian": 134.38,
+            "lineupProjMean": 207.483,
+            "model": "last3",
+            "playerError": {
+              "bias": 0.072,
+              "mae": 6.443,
+              "n": 1495,
+              "rmse": 8.373
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "60/40 season + last 3",
+            "lineupActualMean": 128.627,
+            "lineupActualMedian": 127.94,
+            "lineupProjMean": 190.611,
+            "model": "blend",
+            "playerError": {
+              "bias": -0.043,
+              "mae": 6.184,
+              "n": 1495,
+              "rmse": 8.044
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "EWMA α=0.35",
+            "lineupActualMean": 137.824,
+            "lineupActualMedian": 138.02,
+            "lineupProjMean": 198.44,
+            "model": "ewma",
+            "playerError": {
+              "bias": -0.008,
+              "mae": 6.263,
+              "n": 1495,
+              "rmse": 8.161
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Shrink to position",
+            "lineupActualMean": 130.954,
+            "lineupActualMedian": 126.68,
+            "lineupProjMean": 157.107,
+            "model": "shrink",
+            "playerError": {
+              "bias": -0.122,
+              "mae": 5.961,
+              "n": 1495,
+              "rmse": 7.644
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Usage × rate",
+            "lineupActualMean": 135.266,
+            "lineupActualMedian": 138.18,
+            "lineupProjMean": 207.25,
+            "model": "usage",
+            "playerError": {
+              "bias": 0.206,
+              "mae": 6.346,
+              "n": 1495,
+              "rmse": 8.181
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Opponent-adjusted trail",
+            "lineupActualMean": 126.541,
+            "lineupActualMedian": 126,
+            "lineupProjMean": 140.308,
+            "model": "opp",
+            "playerError": {
+              "bias": -3.305,
+              "mae": 6.469,
+              "n": 1495,
+              "rmse": 8.669
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Trailing mean, greedy by projection",
+            "lineupActualMean": 128.389,
+            "lineupActualMedian": 130.22,
+            "lineupProjMean": 186.003,
+            "model": "trail-greedy-proj",
+            "playerError": {
+              "bias": -0.119,
+              "mae": 6.179,
+              "n": 1495,
+              "rmse": 8.04
+            },
+            "solver": "greedy-proj",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Trailing mean, greedy by value",
+            "lineupActualMean": 102.684,
+            "lineupActualMedian": 97.42,
+            "lineupProjMean": 169.882,
+            "model": "trail-greedy-value",
+            "playerError": {
+              "bias": -0.119,
+              "mae": 6.179,
+              "n": 1495,
+              "rmse": 8.04
+            },
+            "solver": "greedy-value",
+            "validWeeks": 17,
+            "weeks": 17
+          }
+        ],
+        "paired": [
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 12.832,
+              "level": 0.95,
+              "low": -9.659
+            },
+            "losses": 9,
+            "meanDiff": 1.414,
+            "medianDiff": -1.12,
+            "model": "last1",
+            "n": 17,
+            "ties": 1,
+            "wins": 7
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 16.422,
+              "level": 0.95,
+              "low": -3.738
+            },
+            "losses": 6,
+            "meanDiff": 5.888,
+            "medianDiff": 0,
+            "model": "last3",
+            "n": 17,
+            "ties": 3,
+            "wins": 8
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 8.304,
+              "level": 0.95,
+              "low": -8.632
+            },
+            "losses": 7,
+            "meanDiff": -0.339,
+            "medianDiff": 0,
+            "model": "blend",
+            "n": 17,
+            "ties": 4,
+            "wins": 6
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 18.936,
+              "level": 0.95,
+              "low": -0.645
+            },
+            "losses": 5,
+            "meanDiff": 8.858,
+            "medianDiff": 7.8,
+            "model": "ewma",
+            "n": 17,
+            "ties": 2,
+            "wins": 10
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 7.729,
+              "level": 0.95,
+              "low": -3.342
+            },
+            "losses": 7,
+            "meanDiff": 1.988,
+            "medianDiff": 0,
+            "model": "shrink",
+            "n": 17,
+            "ties": 4,
+            "wins": 6
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 17.186,
+              "level": 0.95,
+              "low": -3.839
+            },
+            "losses": 6,
+            "meanDiff": 6.3,
+            "medianDiff": 0.4,
+            "model": "usage",
+            "n": 17,
+            "ties": 2,
+            "wins": 9
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 5.102,
+              "level": 0.95,
+              "low": -8.781
+            },
+            "losses": 8,
+            "meanDiff": -2.425,
+            "medianDiff": 0,
+            "model": "opp",
+            "n": 17,
+            "ties": 4,
+            "wins": 5
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 0,
+              "level": 0.95,
+              "low": -1.729
+            },
+            "losses": 1,
+            "meanDiff": -0.576,
+            "medianDiff": 0,
+            "model": "trail-greedy-proj",
+            "n": 17,
+            "ties": 16,
+            "wins": 0
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": -11.131,
+              "level": 0.95,
+              "low": -39.989
+            },
+            "losses": 14,
+            "meanDiff": -26.282,
+            "medianDiff": -29.8,
+            "model": "trail-greedy-value",
+            "n": 17,
+            "ties": 0,
+            "wins": 3
+          }
+        ],
+        "rounding": {
+          "points": 2,
+          "projection": 4,
+          "summary": 3
+        }
+      },
+      "universe": {
+        "id": "synthetic-prior-season@1:2024",
+        "lookAhead": false,
+        "players": 114,
+        "rule": "synthetic-prior-season@1",
+        "season": 2024,
+        "sha256": "be9a19bb2ada6906fc6c0eeef5d8d65193f6ab1796f4679805eb1fe56a4754ca"
+      },
+      "weekly": [
+        {
+          "lineups": {
+            "blend": {
+              "actual": 76.46,
+              "proj": 235.78
+            },
+            "ewma": {
+              "actual": 76.46,
+              "proj": 235.78
+            },
+            "last1": {
+              "actual": 76.46,
+              "proj": 235.78
+            },
+            "last3": {
+              "actual": 76.46,
+              "proj": 235.78
+            },
+            "opp": {
+              "actual": 118.76,
+              "proj": 183.7214
+            },
+            "shrink": {
+              "actual": 98.76,
+              "proj": 140.285
+            },
+            "trail": {
+              "actual": 76.46,
+              "proj": 235.78
+            },
+            "trail-greedy-proj": {
+              "actual": 76.46,
+              "proj": 235.78
+            },
+            "trail-greedy-value": {
+              "actual": 111.26,
+              "proj": 224.18
+            },
+            "usage": {
+              "actual": 76.46,
+              "proj": 235.78
+            }
+          },
+          "slate": 108,
+          "week": 2
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 115.78,
+              "proj": 206.81
+            },
+            "ewma": {
+              "actual": 130.22,
+              "proj": 208.118
+            },
+            "last1": {
+              "actual": 111.98,
+              "proj": 251.54
+            },
+            "last3": {
+              "actual": 115.78,
+              "proj": 206.81
+            },
+            "opp": {
+              "actual": 103.18,
+              "proj": 163.3322
+            },
+            "shrink": {
+              "actual": 126.68,
+              "proj": 146.074
+            },
+            "trail": {
+              "actual": 115.78,
+              "proj": 206.81
+            },
+            "trail-greedy-proj": {
+              "actual": 115.78,
+              "proj": 206.81
+            },
+            "trail-greedy-value": {
+              "actual": 93.58,
+              "proj": 186.61
+            },
+            "usage": {
+              "actual": 115.78,
+              "proj": 208.6178
+            }
+          },
+          "slate": 108,
+          "week": 3
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 87.1,
+              "proj": 196.0198
+            },
+            "ewma": {
+              "actual": 79.9,
+              "proj": 200.8003
+            },
+            "last1": {
+              "actual": 121.4,
+              "proj": 256.02
+            },
+            "last3": {
+              "actual": 87.1,
+              "proj": 196.0198
+            },
+            "opp": {
+              "actual": 88.5,
+              "proj": 152.3868
+            },
+            "shrink": {
+              "actual": 106.3,
+              "proj": 150.5915
+            },
+            "trail": {
+              "actual": 87.1,
+              "proj": 196.0198
+            },
+            "trail-greedy-proj": {
+              "actual": 87.1,
+              "proj": 196.0198
+            },
+            "trail-greedy-value": {
+              "actual": 81.38,
+              "proj": 178.1833
+            },
+            "usage": {
+              "actual": 103.34,
+              "proj": 206.0401
+            }
+          },
+          "slate": 108,
+          "week": 4
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 144.62,
+              "proj": 192.1013
+            },
+            "ewma": {
+              "actual": 143.12,
+              "proj": 192.9997
+            },
+            "last1": {
+              "actual": 135.04,
+              "proj": 252.68
+            },
+            "last3": {
+              "actual": 134.66,
+              "proj": 197.33
+            },
+            "opp": {
+              "actual": 144.62,
+              "proj": 141.1326
+            },
+            "shrink": {
+              "actual": 158.32,
+              "proj": 152.8921
+            },
+            "trail": {
+              "actual": 144.62,
+              "proj": 189.9467
+            },
+            "trail-greedy-proj": {
+              "actual": 144.62,
+              "proj": 189.9467
+            },
+            "trail-greedy-value": {
+              "actual": 107.76,
+              "proj": 173.2133
+            },
+            "usage": {
+              "actual": 152.12,
+              "proj": 201.6273
+            }
+          },
+          "slate": 95,
+          "week": 5
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 138.02,
+              "proj": 192.4271
+            },
+            "ewma": {
+              "actual": 138.02,
+              "proj": 189.9878
+            },
+            "last1": {
+              "actual": 112.5,
+              "proj": 233.66
+            },
+            "last3": {
+              "actual": 151.72,
+              "proj": 203.6066
+            },
+            "opp": {
+              "actual": 136.92,
+              "proj": 141.2963
+            },
+            "shrink": {
+              "actual": 125.72,
+              "proj": 153.5719
+            },
+            "trail": {
+              "actual": 130.22,
+              "proj": 187.3897
+            },
+            "trail-greedy-proj": {
+              "actual": 130.22,
+              "proj": 187.3897
+            },
+            "trail-greedy-value": {
+              "actual": 154.42,
+              "proj": 167.8997
+            },
+            "usage": {
+              "actual": 134.52,
+              "proj": 202.2141
+            }
+          },
+          "slate": 92,
+          "week": 6
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 155.04,
+              "proj": 189.1533
+            },
+            "ewma": {
+              "actual": 163.24,
+              "proj": 193.0128
+            },
+            "last1": {
+              "actual": 153.4,
+              "proj": 227.12
+            },
+            "last3": {
+              "actual": 160.24,
+              "proj": 196.7433
+            },
+            "opp": {
+              "actual": 150.94,
+              "proj": 146.9043
+            },
+            "shrink": {
+              "actual": 148.64,
+              "proj": 157.3784
+            },
+            "trail": {
+              "actual": 150.94,
+              "proj": 188.1934
+            },
+            "trail-greedy-proj": {
+              "actual": 150.94,
+              "proj": 188.1934
+            },
+            "trail-greedy-value": {
+              "actual": 105.9,
+              "proj": 165.805
+            },
+            "usage": {
+              "actual": 149.04,
+              "proj": 205.286
+            }
+          },
+          "slate": 102,
+          "week": 7
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 130.36,
+              "proj": 187.5368
+            },
+            "ewma": {
+              "actual": 126.06,
+              "proj": 193.8803
+            },
+            "last1": {
+              "actual": 117.26,
+              "proj": 225.94
+            },
+            "last3": {
+              "actual": 153.96,
+              "proj": 195.6267
+            },
+            "opp": {
+              "actual": 115.72,
+              "proj": 140.3787
+            },
+            "shrink": {
+              "actual": 105.66,
+              "proj": 158.4483
+            },
+            "trail": {
+              "actual": 126.06,
+              "proj": 186.7762
+            },
+            "trail-greedy-proj": {
+              "actual": 126.06,
+              "proj": 186.7762
+            },
+            "trail-greedy-value": {
+              "actual": 70.42,
+              "proj": 166.2483
+            },
+            "usage": {
+              "actual": 126.46,
+              "proj": 208.8239
+            }
+          },
+          "slate": 111,
+          "week": 8
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 121,
+              "proj": 177.2534
+            },
+            "ewma": {
+              "actual": 137.6,
+              "proj": 181.593
+            },
+            "last1": {
+              "actual": 159.9,
+              "proj": 233.34
+            },
+            "last3": {
+              "actual": 119.1,
+              "proj": 188.2534
+            },
+            "opp": {
+              "actual": 132.94,
+              "proj": 126.3419
+            },
+            "shrink": {
+              "actual": 129,
+              "proj": 154.7269
+            },
+            "trail": {
+              "actual": 140,
+              "proj": 175.5914
+            },
+            "trail-greedy-proj": {
+              "actual": 140,
+              "proj": 175.5914
+            },
+            "trail-greedy-value": {
+              "actual": 142.6,
+              "proj": 166.4399
+            },
+            "usage": {
+              "actual": 110.58,
+              "proj": 197.2542
+            }
+          },
+          "slate": 102,
+          "week": 9
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 100.9,
+              "proj": 184.6209
+            },
+            "ewma": {
+              "actual": 114.98,
+              "proj": 189.5086
+            },
+            "last1": {
+              "actual": 110.38,
+              "proj": 251.5
+            },
+            "last3": {
+              "actual": 115.28,
+              "proj": 195.9667
+            },
+            "opp": {
+              "actual": 101.22,
+              "proj": 135.6472
+            },
+            "shrink": {
+              "actual": 109.2,
+              "proj": 160.3106
+            },
+            "trail": {
+              "actual": 110.3,
+              "proj": 181.6283
+            },
+            "trail-greedy-proj": {
+              "actual": 110.3,
+              "proj": 181.6283
+            },
+            "trail-greedy-value": {
+              "actual": 80.5,
+              "proj": 157.9743
+            },
+            "usage": {
+              "actual": 150.2,
+              "proj": 203.9658
+            }
+          },
+          "slate": 102,
+          "week": 10
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 127.94,
+              "proj": 181.2929
+            },
+            "ewma": {
+              "actual": 149.28,
+              "proj": 190.8621
+            },
+            "last1": {
+              "actual": 118.78,
+              "proj": 241
+            },
+            "last3": {
+              "actual": 116.94,
+              "proj": 202.3732
+            },
+            "opp": {
+              "actual": 126,
+              "proj": 138.2321
+            },
+            "shrink": {
+              "actual": 155.48,
+              "proj": 161.1873
+            },
+            "trail": {
+              "actual": 155.48,
+              "proj": 180.9147
+            },
+            "trail-greedy-proj": {
+              "actual": 145.68,
+              "proj": 174.0608
+            },
+            "trail-greedy-value": {
+              "actual": 122.28,
+              "proj": 163.0291
+            },
+            "usage": {
+              "actual": 138.18,
+              "proj": 210.4383
+            }
+          },
+          "slate": 104,
+          "week": 11
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 157.88,
+              "proj": 181.6393
+            },
+            "ewma": {
+              "actual": 170.76,
+              "proj": 188.8309
+            },
+            "last1": {
+              "actual": 158.56,
+              "proj": 258.88
+            },
+            "last3": {
+              "actual": 150.76,
+              "proj": 192.0401
+            },
+            "opp": {
+              "actual": 159.68,
+              "proj": 131.5376
+            },
+            "shrink": {
+              "actual": 151.68,
+              "proj": 160.1543
+            },
+            "trail": {
+              "actual": 159.68,
+              "proj": 178.6642
+            },
+            "trail-greedy-proj": {
+              "actual": 159.68,
+              "proj": 178.6642
+            },
+            "trail-greedy-value": {
+              "actual": 92.28,
+              "proj": 165.1835
+            },
+            "usage": {
+              "actual": 151.18,
+              "proj": 192.9691
+            }
+          },
+          "slate": 92,
+          "week": 12
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 109.28,
+              "proj": 188.8894
+            },
+            "ewma": {
+              "actual": 127.48,
+              "proj": 202.8552
+            },
+            "last1": {
+              "actual": 135.14,
+              "proj": 283.68
+            },
+            "last3": {
+              "actual": 134.38,
+              "proj": 208.9934
+            },
+            "opp": {
+              "actual": 105.32,
+              "proj": 135.6239
+            },
+            "shrink": {
+              "actual": 113.08,
+              "proj": 164.0138
+            },
+            "trail": {
+              "actual": 113.08,
+              "proj": 182.03
+            },
+            "trail-greedy-proj": {
+              "actual": 113.08,
+              "proj": 182.03
+            },
+            "trail-greedy-value": {
+              "actual": 108.28,
+              "proj": 171.829
+            },
+            "usage": {
+              "actual": 110.98,
+              "proj": 204.5478
+            }
+          },
+          "slate": 113,
+          "week": 13
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 176.38,
+              "proj": 182.554
+            },
+            "ewma": {
+              "actual": 184.98,
+              "proj": 190.4788
+            },
+            "last1": {
+              "actual": 128.92,
+              "proj": 214.96
+            },
+            "last3": {
+              "actual": 212.78,
+              "proj": 212.84
+            },
+            "opp": {
+              "actual": 168.02,
+              "proj": 126.9927
+            },
+            "shrink": {
+              "actual": 155.12,
+              "proj": 157.6187
+            },
+            "trail": {
+              "actual": 165.02,
+              "proj": 171.6017
+            },
+            "trail-greedy-proj": {
+              "actual": 165.02,
+              "proj": 171.6017
+            },
+            "trail-greedy-value": {
+              "actual": 96.12,
+              "proj": 152.8558
+            },
+            "usage": {
+              "actual": 175.68,
+              "proj": 197.9746
+            }
+          },
+          "slate": 91,
+          "week": 14
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 151.78,
+              "proj": 190.8303
+            },
+            "ewma": {
+              "actual": 168.98,
+              "proj": 210.2728
+            },
+            "last1": {
+              "actual": 160.88,
+              "proj": 293.88
+            },
+            "last3": {
+              "actual": 165.08,
+              "proj": 226.9933
+            },
+            "opp": {
+              "actual": 117,
+              "proj": 133.1259
+            },
+            "shrink": {
+              "actual": 117,
+              "proj": 163.9635
+            },
+            "trail": {
+              "actual": 117,
+              "proj": 179.5326
+            },
+            "trail-greedy-proj": {
+              "actual": 117,
+              "proj": 179.5326
+            },
+            "trail-greedy-value": {
+              "actual": 93.2,
+              "proj": 168.597
+            },
+            "usage": {
+              "actual": 168,
+              "proj": 211.3498
+            }
+          },
+          "slate": 113,
+          "week": 15
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 154.36,
+              "proj": 185.4986
+            },
+            "ewma": {
+              "actual": 139.26,
+              "proj": 210.4011
+            },
+            "last1": {
+              "actual": 160.44,
+              "proj": 284.36
+            },
+            "last3": {
+              "actual": 127.16,
+              "proj": 223.2333
+            },
+            "opp": {
+              "actual": 106.26,
+              "proj": 132.7839
+            },
+            "shrink": {
+              "actual": 121.58,
+              "proj": 162.5598
+            },
+            "trail": {
+              "actual": 115.58,
+              "proj": 176.4284
+            },
+            "trail-greedy-proj": {
+              "actual": 115.58,
+              "proj": 176.4284
+            },
+            "trail-greedy-value": {
+              "actual": 107.98,
+              "proj": 163.8746
+            },
+            "usage": {
+              "actual": 164.94,
+              "proj": 208.6795
+            }
+          },
+          "slate": 113,
+          "week": 16
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 122.38,
+              "proj": 187.0538
+            },
+            "ewma": {
+              "actual": 99.98,
+              "proj": 199.1715
+            },
+            "last1": {
+              "actual": 121.42,
+              "proj": 243.84
+            },
+            "last3": {
+              "actual": 134.08,
+              "proj": 227.9133
+            },
+            "opp": {
+              "actual": 149.12,
+              "proj": 127.3897
+            },
+            "shrink": {
+              "actual": 160.02,
+              "proj": 163.1911
+            },
+            "trail": {
+              "actual": 141.12,
+              "proj": 175.7512
+            },
+            "trail-greedy-proj": {
+              "actual": 141.12,
+              "proj": 175.7512
+            },
+            "trail-greedy-value": {
+              "actual": 97.42,
+              "proj": 157.4898
+            },
+            "usage": {
+              "actual": 150.82,
+              "proj": 212.301
+            }
+          },
+          "slate": 113,
+          "week": 17
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 117.38,
+              "proj": 180.926
+            },
+            "ewma": {
+              "actual": 192.68,
+              "proj": 194.9254
+            },
+            "last1": {
+              "actual": 134,
+              "proj": 242.08
+            },
+            "last3": {
+              "actual": 137.04,
+              "proj": 216.68
+            },
+            "opp": {
+              "actual": 127,
+              "proj": 128.4126
+            },
+            "shrink": {
+              "actual": 143.98,
+              "proj": 163.8522
+            },
+            "trail": {
+              "actual": 143.98,
+              "proj": 175.8425
+            },
+            "trail-greedy-proj": {
+              "actual": 143.98,
+              "proj": 175.8425
+            },
+            "trail-greedy-value": {
+              "actual": 80.24,
+              "proj": 158.5857
+            },
+            "usage": {
+              "actual": 121.24,
+              "proj": 215.383
+            }
+          },
+          "slate": 113,
+          "week": 18
+        }
+      ],
+      "weeks": {
+        "from": 2,
+        "to": 18
+      }
+    },
+    {
+      "cap": 50000,
+      "qbLag": {
+        "corrCpoe": 0.143,
+        "corrEpa": 0.165,
+        "minAttempts": 15,
+        "n": 409,
+        "resultSha256": "c2e07103894611171d9931921c8fabf46c8c78f3ef908c56db98e7a4ddc09e8e"
+      },
+      "resultSha256": "e7ae6f1606ac34cdbcdec57fbaf0fe3376d76848fb5339bf145b92d5d2562b03",
+      "role": "retrospective",
+      "runId": "run-2a18ed7b1af9319f",
+      "season": 2025,
+      "summary": {
+        "commonWeeks": [
+          {
+            "season": 2025,
+            "week": 2
+          },
+          {
+            "season": 2025,
+            "week": 3
+          },
+          {
+            "season": 2025,
+            "week": 4
+          },
+          {
+            "season": 2025,
+            "week": 5
+          },
+          {
+            "season": 2025,
+            "week": 6
+          },
+          {
+            "season": 2025,
+            "week": 7
+          },
+          {
+            "season": 2025,
+            "week": 8
+          },
+          {
+            "season": 2025,
+            "week": 9
+          },
+          {
+            "season": 2025,
+            "week": 10
+          },
+          {
+            "season": 2025,
+            "week": 11
+          },
+          {
+            "season": 2025,
+            "week": 12
+          },
+          {
+            "season": 2025,
+            "week": 13
+          },
+          {
+            "season": 2025,
+            "week": 14
+          },
+          {
+            "season": 2025,
+            "week": 15
+          },
+          {
+            "season": 2025,
+            "week": 16
+          },
+          {
+            "season": 2025,
+            "week": 17
+          },
+          {
+            "season": 2025,
+            "week": 18
+          }
+        ],
+        "excludedWeeks": [],
+        "models": [
+          {
+            "label": "Trailing mean",
+            "lineupActualMean": 139.749,
+            "lineupActualMedian": 142.72,
+            "lineupProjMean": 188.872,
+            "model": "trail",
+            "playerError": {
+              "bias": 0.113,
+              "mae": 6.169,
+              "n": 1522,
+              "rmse": 8.076
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Last week",
+            "lineupActualMean": 133.848,
+            "lineupActualMedian": 119.3,
+            "lineupProjMean": 255.38,
+            "model": "last1",
+            "playerError": {
+              "bias": 0.141,
+              "mae": 7.781,
+              "n": 1522,
+              "rmse": 10.423
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Last 3",
+            "lineupActualMean": 136.638,
+            "lineupActualMedian": 143.82,
+            "lineupProjMean": 208.151,
+            "model": "last3",
+            "playerError": {
+              "bias": 0.121,
+              "mae": 6.57,
+              "n": 1522,
+              "rmse": 8.617
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "60/40 season + last 3",
+            "lineupActualMean": 142.561,
+            "lineupActualMedian": 145,
+            "lineupProjMean": 194.397,
+            "model": "blend",
+            "playerError": {
+              "bias": 0.116,
+              "mae": 6.239,
+              "n": 1522,
+              "rmse": 8.174
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "EWMA α=0.35",
+            "lineupActualMean": 148.885,
+            "lineupActualMedian": 153.32,
+            "lineupProjMean": 198.717,
+            "model": "ewma",
+            "playerError": {
+              "bias": 0.04,
+              "mae": 6.311,
+              "n": 1522,
+              "rmse": 8.301
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Shrink to position",
+            "lineupActualMean": 140.782,
+            "lineupActualMedian": 142.86,
+            "lineupProjMean": 158.633,
+            "model": "shrink",
+            "playerError": {
+              "bias": 0.092,
+              "mae": 5.99,
+              "n": 1522,
+              "rmse": 7.736
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Usage × rate",
+            "lineupActualMean": 146.74,
+            "lineupActualMedian": 143.88,
+            "lineupProjMean": 200.556,
+            "model": "usage",
+            "playerError": {
+              "bias": 0.29,
+              "mae": 6.384,
+              "n": 1522,
+              "rmse": 8.355
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Opponent-adjusted trail",
+            "lineupActualMean": 147.396,
+            "lineupActualMedian": 154.54,
+            "lineupProjMean": 144.439,
+            "model": "opp",
+            "playerError": {
+              "bias": -2.977,
+              "mae": 6.27,
+              "n": 1522,
+              "rmse": 8.571
+            },
+            "solver": "exact-dp",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Trailing mean, greedy by projection",
+            "lineupActualMean": 139.7,
+            "lineupActualMedian": 134.22,
+            "lineupProjMean": 186.764,
+            "model": "trail-greedy-proj",
+            "playerError": {
+              "bias": 0.113,
+              "mae": 6.169,
+              "n": 1522,
+              "rmse": 8.076
+            },
+            "solver": "greedy-proj",
+            "validWeeks": 17,
+            "weeks": 17
+          },
+          {
+            "label": "Trailing mean, greedy by value",
+            "lineupActualMean": 120.696,
+            "lineupActualMedian": 114.3,
+            "lineupProjMean": 163.992,
+            "model": "trail-greedy-value",
+            "playerError": {
+              "bias": 0.113,
+              "mae": 6.169,
+              "n": 1522,
+              "rmse": 8.076
+            },
+            "solver": "greedy-value",
+            "validWeeks": 17,
+            "weeks": 17
+          }
+        ],
+        "paired": [
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 11.68,
+              "level": 0.95,
+              "low": -22.452
+            },
+            "losses": 9,
+            "meanDiff": -5.901,
+            "medianDiff": -7.4,
+            "model": "last1",
+            "n": 17,
+            "ties": 1,
+            "wins": 7
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 8.547,
+              "level": 0.95,
+              "low": -14.276
+            },
+            "losses": 9,
+            "meanDiff": -3.112,
+            "medianDiff": -0.5,
+            "model": "last3",
+            "n": 17,
+            "ties": 3,
+            "wins": 5
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 10.375,
+              "level": 0.95,
+              "low": -3.939
+            },
+            "losses": 6,
+            "meanDiff": 2.812,
+            "medianDiff": 0,
+            "model": "blend",
+            "n": 17,
+            "ties": 5,
+            "wins": 6
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 18.945,
+              "level": 0.95,
+              "low": -0.478
+            },
+            "losses": 5,
+            "meanDiff": 9.135,
+            "medianDiff": 8,
+            "model": "ewma",
+            "n": 17,
+            "ties": 1,
+            "wins": 11
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 5.034,
+              "level": 0.95,
+              "low": -2.951
+            },
+            "losses": 3,
+            "meanDiff": 1.033,
+            "medianDiff": 0,
+            "model": "shrink",
+            "n": 17,
+            "ties": 8,
+            "wins": 6
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 13.55,
+              "level": 0.95,
+              "low": 1.198
+            },
+            "losses": 6,
+            "meanDiff": 6.991,
+            "medianDiff": 0,
+            "model": "usage",
+            "n": 17,
+            "ties": 3,
+            "wins": 8
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 15.402,
+              "level": 0.95,
+              "low": 0.493
+            },
+            "losses": 5,
+            "meanDiff": 7.647,
+            "medianDiff": 7,
+            "model": "opp",
+            "n": 17,
+            "ties": 1,
+            "wins": 11
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": 5.324,
+              "level": 0.95,
+              "low": -5.536
+            },
+            "losses": 4,
+            "meanDiff": -0.049,
+            "medianDiff": 0,
+            "model": "trail-greedy-proj",
+            "n": 17,
+            "ties": 8,
+            "wins": 5
+          },
+          {
+            "baseline": "trail",
+            "interval": {
+              "high": -10.307,
+              "level": 0.95,
+              "low": -27.048
+            },
+            "losses": 14,
+            "meanDiff": -19.053,
+            "medianDiff": -24.2,
+            "model": "trail-greedy-value",
+            "n": 17,
+            "ties": 0,
+            "wins": 3
+          }
+        ],
+        "rounding": {
+          "points": 2,
+          "projection": 4,
+          "summary": 3
+        }
+      },
+      "universe": {
+        "id": "synthetic-prior-season@1:2025",
+        "lookAhead": false,
+        "players": 114,
+        "rule": "synthetic-prior-season@1",
+        "season": 2025,
+        "sha256": "f1f1f4bf09c212e761e2def3ff3522c9cf48c03e9a7f659fb7ed129e5940e3ef"
+      },
+      "weekly": [
+        {
+          "lineups": {
+            "blend": {
+              "actual": 113.72,
+              "proj": 217.16
+            },
+            "ewma": {
+              "actual": 113.72,
+              "proj": 217.16
+            },
+            "last1": {
+              "actual": 113.72,
+              "proj": 217.16
+            },
+            "last3": {
+              "actual": 113.72,
+              "proj": 217.16
+            },
+            "opp": {
+              "actual": 122.52,
+              "proj": 187.043
+            },
+            "shrink": {
+              "actual": 113.72,
+              "proj": 128.0718
+            },
+            "trail": {
+              "actual": 113.72,
+              "proj": 217.16
+            },
+            "trail-greedy-proj": {
+              "actual": 113.72,
+              "proj": 217.16
+            },
+            "trail-greedy-value": {
+              "actual": 92.62,
+              "proj": 189.46
+            },
+            "usage": {
+              "actual": 113.72,
+              "proj": 217.16
+            }
+          },
+          "slate": 109,
+          "week": 2
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 143.82,
+              "proj": 198.38
+            },
+            "ewma": {
+              "actual": 135.22,
+              "proj": 192.491
+            },
+            "last1": {
+              "actual": 117.5,
+              "proj": 261.8
+            },
+            "last3": {
+              "actual": 143.82,
+              "proj": 198.38
+            },
+            "opp": {
+              "actual": 129.82,
+              "proj": 154.6809
+            },
+            "shrink": {
+              "actual": 143.82,
+              "proj": 141.6117
+            },
+            "trail": {
+              "actual": 143.82,
+              "proj": 198.38
+            },
+            "trail-greedy-proj": {
+              "actual": 143.82,
+              "proj": 198.38
+            },
+            "trail-greedy-value": {
+              "actual": 131.5,
+              "proj": 172.1
+            },
+            "usage": {
+              "actual": 139.22,
+              "proj": 200.0508
+            }
+          },
+          "slate": 109,
+          "week": 3
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 164.78,
+              "proj": 192.2932
+            },
+            "ewma": {
+              "actual": 171.98,
+              "proj": 189.3312
+            },
+            "last1": {
+              "actual": 103.1,
+              "proj": 248.44
+            },
+            "last3": {
+              "actual": 164.78,
+              "proj": 192.2932
+            },
+            "opp": {
+              "actual": 173.5,
+              "proj": 141.0986
+            },
+            "shrink": {
+              "actual": 164.78,
+              "proj": 147.5998
+            },
+            "trail": {
+              "actual": 164.78,
+              "proj": 192.2932
+            },
+            "trail-greedy-proj": {
+              "actual": 164.78,
+              "proj": 192.2932
+            },
+            "trail-greedy-value": {
+              "actual": 122.82,
+              "proj": 162.3332
+            },
+            "usage": {
+              "actual": 172.58,
+              "proj": 197.9596
+            }
+          },
+          "slate": 109,
+          "week": 4
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 134.22,
+              "proj": 192.7757
+            },
+            "ewma": {
+              "actual": 153.32,
+              "proj": 189.5461
+            },
+            "last1": {
+              "actual": 142.22,
+              "proj": 224.7
+            },
+            "last3": {
+              "actual": 110.5,
+              "proj": 198.9667
+            },
+            "opp": {
+              "actual": 154.54,
+              "proj": 142.8462
+            },
+            "shrink": {
+              "actual": 149.02,
+              "proj": 151.431
+            },
+            "trail": {
+              "actual": 134.22,
+              "proj": 189.915
+            },
+            "trail-greedy-proj": {
+              "actual": 134.22,
+              "proj": 189.915
+            },
+            "trail-greedy-value": {
+              "actual": 121.52,
+              "proj": 167.115
+            },
+            "usage": {
+              "actual": 133.9,
+              "proj": 198.9111
+            }
+          },
+          "slate": 97,
+          "week": 5
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 155.4,
+              "proj": 188.3642
+            },
+            "ewma": {
+              "actual": 179.58,
+              "proj": 188.452
+            },
+            "last1": {
+              "actual": 222.2,
+              "proj": 234.74
+            },
+            "last3": {
+              "actual": 134.72,
+              "proj": 195.0466
+            },
+            "opp": {
+              "actual": 173.36,
+              "proj": 142.0017
+            },
+            "shrink": {
+              "actual": 171,
+              "proj": 154.3441
+            },
+            "trail": {
+              "actual": 171,
+              "proj": 185.596
+            },
+            "trail-greedy-proj": {
+              "actual": 175.7,
+              "proj": 183.771
+            },
+            "trail-greedy-value": {
+              "actual": 144.78,
+              "proj": 155.256
+            },
+            "usage": {
+              "actual": 174.88,
+              "proj": 194.4339
+            }
+          },
+          "slate": 105,
+          "week": 6
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 174.44,
+              "proj": 193.2227
+            },
+            "ewma": {
+              "actual": 193.74,
+              "proj": 196.3632
+            },
+            "last1": {
+              "actual": 165.24,
+              "proj": 263.28
+            },
+            "last3": {
+              "actual": 146.64,
+              "proj": 205.4334
+            },
+            "opp": {
+              "actual": 164.94,
+              "proj": 144.3425
+            },
+            "shrink": {
+              "actual": 178.44,
+              "proj": 159.3866
+            },
+            "trail": {
+              "actual": 178.44,
+              "proj": 188.8934
+            },
+            "trail-greedy-proj": {
+              "actual": 178.44,
+              "proj": 188.8934
+            },
+            "trail-greedy-value": {
+              "actual": 190.34,
+              "proj": 162.0101
+            },
+            "usage": {
+              "actual": 178.44,
+              "proj": 197.5036
+            }
+          },
+          "slate": 104,
+          "week": 7
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 167.66,
+              "proj": 198.9719
+            },
+            "ewma": {
+              "actual": 175.26,
+              "proj": 204.1485
+            },
+            "last1": {
+              "actual": 124.18,
+              "proj": 287.76
+            },
+            "last3": {
+              "actual": 153.06,
+              "proj": 219.68
+            },
+            "opp": {
+              "actual": 156.96,
+              "proj": 141.9318
+            },
+            "shrink": {
+              "actual": 142.86,
+              "proj": 157.1157
+            },
+            "trail": {
+              "actual": 156.96,
+              "proj": 187.2833
+            },
+            "trail-greedy-proj": {
+              "actual": 154.86,
+              "proj": 183.0429
+            },
+            "trail-greedy-value": {
+              "actual": 171.76,
+              "proj": 170.9382
+            },
+            "usage": {
+              "actual": 156.96,
+              "proj": 202.5849
+            }
+          },
+          "slate": 89,
+          "week": 8
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 145,
+              "proj": 202.5376
+            },
+            "ewma": {
+              "actual": 129,
+              "proj": 205.6819
+            },
+            "last1": {
+              "actual": 108.62,
+              "proj": 264.7
+            },
+            "last3": {
+              "actual": 145,
+              "proj": 217.2433
+            },
+            "opp": {
+              "actual": 161.56,
+              "proj": 147.4557
+            },
+            "shrink": {
+              "actual": 145.6,
+              "proj": 164.3276
+            },
+            "trail": {
+              "actual": 145.5,
+              "proj": 193.0087
+            },
+            "trail-greedy-proj": {
+              "actual": 145.5,
+              "proj": 193.0087
+            },
+            "trail-greedy-value": {
+              "actual": 121.3,
+              "proj": 172.7789
+            },
+            "usage": {
+              "actual": 140.9,
+              "proj": 204.9889
+            }
+          },
+          "slate": 97,
+          "week": 9
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 170.5,
+              "proj": 190.3699
+            },
+            "ewma": {
+              "actual": 173.4,
+              "proj": 194.5545
+            },
+            "last1": {
+              "actual": 101.3,
+              "proj": 279.44
+            },
+            "last3": {
+              "actual": 174.8,
+              "proj": 208.7533
+            },
+            "opp": {
+              "actual": 172.84,
+              "proj": 142.4639
+            },
+            "shrink": {
+              "actual": 165.84,
+              "proj": 163.2441
+            },
+            "trail": {
+              "actual": 165.84,
+              "proj": 184.6618
+            },
+            "trail-greedy-proj": {
+              "actual": 152.14,
+              "proj": 182.2808
+            },
+            "trail-greedy-value": {
+              "actual": 132.5,
+              "proj": 158.9504
+            },
+            "usage": {
+              "actual": 199.84,
+              "proj": 195.0741
+            }
+          },
+          "slate": 101,
+          "week": 10
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 158.34,
+              "proj": 187.9008
+            },
+            "ewma": {
+              "actual": 158.34,
+              "proj": 198.5112
+            },
+            "last1": {
+              "actual": 113.9,
+              "proj": 248.6
+            },
+            "last3": {
+              "actual": 158.34,
+              "proj": 201.4266
+            },
+            "opp": {
+              "actual": 147.34,
+              "proj": 138.2775
+            },
+            "shrink": {
+              "actual": 157.24,
+              "proj": 161.783
+            },
+            "trail": {
+              "actual": 150.34,
+              "proj": 183.956
+            },
+            "trail-greedy-proj": {
+              "actual": 122.64,
+              "proj": 181.7394
+            },
+            "trail-greedy-value": {
+              "actual": 105.54,
+              "proj": 159.8421
+            },
+            "usage": {
+              "actual": 143.88,
+              "proj": 197.6174
+            }
+          },
+          "slate": 109,
+          "week": 11
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 124.62,
+              "proj": 197.4807
+            },
+            "ewma": {
+              "actual": 116.42,
+              "proj": 207.2464
+            },
+            "last1": {
+              "actual": 122.62,
+              "proj": 267.28
+            },
+            "last3": {
+              "actual": 122.92,
+              "proj": 218.9468
+            },
+            "opp": {
+              "actual": 165.46,
+              "proj": 142.6039
+            },
+            "shrink": {
+              "actual": 129.62,
+              "proj": 166.6205
+            },
+            "trail": {
+              "actual": 142.72,
+              "proj": 188.1226
+            },
+            "trail-greedy-proj": {
+              "actual": 127.42,
+              "proj": 186.2076
+            },
+            "trail-greedy-value": {
+              "actual": 109.88,
+              "proj": 166.448
+            },
+            "usage": {
+              "actual": 149.12,
+              "proj": 196.3306
+            }
+          },
+          "slate": 97,
+          "week": 12
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 96.52,
+              "proj": 196.2898
+            },
+            "ewma": {
+              "actual": 134.74,
+              "proj": 206.6554
+            },
+            "last1": {
+              "actual": 113.2,
+              "proj": 273.46
+            },
+            "last3": {
+              "actual": 71.42,
+              "proj": 216.8466
+            },
+            "opp": {
+              "actual": 137.72,
+              "proj": 146.0481
+            },
+            "shrink": {
+              "actual": 123.04,
+              "proj": 168.1639
+            },
+            "trail": {
+              "actual": 109.72,
+              "proj": 187.6295
+            },
+            "trail-greedy-proj": {
+              "actual": 109.72,
+              "proj": 187.6295
+            },
+            "trail-greedy-value": {
+              "actual": 108.54,
+              "proj": 163.9957
+            },
+            "usage": {
+              "actual": 104.32,
+              "proj": 202.3903
+            }
+          },
+          "slate": 113,
+          "week": 13
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 126.7,
+              "proj": 187.3323
+            },
+            "ewma": {
+              "actual": 114,
+              "proj": 190.9548
+            },
+            "last1": {
+              "actual": 119.3,
+              "proj": 248.54
+            },
+            "last3": {
+              "actual": 114.6,
+              "proj": 202.9199
+            },
+            "opp": {
+              "actual": 123.56,
+              "proj": 134.6347
+            },
+            "shrink": {
+              "actual": 126.7,
+              "proj": 161.5859
+            },
+            "trail": {
+              "actual": 126.7,
+              "proj": 179.185
+            },
+            "trail-greedy-proj": {
+              "actual": 127.14,
+              "proj": 168.6734
+            },
+            "trail-greedy-value": {
+              "actual": 88.3,
+              "proj": 166.43
+            },
+            "usage": {
+              "actual": 142.7,
+              "proj": 204.1486
+            }
+          },
+          "slate": 102,
+          "week": 14
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 118.92,
+              "proj": 193.724
+            },
+            "ewma": {
+              "actual": 118.92,
+              "proj": 199.9816
+            },
+            "last1": {
+              "actual": 142.22,
+              "proj": 250.54
+            },
+            "last3": {
+              "actual": 112.32,
+              "proj": 215.6268
+            },
+            "opp": {
+              "actual": 134.42,
+              "proj": 137.3202
+            },
+            "shrink": {
+              "actual": 113.32,
+              "proj": 168.5468
+            },
+            "trail": {
+              "actual": 125.42,
+              "proj": 185.9792
+            },
+            "trail-greedy-proj": {
+              "actual": 125.42,
+              "proj": 185.9792
+            },
+            "trail-greedy-value": {
+              "actual": 94.86,
+              "proj": 160.9042
+            },
+            "usage": {
+              "actual": 117.6,
+              "proj": 196.7678
+            }
+          },
+          "slate": 113,
+          "week": 15
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 153.8,
+              "proj": 186.2083
+            },
+            "ewma": {
+              "actual": 166.1,
+              "proj": 193.9199
+            },
+            "last1": {
+              "actual": 180.9,
+              "proj": 267.9
+            },
+            "last3": {
+              "actual": 157.3,
+              "proj": 205.4934
+            },
+            "opp": {
+              "actual": 191.2,
+              "proj": 139.5313
+            },
+            "shrink": {
+              "actual": 140.9,
+              "proj": 167.5631
+            },
+            "trail": {
+              "actual": 140.9,
+              "proj": 184.1077
+            },
+            "trail-greedy-proj": {
+              "actual": 157,
+              "proj": 183.2309
+            },
+            "trail-greedy-value": {
+              "actual": 111.8,
+              "proj": 151.4377
+            },
+            "usage": {
+              "actual": 164.9,
+              "proj": 192.5811
+            }
+          },
+          "slate": 113,
+          "week": 16
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 166.02,
+              "proj": 188.7603
+            },
+            "ewma": {
+              "actual": 181.92,
+              "proj": 198.4819
+            },
+            "last1": {
+              "actual": 196.02,
+              "proj": 254.6
+            },
+            "last3": {
+              "actual": 157.52,
+              "proj": 205.34
+            },
+            "opp": {
+              "actual": 119.7,
+              "proj": 139.166
+            },
+            "shrink": {
+              "actual": 125.2,
+              "proj": 167.5504
+            },
+            "trail": {
+              "actual": 116.98,
+              "proj": 182.6023
+            },
+            "trail-greedy-proj": {
+              "actual": 125.78,
+              "proj": 177.5931
+            },
+            "trail-greedy-value": {
+              "actual": 114.3,
+              "proj": 162.4562
+            },
+            "usage": {
+              "actual": 144.18,
+              "proj": 203.1021
+            }
+          },
+          "slate": 113,
+          "week": 17
+        },
+        {
+          "lineups": {
+            "blend": {
+              "actual": 109.08,
+              "proj": 192.9764
+            },
+            "ewma": {
+              "actual": 115.38,
+              "proj": 204.7113
+            },
+            "last1": {
+              "actual": 89.18,
+              "proj": 248.52
+            },
+            "last3": {
+              "actual": 141.38,
+              "proj": 219.0068
+            },
+            "opp": {
+              "actual": 76.3,
+              "proj": 134.0099
+            },
+            "shrink": {
+              "actual": 102.2,
+              "proj": 167.8184
+            },
+            "trail": {
+              "actual": 88.68,
+              "proj": 182.0543
+            },
+            "trail-greedy-proj": {
+              "actual": 116.6,
+              "proj": 175.193
+            },
+            "trail-greedy-value": {
+              "actual": 89.48,
+              "proj": 145.4096
+            },
+            "usage": {
+              "actual": 117.44,
+              "proj": 207.8469
+            }
+          },
+          "slate": 113,
+          "week": 18
+        }
+      ],
+      "weeks": {
+        "from": 2,
+        "to": 18
+      }
+    }
+  ],
+  "shippedSlate": {
+    "cap": 50000,
+    "qbLag": null,
+    "resultSha256": "e49bf5d9951b8e93ab5bd4ede7d5777ca09898f8d63ef70e14b674090125378b",
+    "role": "retrospective",
+    "runId": "run-541d16551040108e",
+    "season": 2025,
+    "summary": {
+      "commonWeeks": [
+        {
+          "season": 2025,
+          "week": 2
+        },
+        {
+          "season": 2025,
+          "week": 3
+        },
+        {
+          "season": 2025,
+          "week": 4
+        },
+        {
+          "season": 2025,
+          "week": 5
+        },
+        {
+          "season": 2025,
+          "week": 6
+        },
+        {
+          "season": 2025,
+          "week": 7
+        },
+        {
+          "season": 2025,
+          "week": 8
+        },
+        {
+          "season": 2025,
+          "week": 9
+        },
+        {
+          "season": 2025,
+          "week": 10
+        },
+        {
+          "season": 2025,
+          "week": 11
+        },
+        {
+          "season": 2025,
+          "week": 12
+        },
+        {
+          "season": 2025,
+          "week": 13
+        },
+        {
+          "season": 2025,
+          "week": 14
+        },
+        {
+          "season": 2025,
+          "week": 15
+        },
+        {
+          "season": 2025,
+          "week": 16
+        },
+        {
+          "season": 2025,
+          "week": 17
+        },
+        {
+          "season": 2025,
+          "week": 18
+        }
+      ],
+      "excludedWeeks": [],
+      "models": [
+        {
+          "label": "Trailing mean",
+          "lineupActualMean": 126.745,
+          "lineupActualMedian": 135.9,
+          "lineupProjMean": 179.646,
+          "model": "trail",
+          "playerError": {
+            "bias": -0.812,
+            "mae": 6.629,
+            "n": 1552,
+            "rmse": 8.616
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "Last week",
+          "lineupActualMean": 129.584,
+          "lineupActualMedian": 129.48,
+          "lineupProjMean": 264.454,
+          "model": "last1",
+          "playerError": {
+            "bias": -0.09,
+            "mae": 8.425,
+            "n": 1552,
+            "rmse": 10.978
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "Last 3",
+          "lineupActualMean": 119.628,
+          "lineupActualMedian": 124.58,
+          "lineupProjMean": 207.007,
+          "model": "last3",
+          "playerError": {
+            "bias": -0.311,
+            "mae": 7.074,
+            "n": 1552,
+            "rmse": 9.131
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "60/40 season + last 3",
+          "lineupActualMean": 114.398,
+          "lineupActualMedian": 114.62,
+          "lineupProjMean": 186.305,
+          "model": "blend",
+          "playerError": {
+            "bias": -0.612,
+            "mae": 6.705,
+            "n": 1552,
+            "rmse": 8.689
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "EWMA α=0.35",
+          "lineupActualMean": 121.245,
+          "lineupActualMedian": 114.9,
+          "lineupProjMean": 193.989,
+          "model": "ewma",
+          "playerError": {
+            "bias": -0.504,
+            "mae": 6.797,
+            "n": 1552,
+            "rmse": 8.817
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "Shrink to position",
+          "lineupActualMean": 125.774,
+          "lineupActualMedian": 129.7,
+          "lineupProjMean": 154.204,
+          "model": "shrink",
+          "playerError": {
+            "bias": -0.746,
+            "mae": 6.287,
+            "n": 1552,
+            "rmse": 8.145
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "Usage × rate",
+          "lineupActualMean": 120.376,
+          "lineupActualMedian": 108.42,
+          "lineupProjMean": 194.469,
+          "model": "usage",
+          "playerError": {
+            "bias": -0.463,
+            "mae": 6.806,
+            "n": 1552,
+            "rmse": 8.82
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "Opponent-adjusted trail",
+          "lineupActualMean": 129.769,
+          "lineupActualMedian": 127.98,
+          "lineupProjMean": 138.421,
+          "model": "opp",
+          "playerError": {
+            "bias": -4.18,
+            "mae": 7.122,
+            "n": 1552,
+            "rmse": 9.47
+          },
+          "solver": "exact-dp",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "Trailing mean, greedy by projection",
+          "lineupActualMean": 124.136,
+          "lineupActualMedian": 125.92,
+          "lineupProjMean": 169.345,
+          "model": "trail-greedy-proj",
+          "playerError": {
+            "bias": -0.812,
+            "mae": 6.629,
+            "n": 1552,
+            "rmse": 8.616
+          },
+          "solver": "greedy-proj",
+          "validWeeks": 17,
+          "weeks": 17
+        },
+        {
+          "label": "Trailing mean, greedy by value",
+          "lineupActualMean": 85.421,
+          "lineupActualMedian": 79.26,
+          "lineupProjMean": 151.72,
+          "model": "trail-greedy-value",
+          "playerError": {
+            "bias": -0.812,
+            "mae": 6.629,
+            "n": 1552,
+            "rmse": 8.616
+          },
+          "solver": "greedy-value",
+          "validWeeks": 17,
+          "weeks": 17
+        }
+      ],
+      "paired": [
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": 20.499,
+            "level": 0.95,
+            "low": -14.174
+          },
+          "losses": 9,
+          "meanDiff": 2.839,
+          "medianDiff": -1.62,
+          "model": "last1",
+          "n": 17,
+          "ties": 1,
+          "wins": 7
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": 3.423,
+            "level": 0.95,
+            "low": -18.275
+          },
+          "losses": 10,
+          "meanDiff": -7.116,
+          "medianDiff": -2.38,
+          "model": "last3",
+          "n": 17,
+          "ties": 3,
+          "wins": 4
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": -4.216,
+            "level": 0.95,
+            "low": -21.436
+          },
+          "losses": 11,
+          "meanDiff": -12.347,
+          "medianDiff": -13.2,
+          "model": "blend",
+          "n": 17,
+          "ties": 3,
+          "wins": 3
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": 2.803,
+            "level": 0.95,
+            "low": -14.011
+          },
+          "losses": 9,
+          "meanDiff": -5.5,
+          "medianDiff": -4.34,
+          "model": "ewma",
+          "n": 17,
+          "ties": 1,
+          "wins": 7
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": 2.824,
+            "level": 0.95,
+            "low": -5.3
+          },
+          "losses": 5,
+          "meanDiff": -0.971,
+          "medianDiff": 0,
+          "model": "shrink",
+          "n": 17,
+          "ties": 5,
+          "wins": 7
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": 6.488,
+            "level": 0.95,
+            "low": -20.386
+          },
+          "losses": 8,
+          "meanDiff": -6.368,
+          "medianDiff": 0,
+          "model": "usage",
+          "n": 17,
+          "ties": 3,
+          "wins": 6
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": 11.633,
+            "level": 0.95,
+            "low": -5.574
+          },
+          "losses": 6,
+          "meanDiff": 3.025,
+          "medianDiff": 0,
+          "model": "opp",
+          "n": 17,
+          "ties": 3,
+          "wins": 8
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": 5.604,
+            "level": 0.95,
+            "low": -11.339
+          },
+          "losses": 8,
+          "meanDiff": -2.608,
+          "medianDiff": 1.94,
+          "model": "trail-greedy-proj",
+          "n": 17,
+          "ties": 0,
+          "wins": 9
+        },
+        {
+          "baseline": "trail",
+          "interval": {
+            "high": -30.371,
+            "level": 0.95,
+            "low": -52.409
+          },
+          "losses": 17,
+          "meanDiff": -41.324,
+          "medianDiff": -47.8,
+          "model": "trail-greedy-value",
+          "n": 17,
+          "ties": 0,
+          "wins": 0
+        }
+      ],
+      "rounding": {
+        "points": 2,
+        "projection": 4,
+        "summary": 3
+      }
+    },
+    "universe": {
+      "id": "legacy-fantasy-json",
+      "lookAhead": true,
+      "players": 114,
+      "rule": "legacy-fantasy-json",
+      "season": 2025,
+      "sha256": "666a3b3de6346af7edae36a0ddde28a44d5f103551de7aeae1d4d54317a868da"
+    },
+    "weekly": [
+      {
+        "lineups": {
+          "blend": {
+            "actual": 114.62,
+            "proj": 217.86
+          },
+          "ewma": {
+            "actual": 114.62,
+            "proj": 217.86
+          },
+          "last1": {
+            "actual": 114.62,
+            "proj": 217.86
+          },
+          "last3": {
+            "actual": 114.62,
+            "proj": 217.86
+          },
+          "opp": {
+            "actual": 119.62,
+            "proj": 189.865
+          },
+          "shrink": {
+            "actual": 114.62,
+            "proj": 131.0252
+          },
+          "trail": {
+            "actual": 114.62,
+            "proj": 217.86
+          },
+          "trail-greedy-proj": {
+            "actual": 119.62,
+            "proj": 213.66
+          },
+          "trail-greedy-value": {
+            "actual": 106.04,
+            "proj": 190.88
+          },
+          "usage": {
+            "actual": 114.62,
+            "proj": 217.86
+          }
+        },
+        "slate": 108,
+        "week": 2
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 137.92,
+            "proj": 197.31
+          },
+          "ewma": {
+            "actual": 139.32,
+            "proj": 191.441
+          },
+          "last1": {
+            "actual": 122.28,
+            "proj": 280.56
+          },
+          "last3": {
+            "actual": 137.92,
+            "proj": 197.31
+          },
+          "opp": {
+            "actual": 119.72,
+            "proj": 159.6133
+          },
+          "shrink": {
+            "actual": 137.92,
+            "proj": 143.1552
+          },
+          "trail": {
+            "actual": 137.92,
+            "proj": 197.31
+          },
+          "trail-greedy-proj": {
+            "actual": 119.72,
+            "proj": 195.21
+          },
+          "trail-greedy-value": {
+            "actual": 110.62,
+            "proj": 174.81
+          },
+          "usage": {
+            "actual": 136.92,
+            "proj": 196.9139
+          }
+        },
+        "slate": 110,
+        "week": 3
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 161.38,
+            "proj": 185.2666
+          },
+          "ewma": {
+            "actual": 174.76,
+            "proj": 184.0283
+          },
+          "last1": {
+            "actual": 129.48,
+            "proj": 243.82
+          },
+          "last3": {
+            "actual": 161.38,
+            "proj": 185.2666
+          },
+          "opp": {
+            "actual": 161.38,
+            "proj": 140.806
+          },
+          "shrink": {
+            "actual": 155.18,
+            "proj": 146.0817
+          },
+          "trail": {
+            "actual": 161.38,
+            "proj": 185.2666
+          },
+          "trail-greedy-proj": {
+            "actual": 141.16,
+            "proj": 175.0666
+          },
+          "trail-greedy-value": {
+            "actual": 106.5,
+            "proj": 154.0534
+          },
+          "usage": {
+            "actual": 161.38,
+            "proj": 185.3914
+          }
+        },
+        "slate": 111,
+        "week": 4
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 122.7,
+            "proj": 187.048
+          },
+          "ewma": {
+            "actual": 102.12,
+            "proj": 182.834
+          },
+          "last1": {
+            "actual": 134.28,
+            "proj": 251.56
+          },
+          "last3": {
+            "actual": 124.58,
+            "proj": 198.1467
+          },
+          "opp": {
+            "actual": 110.14,
+            "proj": 138.5809
+          },
+          "shrink": {
+            "actual": 135.9,
+            "proj": 151.408
+          },
+          "trail": {
+            "actual": 135.9,
+            "proj": 181.84
+          },
+          "trail-greedy-proj": {
+            "actual": 143.82,
+            "proj": 167.14
+          },
+          "trail-greedy-value": {
+            "actual": 76.2,
+            "proj": 148.765
+          },
+          "usage": {
+            "actual": 95.4,
+            "proj": 192.3413
+          }
+        },
+        "slate": 95,
+        "week": 5
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 102.54,
+            "proj": 184.3274
+          },
+          "ewma": {
+            "actual": 103.44,
+            "proj": 183.4494
+          },
+          "last1": {
+            "actual": 192.24,
+            "proj": 242.38
+          },
+          "last3": {
+            "actual": 94.14,
+            "proj": 196.3599
+          },
+          "opp": {
+            "actual": 90.46,
+            "proj": 136.8116
+          },
+          "shrink": {
+            "actual": 100.82,
+            "proj": 152.8805
+          },
+          "trail": {
+            "actual": 96.52,
+            "proj": 178.492
+          },
+          "trail-greedy-proj": {
+            "actual": 125.92,
+            "proj": 166.956
+          },
+          "trail-greedy-value": {
+            "actual": 71.54,
+            "proj": 145.472
+          },
+          "usage": {
+            "actual": 108.42,
+            "proj": 188.7354
+          }
+        },
+        "slate": 106,
+        "week": 6
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 150.96,
+            "proj": 186.9127
+          },
+          "ewma": {
+            "actual": 155.96,
+            "proj": 192.7377
+          },
+          "last1": {
+            "actual": 149.32,
+            "proj": 259.2
+          },
+          "last3": {
+            "actual": 150.96,
+            "proj": 205.9267
+          },
+          "opp": {
+            "actual": 141.34,
+            "proj": 136.5211
+          },
+          "shrink": {
+            "actual": 174.64,
+            "proj": 152.3787
+          },
+          "trail": {
+            "actual": 170.54,
+            "proj": 176.0967
+          },
+          "trail-greedy-proj": {
+            "actual": 176.94,
+            "proj": 172.0634
+          },
+          "trail-greedy-value": {
+            "actual": 92.34,
+            "proj": 146.2034
+          },
+          "usage": {
+            "actual": 188.44,
+            "proj": 191.8056
+          }
+        },
+        "slate": 107,
+        "week": 7
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 140.72,
+            "proj": 193.8184
+          },
+          "ewma": {
+            "actual": 157.88,
+            "proj": 198.4798
+          },
+          "last1": {
+            "actual": 130.98,
+            "proj": 271.96
+          },
+          "last3": {
+            "actual": 126.12,
+            "proj": 216.8267
+          },
+          "opp": {
+            "actual": 172.06,
+            "proj": 141.4614
+          },
+          "shrink": {
+            "actual": 161.36,
+            "proj": 155.5846
+          },
+          "trail": {
+            "actual": 172.06,
+            "proj": 181.4124
+          },
+          "trail-greedy-proj": {
+            "actual": 148.72,
+            "proj": 172.2489
+          },
+          "trail-greedy-value": {
+            "actual": 113.16,
+            "proj": 148.5814
+          },
+          "usage": {
+            "actual": 172.06,
+            "proj": 198.6956
+          }
+        },
+        "slate": 87,
+        "week": 8
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 155.72,
+            "proj": 189.8135
+          },
+          "ewma": {
+            "actual": 139.92,
+            "proj": 195.5407
+          },
+          "last1": {
+            "actual": 120.64,
+            "proj": 253.38
+          },
+          "last3": {
+            "actual": 155.72,
+            "proj": 211.3834
+          },
+          "opp": {
+            "actual": 127.98,
+            "proj": 139.5484
+          },
+          "shrink": {
+            "actual": 142.38,
+            "proj": 155.7496
+          },
+          "trail": {
+            "actual": 136.08,
+            "proj": 178.7029
+          },
+          "trail-greedy-proj": {
+            "actual": 141.12,
+            "proj": 166.4451
+          },
+          "trail-greedy-value": {
+            "actual": 112.92,
+            "proj": 157.0187
+          },
+          "usage": {
+            "actual": 121.7,
+            "proj": 199.9588
+          }
+        },
+        "slate": 101,
+        "week": 9
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 152,
+            "proj": 187.0443
+          },
+          "ewma": {
+            "actual": 152,
+            "proj": 196.2916
+          },
+          "last1": {
+            "actual": 128.4,
+            "proj": 298.46
+          },
+          "last3": {
+            "actual": 143.1,
+            "proj": 208.22
+          },
+          "opp": {
+            "actual": 171.7,
+            "proj": 133.7497
+          },
+          "shrink": {
+            "actual": 169.02,
+            "proj": 158.1084
+          },
+          "trail": {
+            "actual": 169.02,
+            "proj": 175.6561
+          },
+          "trail-greedy-proj": {
+            "actual": 152.74,
+            "proj": 164.3896
+          },
+          "trail-greedy-value": {
+            "actual": 97.62,
+            "proj": 135.8892
+          },
+          "usage": {
+            "actual": 137.1,
+            "proj": 191.3439
+          }
+        },
+        "slate": 103,
+        "week": 10
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 107.12,
+            "proj": 181.4368
+          },
+          "ewma": {
+            "actual": 121.7,
+            "proj": 194.1675
+          },
+          "last1": {
+            "actual": 156.8,
+            "proj": 263.08
+          },
+          "last3": {
+            "actual": 125.8,
+            "proj": 204.9799
+          },
+          "opp": {
+            "actual": 132.54,
+            "proj": 130.5791
+          },
+          "shrink": {
+            "actual": 129.7,
+            "proj": 155.4213
+          },
+          "trail": {
+            "actual": 136.7,
+            "proj": 172.7301
+          },
+          "trail-greedy-proj": {
+            "actual": 132.68,
+            "proj": 153.4175
+          },
+          "trail-greedy-value": {
+            "actual": 68.5,
+            "proj": 150.1547
+          },
+          "usage": {
+            "actual": 76.42,
+            "proj": 193.6895
+          }
+        },
+        "slate": 105,
+        "week": 11
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 106.52,
+            "proj": 186.8956
+          },
+          "ewma": {
+            "actual": 114.9,
+            "proj": 202.5036
+          },
+          "last1": {
+            "actual": 135.82,
+            "proj": 298.48
+          },
+          "last3": {
+            "actual": 96.52,
+            "proj": 215.58
+          },
+          "opp": {
+            "actual": 141.26,
+            "proj": 135.8953
+          },
+          "shrink": {
+            "actual": 148.86,
+            "proj": 160.7394
+          },
+          "trail": {
+            "actual": 141.26,
+            "proj": 177.2308
+          },
+          "trail-greedy-proj": {
+            "actual": 103.32,
+            "proj": 163.8148
+          },
+          "trail-greedy-value": {
+            "actual": 79.26,
+            "proj": 148.2459
+          },
+          "usage": {
+            "actual": 99.72,
+            "proj": 189.2616
+          }
+        },
+        "slate": 99,
+        "week": 12
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 86.5,
+            "proj": 188.7769
+          },
+          "ewma": {
+            "actual": 95.8,
+            "proj": 204.5782
+          },
+          "last1": {
+            "actual": 87.8,
+            "proj": 281.46
+          },
+          "last3": {
+            "actual": 97.16,
+            "proj": 219.38
+          },
+          "opp": {
+            "actual": 158.02,
+            "proj": 135.0605
+          },
+          "shrink": {
+            "actual": 109.3,
+            "proj": 162.6569
+          },
+          "trail": {
+            "actual": 134.3,
+            "proj": 178.3553
+          },
+          "trail-greedy-proj": {
+            "actual": 118.22,
+            "proj": 169.4281
+          },
+          "trail-greedy-value": {
+            "actual": 99.3,
+            "proj": 149.3194
+          },
+          "usage": {
+            "actual": 95.8,
+            "proj": 196.1217
+          }
+        },
+        "slate": 114,
+        "week": 13
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 134.04,
+            "proj": 188.0393
+          },
+          "ewma": {
+            "actual": 118.8,
+            "proj": 196.1771
+          },
+          "last1": {
+            "actual": 143.16,
+            "proj": 241.16
+          },
+          "last3": {
+            "actual": 128.04,
+            "proj": 211.1266
+          },
+          "opp": {
+            "actual": 134.36,
+            "proj": 131.4535
+          },
+          "shrink": {
+            "actual": 118,
+            "proj": 161.7864
+          },
+          "trail": {
+            "actual": 128.6,
+            "proj": 176.919
+          },
+          "trail-greedy-proj": {
+            "actual": 130.54,
+            "proj": 170.8651
+          },
+          "trail-greedy-value": {
+            "actual": 74,
+            "proj": 162.4251
+          },
+          "usage": {
+            "actual": 103.4,
+            "proj": 206.277
+          }
+        },
+        "slate": 97,
+        "week": 14
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 80.76,
+            "proj": 184.6148
+          },
+          "ewma": {
+            "actual": 93.22,
+            "proj": 190.7499
+          },
+          "last1": {
+            "actual": 101.32,
+            "proj": 258.64
+          },
+          "last3": {
+            "actual": 78.06,
+            "proj": 212.8334
+          },
+          "opp": {
+            "actual": 114.34,
+            "proj": 127.0459
+          },
+          "shrink": {
+            "actual": 86.26,
+            "proj": 161.305
+          },
+          "trail": {
+            "actual": 84.36,
+            "proj": 174.474
+          },
+          "trail-greedy-proj": {
+            "actual": 95.82,
+            "proj": 166.6994
+          },
+          "trail-greedy-value": {
+            "actual": 70.96,
+            "proj": 153.1221
+          },
+          "usage": {
+            "actual": 105.2,
+            "proj": 195.646
+          }
+        },
+        "slate": 114,
+        "week": 15
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 105.6,
+            "proj": 173.7113
+          },
+          "ewma": {
+            "actual": 107.46,
+            "proj": 194.5196
+          },
+          "last1": {
+            "actual": 122.36,
+            "proj": 297
+          },
+          "last3": {
+            "actual": 121.16,
+            "proj": 206.9401
+          },
+          "opp": {
+            "actual": 126.66,
+            "proj": 129.1447
+          },
+          "shrink": {
+            "actual": 116.4,
+            "proj": 159.0744
+          },
+          "trail": {
+            "actual": 111.8,
+            "proj": 169.8991
+          },
+          "trail-greedy-proj": {
+            "actual": 102.1,
+            "proj": 163.3279
+          },
+          "trail-greedy-value": {
+            "actual": 64,
+            "proj": 133.4412
+          },
+          "usage": {
+            "actual": 151,
+            "proj": 189.4492
+          }
+        },
+        "slate": 114,
+        "week": 16
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 58.68,
+            "proj": 169.3053
+          },
+          "ewma": {
+            "actual": 90.98,
+            "proj": 185.6145
+          },
+          "last1": {
+            "actual": 146.04,
+            "proj": 269.7
+          },
+          "last3": {
+            "actual": 118.22,
+            "proj": 206.2066
+          },
+          "opp": {
+            "actual": 92.3,
+            "proj": 125.4959
+          },
+          "shrink": {
+            "actual": 86.3,
+            "proj": 157.871
+          },
+          "trail": {
+            "actual": 72.1,
+            "proj": 167.2398
+          },
+          "trail-greedy-proj": {
+            "actual": 99.08,
+            "proj": 150.0724
+          },
+          "trail-greedy-value": {
+            "actual": 68.1,
+            "proj": 143.9671
+          },
+          "usage": {
+            "actual": 107.68,
+            "proj": 187.716
+          }
+        },
+        "slate": 114,
+        "week": 17
+      },
+      {
+        "lineups": {
+          "blend": {
+            "actual": 26.98,
+            "proj": 165.0034
+          },
+          "ewma": {
+            "actual": 78.28,
+            "proj": 186.8334
+          },
+          "last1": {
+            "actual": 87.38,
+            "proj": 267.02
+          },
+          "last3": {
+            "actual": 60.18,
+            "proj": 204.7732
+          },
+          "opp": {
+            "actual": 92.2,
+            "proj": 121.5237
+          },
+          "shrink": {
+            "actual": 51.5,
+            "proj": 156.2399
+          },
+          "trail": {
+            "actual": 51.5,
+            "proj": 164.4998
+          },
+          "trail-greedy-proj": {
+            "actual": 58.8,
+            "proj": 148.065
+          },
+          "trail-greedy-value": {
+            "actual": 41.1,
+            "proj": 136.8959
+          },
+          "usage": {
+            "actual": 71.14,
+            "proj": 184.7619
+          }
+        },
+        "slate": 114,
+        "week": 18
+      }
+    ],
+    "weeks": {
+      "from": 2,
+      "to": 18
+    }
+  },
+  "solver": "gridiron-lab-solveLineup@1",
+  "uncertainty": {
+    "level": 0.95,
+    "method": "paired-week-bootstrap-percentile",
+    "resamples": 2000,
+    "seed": 20260912
+  }
+}

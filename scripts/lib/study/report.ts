@@ -149,10 +149,15 @@ export function buildMultiSeason(runs: readonly StudyRunArtifact[]): StudyMultiS
       hashJson(a.run.models) === modelsSha256 &&
       a.run.baselineModel === first.run.baselineModel &&
       a.run.scoring.ref === first.run.scoring.ref &&
-      canonicalJson(a.run.uncertainty) === canonicalJson(first.run.uncertainty);
+      canonicalJson(a.run.uncertainty) === canonicalJson(first.run.uncertainty) &&
+      a.run.pipeline === first.run.pipeline &&
+      a.run.solver.ref === first.run.solver.ref &&
+      a.run.universe.rule === first.run.universe.rule &&
+      a.run.minHistoryGames === first.run.minHistoryGames &&
+      a.run.positionPriorFallback === first.run.positionPriorFallback;
     if (!same) {
       throw new StudyConfigError(
-        `${a.runId} (${a.run.season}) differs from ${first.runId} in models, baseline, scoring or uncertainty; pooling needs one locked configuration`,
+        `${a.runId} (${a.run.season}) differs from ${first.runId} in models, baseline, scoring, uncertainty, pipeline, solver, universe rule or slate settings; pooling needs one locked configuration`,
       );
     }
   }
