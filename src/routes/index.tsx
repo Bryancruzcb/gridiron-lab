@@ -1,16 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowUpRight, Binary, LayoutDashboard, Radio, ScrollText, Users, Waypoints } from "lucide-react";
-import { useState } from "react";
 import qbsFile from "@/data/qbs.json";
 import playFile from "@/data/playcalling.json";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { SampleN } from "@/components/SampleN";
-import { MatchHero, MatchTile } from "@/components/match/MatchFace";
 import { formatEpa, formatPct } from "@/lib/utils";
 import { teamLogo, teamNick } from "@/lib/nfl";
 import { isThin } from "@/lib/season";
 import { useSeason } from "@/lib/season-provider";
+import type { Scoreboard } from "@/lib/live/types";
 import type { QbFile, PlaycallingFile, QbSeason, TeamSeason } from "@/data/types";
 import { cn } from "@/lib/utils";
 
@@ -195,109 +194,83 @@ function Home() {
   );
 }
 
-function localDayKey(iso: string) {
-  const d = new Date(iso);
-  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
-}
-
-function dayLabel(iso: string) {
-  const d = new Date(iso);
-  return {
-    key: localDayKey(iso),
-    wd: d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase(),
-    n: d.getDate(),
-  };
-}
-
 function LiveStrip() {
   const { scoreboard: board } = useSeason();
-  const [day, setDay] = useState<string>("all");
-
   if (!board) {
     return (
-      <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">This NFL week · kickoff days</p>
-        <div className="mt-3 flex gap-2">
-          {["All", "—", "—", "—"].map((label, i) => (
-            <span
-              key={i}
-              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-elevated text-xs text-subtle"
-            >
-              {label}
-            </span>
-          ))}
+      <section className="border-t border-border">
+        <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+          <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">This week’s slate</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-24 rounded-xl bg-surface" />
+            ))}
+          </div>
         </div>
       </section>
     );
   }
-
-  const days = [...new Map(board.games.map((g) => {
-    const lab = dayLabel(g.start);
-    return [lab.key, lab] as const;
-  })).values()];
-
-  const slate = board.games.filter((g) => day === "all" || localDayKey(g.start) === day);
   const featured = [
-    ...slate.filter((g) => g.status === "in"),
-    ...slate.filter((g) => g.status === "post"),
-    ...slate.filter((g) => g.status === "pre"),
-  ];
-  const hero = featured[0];
-  const rest = featured.slice(1, 5);
+    ...board.games.filter((g) => g.status === "in"),
+    ...board.games.filter((g) => g.status === "post"),
+    ...board.games.filter((g) => g.status === "pre"),
+  ].slice(0, 4);
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-      <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
-        Week {board.week} kickoffs · this week only
-      </p>
-      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        <button
-          type="button"
-          onClick={() => setDay("all")}
-          className={cn(
-            "h-14 shrink-0 rounded-full px-4 text-xs font-medium tracking-wide uppercase",
-            day === "all" ? "bg-fg text-bg" : "bg-elevated text-muted",
-          )}
-        >
-          All
-        </button>
-        {days.map((d) => {
-          const on = day === d.key;
-          return (
-            <button
-              key={d.key}
-              type="button"
-              onClick={() => setDay(d.key)}
-              className={cn(
-                "flex h-14 w-14 shrink-0 flex-col items-center justify-center rounded-full",
-                on ? "bg-fg text-bg" : "bg-elevated text-muted",
-              )}
-            >
-              <span className="text-[10px] tracking-wide">{d.wd}</span>
-              <span className="font-display text-lg leading-none">{d.n}</span>
-            </button>
-          );
-        })}
-      </div>
-      {hero ? (
-        <Link to="/live" search={{ game: hero.id }} className="mt-4 block">
-          <MatchHero game={hero} />
-        </Link>
-      ) : (
-        <p className="mt-4 text-sm text-muted">No games that day.</p>
-      )}
-      <div className="mt-3 grid gap-2 sm:grid-cols-2">
-        {rest.map((g) => (
-          <Link key={g.id} to="/live" search={{ game: g.id }}>
-            <MatchTile game={g} />
+    <section className="border-t border-border">
+      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mb-4 flex items-baseline justify-between gap-3">
+          <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
+            2026 week {board.week}
+          </p>
+          <Link to="/live" className="text-sm text-fg">
+            Full slate
+            <ArrowUpRight className="ml-1 inline size-3.5" />
           </Link>
-        ))}
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+          {featured.map((g) => (
+            <Link
+              key={g.id}
+              to="/live"
+              search={{ game: g.id }}
+              className="rounded-xl bg-surface p-4"
+            >
+              <div className="flex items-center justify-between">
+                <span
+                  className={cn(
+                    "text-[11px] font-medium tracking-wide uppercase",
+                    g.status === "in" ? "text-sage" : "text-subtle",
+                  )}
+                >
+                  {g.status === "in" ? "Live" : g.stage === "advanced" ? "Advanced" : g.statusText}
+                </span>
+                {g.status === "in" ? <span className="live-dot" /> : null}
+              </div>
+              <div className="mt-3 space-y-1.5">
+                <StripSide side={g.away} />
+                <StripSide side={g.home} />
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
-      <Link to="/live" className="mt-4 inline-flex items-center gap-1 text-sm">
-        Full slate
-        <ArrowUpRight className="size-3.5" />
-      </Link>
     </section>
   );
 }
+
+function StripSide({ side }: { side: Scoreboard["games"][number]["away"] }) {
+  return (
+    <p className="flex items-center justify-between gap-2">
+      <span className="flex min-w-0 items-center gap-2">
+        {side.logo ? <img src={side.logo} alt="" className="size-6 object-contain" /> : null}
+        <span className="truncate text-sm">{side.nick}</span>
+      </span>
+      <span className={cn("font-mono text-sm tabular-nums", side.winner && "text-sage")}>
+        {side.score}
+      </span>
+    </p>
+  );
+}
+
 
