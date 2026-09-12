@@ -1,0 +1,8 @@
+{
+  "file": "espn_summary_401772854.json",
+  "url": "https://site.api.espn.com/apis/site/v2/sports/football/nfl/summary?event=401772854",
+  "retrieved": "2026-09-12",
+  "originalSha256": "fa0187d372c9f337bbb978f6fc9b424b8cb375af8f2812a79710e9ca8f5af9f7",
+  "originalBytes": 564739,
+  "trimmed": "DET at CIN, 2025 regular season week 5. Kept header ids and scores, team box stats used by the app, passing/rushing/receiving/fumbles/return blocks with keys and labels for all passers, all fumblers and the top two rushers and receivers per team, and every scoring play (id, type text, text, running scores, team)."
+}

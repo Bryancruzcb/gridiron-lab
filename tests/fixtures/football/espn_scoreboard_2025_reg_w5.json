@@ -1,0 +1,47 @@
+{
+  "season": {
+    "type": 2,
+    "year": 2025
+  },
+  "week": {
+    "number": 5
+  },
+  "events": [
+    {
+      "id": "401772854",
+      "date": "2025-10-05T20:25Z",
+      "competitions": [
+        {
+          "competitors": [
+            {
+              "homeAway": "home",
+              "score": "24",
+              "winner": false,
+              "team": {
+                "abbreviation": "CIN",
+                "displayName": "Cincinnati Bengals",
+                "shortDisplayName": "Bengals"
+              }
+            },
+            {
+              "homeAway": "away",
+              "score": "37",
+              "winner": true,
+              "team": {
+                "abbreviation": "DET",
+                "displayName": "Detroit Lions",
+                "shortDisplayName": "Lions"
+              }
+            }
+          ],
+          "status": {
+            "type": {
+              "state": "post",
+              "shortDetail": "Final"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

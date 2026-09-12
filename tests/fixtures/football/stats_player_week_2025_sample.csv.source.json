@@ -1,0 +1,8 @@
+{
+  "file": "stats_player_week_2025_sample.csv",
+  "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2025.csv",
+  "retrieved": "2026-09-12",
+  "originalSha256": "e5e0615b3d96a3eaebfaee91e55afb4a4e7fe0caf057454177bcd7d6ad4bcfc2",
+  "originalBytes": 8656387,
+  "trimmed": "Header plus 18 rows, bytes unchanged: 2025_01_MIN_CHI Adam Thielen (receiving two-point conversion); 2025_01_MIN_CHI DJ Moore (return fumble lost outside scrimmage columns); 2025_01_DAL_PHI  (row without player_id); 2025_02_NE_MIA Rhamondre Stevenson (rushing two-point conversion); 2025_02_NE_MIA Malik Washington (special teams touchdown); 2025_05_DET_CIN Jared Goff (fixture game athlete); 2025_05_DET_CIN Samaje Perine (fixture game athlete); 2025_05_DET_CIN Jake Browning (fixture game athlete); 2025_05_DET_CIN David Montgomery (fixture game athlete); 2025_05_DET_CIN Logan Wilson (fixture game athlete); 2025_05_DET_CIN Tee Higgins (fixture game athlete); 2025_05_DET_CIN Ja'Marr Chase (fixture game athlete); 2025_05_DET_CIN Amon-Ra St. Brown (fixture game athlete); 2025_05_DET_CIN Chase Brown (fixture game athlete); 2025_05_DET_CIN Andrei Iosivas (fixture game athlete); 2025_05_DET_CIN Sam LaPorta (fixture game athlete); 2025_05_DET_CIN Jahmyr Gibbs (fixture game athlete); 2025_19_LA_CAR Matthew Stafford (postseason row)."
+}

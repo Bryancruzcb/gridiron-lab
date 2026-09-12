@@ -1,0 +1,8 @@
+{
+  "file": "stats_team_week_2025_05_DET_CIN.csv",
+  "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2025.csv",
+  "retrieved": "2026-09-12",
+  "originalSha256": "91058a59d894855377b2f39f40c4e7bdbeef96d12144289dc68215209a1c93cb",
+  "originalBytes": 229660,
+  "trimmed": "Header plus the two rows with game_id 2025_05_DET_CIN, bytes unchanged."
+}

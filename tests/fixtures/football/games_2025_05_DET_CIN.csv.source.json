@@ -1,0 +1,8 @@
+{
+  "file": "games_2025_05_DET_CIN.csv",
+  "url": "https://github.com/nflverse/nfldata/raw/master/data/games.csv",
+  "retrieved": "2026-09-12",
+  "originalSha256": "e5443356b1e8ec15332fb00aff0dc689b06e12c8e35d6af2e22aa7d3e1725965",
+  "originalBytes": 2178387,
+  "trimmed": "Header, the 2025_05_DET_CIN row, and the first 2026 row without scores (2026_01_CHI_CAR), bytes unchanged."
+}
