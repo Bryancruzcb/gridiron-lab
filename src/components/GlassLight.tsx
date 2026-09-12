@@ -6,12 +6,15 @@ export function GlassLight() {
     const root = document.documentElement;
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
+    const emit = () => root.dispatchEvent(new Event("glasslight"));
+
     const paint = () => {
       const max = Math.max(1, document.documentElement.scrollHeight - window.innerHeight);
       const t = window.scrollY / max;
       root.style.setProperty("--light-y", `${12 + t * 68}%`);
       root.style.setProperty("--light-x", `${20 + t * 28}%`);
       if (reduced) root.style.setProperty("--spec-y", `${8 + t * 30}%`);
+      emit();
     };
 
     const onMove = (e: PointerEvent) => {
@@ -19,6 +22,7 @@ export function GlassLight() {
       root.style.setProperty("--spec-x", `${(e.clientX / window.innerWidth) * 100}%`);
       root.style.setProperty("--spec-y", `${(e.clientY / window.innerHeight) * 70}%`);
       root.style.setProperty("--light-x", `${(e.clientX / window.innerWidth) * 100}%`);
+      emit();
     };
 
     paint();

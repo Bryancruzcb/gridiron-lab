@@ -2,6 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router";
 import { Binary, House, LayoutDashboard, Menu, Radio, Users } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { LiquidChrome } from "@/components/LiquidChrome";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
@@ -75,7 +76,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="relative z-10 flex min-h-dvh flex-col bg-transparent text-fg">
-      <header className="glass-bar sticky top-0 z-40">
+      <LiquidChrome as="header" className="glass-bar sticky top-0 z-40 w-full">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-3">
             <span className="grid size-8 place-items-center rounded-[6px] bg-elevated shadow-[var(--shadow-border)]">
@@ -98,7 +99,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </Button>
           ) : null}
         </div>
-      </header>
+      </LiquidChrome>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[280px]">
           <SheetHeader>
@@ -115,7 +116,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(1rem,env(safe-area-inset-bottom))]"
           aria-label="Primary"
         >
-          <ul className="pointer-events-auto mx-auto flex max-w-sm items-center justify-center gap-3 px-4">
+        <div className="pointer-events-auto mx-auto max-w-sm px-4">
+          <LiquidChrome className="rounded-full px-3 py-2">
+            <ul className="flex items-center justify-center gap-3">
             {DOCK.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
@@ -134,7 +137,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 </li>
               );
             })}
-          </ul>
+            </ul>
+          </LiquidChrome>
+        </div>
         </nav>
       ) : (
         <footer className="hidden border-t border-border md:block">
