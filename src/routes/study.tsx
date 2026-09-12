@@ -27,6 +27,39 @@ const lag = lagFile as QbLagFile;
 const projections = projFile as ProjectionFile;
 const ewma = ewmaFile as EwmaFile;
 
+function pearson(xs: number[], ys: number[]) {
+  const n = xs.length;
+  if (n < 3) return null;
+  const mx = xs.reduce((s, x) => s + x, 0) / n;
+  const my = ys.reduce((s, y) => s + y, 0) / n;
+  let num = 0;
+  let dx = 0;
+  let dy = 0;
+  for (let i = 0; i < n; i++) {
+    const a = xs[i]! - mx;
+    const b = ys[i]! - my;
+    num += a * b;
+    dx += a * a;
+    dy += b * b;
+  }
+  const den = Math.sqrt(dx * dy);
+  return den === 0 ? null : num / den;
+}
+
+const guessXs = backtest.weeks.map((w) => w.exact.proj);
+const guessYs = backtest.weeks.map((w) => w.exact.actual);
+const guessMean = guessXs.reduce((s, x) => s + x, 0) / guessXs.length;
+const realMean = guessYs.reduce((s, y) => s + y, 0) / guessYs.length;
+const guessBias = guessMean - realMean;
+const guessR = pearson(guessXs, guessYs);
+const guessHigh = backtest.weeks.filter((w) => w.exact.proj > w.exact.actual).length;
+const guessDots = backtest.weeks.map((w) => ({
+  week: w.week,
+  proj: w.exact.proj,
+  actual: w.exact.actual,
+}));
+
+
 function StudyPage() {
   const s = backtest.summary;
   const ready = s.weeks > 0 && lag.n > 0;
@@ -120,6 +153,57 @@ function StudyPage() {
                   </tbody>
                 </table>
               </div>
+            </section>
+
+            <section className="mt-10">
+              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Guess vs real</h2>
+              <p className="mt-3 text-sm leading-relaxed">
+                The Exact column above is actual PPR. The solver’s own sum of projections averaged{" "}
+                {guessMean.toFixed(1)}. Real was {realMean.toFixed(1)}. High by{" "}
+                {guessBias.toFixed(1)} every week ({guessHigh}/{backtest.weeks.length}). Correlation
+                between guessed total and real total is r = {guessR == null ? "—" : guessR.toFixed(2)}.
+                Trailing mean per player is only off ~6.6 PPR. The $50k roster is nine of the fattest
+                means — players who already got lucky — so the packed total is ~60 points of fiction.
+              </p>
+              <div className="mt-6 h-[240px] rounded-xl bg-surface p-3 shadow-[var(--shadow-border)] sm:p-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart margin={{ top: 8, right: 12, bottom: 8, left: 4 }}>
+                    <CartesianGrid stroke={CHART.grid} />
+                    <XAxis
+                      type="number"
+                      dataKey="proj"
+                      name="Guess"
+                      domain={[50, 220]}
+                      tickCount={5}
+                      {...axisProps}
+                      tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="actual"
+                      name="Real"
+                      domain={[50, 220]}
+                      width={36}
+                      tickCount={5}
+                      {...axisProps}
+                      tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                    />
+                    <ReferenceLine
+                      segment={[
+                        { x: 50, y: 50 },
+                        { x: 220, y: 220 },
+                      ]}
+                      stroke={CHART.muted}
+                      strokeDasharray="4 4"
+                    />
+                    <Tooltip content={<GuessTip />} />
+                    <Scatter data={guessDots} fill={CHART.paper} />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-2 text-xs text-muted">
+                X = solver guess · Y = actual · dashed is perfect. All 17 weeks sit below it.
+              </p>
             </section>
 
             <section className="mt-10">
@@ -272,8 +356,8 @@ function StudyPage() {
                   Do not fit α on 17 weeks.
                 </li>
                 <li>
-                  Exact beat greedy-proj only {s.exactBeatsProj}/{s.weeks} weeks. Cap-optimal on a bad
-                  projection is still a bad lineup.
+                  Exact’s guessed total averaged {guessMean.toFixed(1)} against {realMean.toFixed(1)}{" "}
+                  actual. High every week. That is winner’s curse on trailing means, not a solver bug.
                 </li>
                 <li>
                   EPA and CPOE persist only a little (r ≈ 0.16). Week 1 of 2026 is still a thin sample.
@@ -284,6 +368,28 @@ function StudyPage() {
         )}
       </article>
     </AppShell>
+  );
+}
+
+function GuessTip({
+  active,
+  payload,
+}: {
+  active?: boolean;
+  payload?: Array<{ payload: { week: number; proj: number; actual: number } }>;
+}) {
+  if (!active || !payload?.[0]) return null;
+  const d = payload[0].payload;
+  return (
+    <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
+      <p className="font-medium">Week {d.week}</p>
+      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
+        <dt className="text-muted">Guess</dt>
+        <dd>{d.proj.toFixed(1)}</dd>
+        <dt className="text-muted">Real</dt>
+        <dd>{d.actual.toFixed(1)}</dd>
+      </dl>
+    </div>
   );
 }
 
