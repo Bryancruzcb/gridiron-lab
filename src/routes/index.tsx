@@ -253,16 +253,30 @@ function LiveStrip() {
                 </span>
                 {g.status === "in" ? <span className="live-dot" /> : null}
               </div>
-              <p className="mt-2 text-sm">
-                {g.away.nick} {g.away.score}
-              </p>
-              <p className="text-sm">
-                {g.home.nick} {g.home.score}
-              </p>
+              <div className="mt-3 space-y-1.5">
+                <StripSide side={g.away} />
+                <StripSide side={g.home} />
+              </div>
             </Link>
           ))}
         </div>
       </div>
     </section>
+  );
+}
+
+function StripSide({ side }: { side: Scoreboard["games"][number]["away"] }) {
+  return (
+    <p className="flex items-center justify-between gap-2">
+      <span className="flex min-w-0 items-center gap-2">
+        {side.logo ? (
+          <img src={side.logo} alt="" className="size-6 object-contain" />
+        ) : null}
+        <span className="truncate text-sm">{side.nick}</span>
+      </span>
+      <span className={cn("font-mono text-sm tabular-nums", side.winner && "text-sage")}>
+        {side.score}
+      </span>
+    </p>
   );
 }
