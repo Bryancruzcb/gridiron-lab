@@ -2,6 +2,7 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { SeasonProvider } from "@/lib/season-provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { GlassLight } from "@/components/GlassLight";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import appCss from "../styles.css?url";
 
@@ -40,6 +41,7 @@ export const Route = createRootRoute({
       </head>
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
+        <GlassLight />
         <AuthProvider>
           <SeasonProvider>
             <TooltipProvider delayDuration={200}>

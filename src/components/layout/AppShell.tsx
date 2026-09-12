@@ -74,8 +74,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const app = useStandaloneApp();
 
   return (
-    <div className="flex min-h-dvh flex-col bg-bg text-fg">
-      <header className="sticky top-0 z-40 border-b border-border bg-bg/90 backdrop-blur-md">
+    <div className="relative z-10 flex min-h-dvh flex-col bg-transparent text-fg">
+      <header className="glass-bar sticky top-0 z-40">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link to="/" className="flex items-center gap-3">
             <span className="grid size-8 place-items-center rounded-[6px] bg-elevated shadow-[var(--shadow-border)]">
