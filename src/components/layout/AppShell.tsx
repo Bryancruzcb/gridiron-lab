@@ -58,7 +58,7 @@ function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolea
             className={cn(
               "rounded-sm px-3 py-2 text-[13px] font-medium tracking-wide uppercase transition-colors duration-150",
               stacked ? "flex h-12 items-center" : "h-10",
-              active ? "bg-elevated text-fg" : "text-muted hover:text-fg",
+              active ? "bg-fg/10 text-fg" : "text-muted hover:text-fg",
             )}
           >
             {item.label}
@@ -129,7 +129,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     aria-label={item.label}
                     className={cn(
                       "grid size-14 place-items-center rounded-full transition-colors duration-150",
-                      active ? "bg-fg text-bg" : "bg-elevated text-fg shadow-[var(--shadow-border)]",
+                      active ? "bg-fg text-bg" : "text-fg/80 hover:bg-fg/10",
                     )}
                   >
                     <Icon className="size-6" />

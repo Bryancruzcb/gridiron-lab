@@ -127,20 +127,22 @@
 .bg-surface {
   background-color: rgb(241 240 234 / 0.055);
   background-image: radial-gradient(
-    90% 80% at var(--spec-x) var(--spec-y),
-    rgb(255 255 255 / 0.2),
-    transparent 62%
+    70vmax 50vmax at var(--spec-x) var(--spec-y),
+    rgb(255 255 255 / 0.18),
+    transparent 55%
   );
+  background-attachment: fixed;
   -webkit-backdrop-filter: blur(28px) saturate(1.85) brightness(1.12);
   backdrop-filter: blur(28px) saturate(1.85) brightness(1.12);
 }
 .bg-elevated {
-  background-color: rgb(241 240 234 / 0.09);
+  background-color: rgb(241 240 234 / 0.08);
   background-image: radial-gradient(
-    80% 70% at var(--spec-x) var(--spec-y),
-    rgb(255 255 255 / 0.16),
-    transparent 58%
+    70vmax 50vmax at var(--spec-x) var(--spec-y),
+    rgb(255 255 255 / 0.14),
+    transparent 55%
   );
+  background-attachment: fixed;
   -webkit-backdrop-filter: blur(18px) saturate(1.65) brightness(1.1);
   backdrop-filter: blur(18px) saturate(1.65) brightness(1.1);
 }
