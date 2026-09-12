@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getScoreboard } from "@/lib/live/functions";
 import type { Scoreboard } from "@/lib/live/types";
 import { formatEpa, formatPct } from "@/lib/utils";
-import { teamNick } from "@/lib/nfl";
+import { teamLogo, teamNick } from "@/lib/nfl";
 import { isThin } from "@/lib/season";
 import { useSeason } from "@/lib/season-provider";
 import type { QbFile, PlaycallingFile, QbSeason, TeamSeason } from "@/data/types";
@@ -113,7 +113,10 @@ function Home() {
                     <Headshot src={q.headshot} name={q.name} team={q.team} className="size-10" />
                     <div>
                       <p className="text-sm font-medium">{q.name}</p>
-                      <p className="text-xs text-muted">{teamNick(q.team)}</p>
+                      <p className="flex items-center gap-1.5 text-xs text-muted">
+                        <img src={teamLogo(q.team)} alt="" className="size-3.5 object-contain" />
+                        {teamNick(q.team)}
+                      </p>
                     </div>
                   </div>
                   <span className="text-right">
@@ -174,7 +177,10 @@ function Home() {
             <ul className="mt-4 space-y-3">
               {goers.map((t) => (
                 <li key={t.team} className="flex items-center justify-between gap-3">
-                  <span className="text-sm">{teamNick(t.team)}</span>
+                  <span className="flex min-w-0 items-center gap-2 text-sm">
+                    <img src={teamLogo(t.team)} alt="" className="size-5 object-contain" />
+                    {teamNick(t.team)}
+                  </span>
                   <span className="text-right">
                     <span
                       className={cn(
