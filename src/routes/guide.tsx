@@ -16,7 +16,7 @@ function GuidePage() {
         </p>
         <h1 className="mt-3 font-display text-5xl uppercase tracking-[0.03em]">Guide</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Short definitions. The 2025 holdout is on{" "}
+          Short definitions. The 2023–2025 lineup study is on{" "}
           <Link to="/study" className="text-fg">
             Study
           </Link>
@@ -62,15 +62,32 @@ function GuidePage() {
             <Item term="The roster">
               1 QB, 2 RB, 3 WR, 1 TE, 1 FLEX, 1 D/ST. Cap is $50,000.
             </Item>
-            <Item term="Salary">DraftKings-style price.</Item>
+            <Item term="Salary">
+              Synthetic DraftKings-style price, frozen for the season. Not a real DraftKings salary.
+              The 114-player 2025 slate was picked and priced with the whole 2025 season, so it knows
+              things no one knew before kickoff.
+            </Item>
             <Item term="Pts / $1k">Projected points per $1,000 of salary.</Item>
             <Item term="Lock">Force that player into the lineup.</Item>
             <Item term="Bench">Never pick that player.</Item>
+            <Item term="Forecast">
+              A guess made before kickoff from earlier games only.
+            </Item>
             <Item term="Hindsight">
-              Rebuilds the lineup on this week’s actual PPR after games go final.
+              Rebuilds the lineup on this week’s actual PPR after games go final. Not a forecast.
             </Item>
             <Item term="Backtest">
-              This week on Lineup; 2025 weeks 2–18 on Study. Exact DP vs greedy, scored on actuals.
+              This week on Lineup. On Study: 2023–2025, weeks 2–18. Each season has its own pool and
+              prices built from the season before. The exact solver must prove its team is best or the
+              week is dropped for every method. Scored on actuals.
+            </Item>
+            <Item term="Look back">
+              A past season replayed with every guess limited to earlier weeks. 2025 on Study is a look
+              back, not a fresh test, because it had already been studied.
+            </Item>
+            <Item term="95% range">
+              On Study, the spread of the average weekly gap when the weeks are resampled. Each week
+              counts once. A range that includes zero means those weeks can’t tell two methods apart.
             </Item>
           </dl>
         </section>
