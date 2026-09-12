@@ -7,9 +7,9 @@ Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main 
 
 ## Current next action
 
-Task 6 (`wip/task6-analyses`, from 764a4ba) is still running in its worktree. After it merges:
-- Run the final Task 4 wave: a `test:e2e` command and a CI browser job, the five deliberate-regression bite checks, and the README/guide agreement check.
-- Then run one three-lens review (correctness, runtime/security, honesty + handoff §11 checklist) of ce5d6b1..HEAD.
+All eight tasks' implementation branches are merged. Next:
+- Run the final Task 4 wave: a `test:e2e` command and a CI browser job, the five deliberate-regression bite checks, and the README/guide agreement check, including the Task 6 feature docs.
+- Then run one three-lens review (correctness, runtime/security, honesty + handoff §11 checklist) of ce5d6b1..HEAD, and fix what it confirms.
 
 ## Task status
 
@@ -20,9 +20,29 @@ Task 6 (`wip/task6-analyses`, from 764a4ba) is still running in its worktree. Af
 | 3 Constraints | Verified (wave 2) | Reducer + fingerprints, 37 ui tests, optimizer browser flows 8/8 on the production preview after the merge. URL/saved persistence is handled in Task 6 |
 | 4 CI/testing | Part 1 verified; final wave pending | npm test/build/lint gated. Pending: e2e command + CI browser job, bite checks, docs agreement |
 | 5 Reproducibility | Verified (wave 2 + 5B) | 2022–2025 inputs in docs/study/input-manifest.json; strict exact runs for 2023–2025 + shipped slate; pinned offline rerun byte-identical; docs/study/REGENERATION_REPORT.md |
-| 6 Sharing/saves | In progress (wave 3a) | |
+| 6 Sharing/saves | Verified (wave 3a) | 33 pure analysis tests (test:ui 70), `tests/e2e/analysis.mjs` 11/11 on the production preview with the fixture switch; optimizer flows 8/8 and data-freshness 11/11 still pass. Docs for the new features are pending (final Task 4 wave) |
 | 7 Data freshness | Verified (wave 2) | 57 pure tests, data-freshness browser checks 11/11 on the production preview after the merge |
 | 8 Worker | Verified (wave 2) | Worker for the initial, manual, comparison and hindsight solves; cancellation by terminate; perf evidence in docs/perf/optimizer-worker.md |
+
+## Task 6 (merged at 0624bfb)
+
+Branch `wip/task6-analyses`: f954808 (feature) and aeda864 (browser checks).
+
+- `src/lib/analysis/state.ts`: Zod schemas plus encode/decode for the QB and lineup states. Lineup links go through `parseSelection`, so there is one selection schema. URL shapes:
+  - QB: `?season=&down=&dist=&sit=&min=&sort=&pins=id.id`
+  - Lineup: `?slate=&mode=&lock=id.id&bench=&stack=`
+  - Defaults are left out of the URL, and `pins=` (empty) means explicitly no pins.
+- Invalid keys are kept out of the validated search, so the page can report the raw value (TanStack otherwise overwrites it silently).
+- `storage.ts`: one localStorage key `gridiron-lab:saved-analyses` with `{schemaVersion 1, analyses[]}`, Zod-validated per record.
+  - Unreadable records are skipped but kept, and an unsupported envelope is read-only.
+  - "Start over" (with confirmation) is the recovery path.
+  - Limits: 50 views, 80-character names. Labelled this browser only.
+- `export.ts`: lineup JSON (schema, refs, data version, configuration, solver metadata, slot rows with actual status, totals) plus `parseLineupExport`, which validates the schema and recomputes totals.
+  - The CSV is a metadata table, a blank line, then the slot table, with RFC 4180 quoting and a formula guard on text cells.
+  - Export is offered only for a current result.
+- QB page: state comes from the route search, and defaults fill only absent values. The slider replaces history once, on commit. Pins that miss the current cut stay listed as unresolved, with an explanation and an Unpin button.
+- Lineup page: the hook imports links and back/forward through the existing reducer `import` action, and writes edits back (push for edits, replace for a memory restore). The result card shows the input version (slate id, actuals version), Export JSON/CSV, Copy link and saved views.
+- The `tests/e2e/optimizer-flows.mjs` URL wait now accepts a query string.
 
 ## Task 5 part B (merged at 4724f44)
 
