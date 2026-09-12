@@ -163,6 +163,18 @@
   }
 }
 
+.overflow-x-auto,
+.overflow-y-auto,
+.overflow-auto {
+  scrollbar-width: none;
+}
+.overflow-x-auto::-webkit-scrollbar,
+.overflow-y-auto::-webkit-scrollbar,
+.overflow-auto::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .stagger-in > *,
   .stagger-in > *:nth-child(n),

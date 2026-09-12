@@ -239,60 +239,31 @@ function GamePanel({
 
           <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Quarterbacks</h3>
           <p className="mt-1 text-xs text-subtle">Box line now. EPA / CPOE when Advanced is in.</p>
-          <div className="mt-3 overflow-x-auto">
-            <table className="w-full min-w-[560px] text-left text-sm">
-              <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
-                <tr className="border-y border-border">
-                  <th className="px-2 py-2 font-medium">QB</th>
-                  <th className="px-2 py-2 text-right font-medium">C/ATT</th>
-                  <th className="px-2 py-2 text-right font-medium">Yds</th>
-                  <th className="px-2 py-2 text-right font-medium">TD/INT</th>
-                  <th className="px-2 py-2 text-right font-medium">
-                    <StatTip metric="ppr" />
-                  </th>
-                  <th className="px-2 py-2 text-right font-medium">
-                    <StatTip metric="epa" />
-                  </th>
-                  <th className="px-2 py-2 text-right font-medium">
-                    <StatTip metric="cpoe" />
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {qbs.map((p) => {
-                  const adv = detail.advanced?.qbs.find((q) => prettyQb(q.name, detail) === p.name)
-                    ?? detail.advanced?.qbs.find((q) => q.team === p.team);
-                  return (
-                    <tr key={p.id} className="border-b border-border/70">
-                      <td className="px-2 py-2">
-                        <div className="flex items-center gap-2">
-                          <Headshot src={p.headshot} name={p.name} team={p.team} className="size-8" />
-                          <div>
-                            <p className="font-medium">{p.name}</p>
-                            <p className="text-xs text-muted">{teamNick(p.team)}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">
-                        {p.passCmp ?? "—"}/{p.passAtt ?? "—"}
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">{p.passYds}</td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">
-                        {p.passTd}/{p.ints}
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">{p.ppr.toFixed(1)}</td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums text-sage">
-                        {adv ? formatEpa(adv.epa) : "—"}
-                      </td>
-                      <td className="px-2 py-2 text-right font-mono tabular-nums">
-                        {adv ? formatCpoe(adv.cpoe) : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className="mt-3 divide-y divide-border">
+            {qbs.map((p) => {
+              const adv = detail.advanced?.qbs.find((q) => prettyQb(q.name, detail) === p.name)
+                ?? detail.advanced?.qbs.find((q) => q.team === p.team);
+              return (
+                <li key={p.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Headshot src={p.headshot} name={p.name} team={p.team} className="size-8" />
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium">{p.name}</p>
+                      <p className="text-xs text-muted">
+                        {p.passCmp ?? "—"}/{p.passAtt ?? "—"} · {p.passYds} yds · {p.passTd}/{p.ints}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 text-right">
+                    <span className="block font-mono text-sm tabular-nums text-sage">
+                      {adv ? formatEpa(adv.epa) : "—"}
+                    </span>
+                    <span className="font-mono text-xs tabular-nums text-muted">{p.ppr.toFixed(1)} PPR</span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
           {!detail.advanced && game.status === "post" && (
             <p className="mt-2 text-xs text-muted">
               Advanced pending — nflverse has not posted EPA for this game yet.
