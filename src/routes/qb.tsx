@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState, useEffect, type ReactNode } from "react";
+import { useMemo, useRef, useState, useEffect, type ReactNode } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -14,6 +14,7 @@ import {
 } from "recharts";
 import qbsFile from "@/data/qbs.json";
 import { AppShell } from "@/components/layout/AppShell";
+import { FeedStatus } from "@/components/DataStatus";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
 import { SampleN } from "@/components/SampleN";
@@ -41,7 +42,7 @@ export const Route = createFileRoute("/qb")({ component: QbLab });
 const data = qbsFile as QbFile;
 
 function QbLab() {
-  const { labs } = useSeason();
+  const { labs, labsSections } = useSeason();
   const [season, setSeason] = useState<number>(2026);
   const [minPlays, setMinPlays] = useState(10);
   const [down, setDown] = useState<DownFilter>("all");
@@ -62,13 +63,19 @@ function QbLab() {
     setMinPlays(playFloor(season, down, dist, sit).def);
   }, [season, down, dist, sit]);
 
+  // Default pins follow the season. Once someone pins or unpins, a data refresh leaves their picks alone.
+  const pinsTouched = useRef(false);
   useEffect(() => {
+    pinsTouched.current = false;
+  }, [season]);
+  useEffect(() => {
+    if (pinsTouched.current) return;
     const floor = season >= 2026 ? 10 : 250;
     const ids = allQbs
       .filter((q) => q.season === season && q.overall.plays >= floor)
       .slice(0, 3)
       .map((q) => q.id);
-    setPinned(ids);
+    setPinned((prev) => (prev.length === ids.length && prev.every((id, i) => id === ids[i]) ? prev : ids));
   }, [season, allQbs]);
 
   const key = splitKey(down, dist, sit);
@@ -106,6 +113,7 @@ function QbLab() {
   }));
 
   const togglePin = (id: string) => {
+    pinsTouched.current = true;
     setPinned((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
       if (prev.length >= 4) return [...prev.slice(1), id];
@@ -147,11 +155,9 @@ function QbLab() {
             />
             <span className="text-[11px] tracking-[0.14em] text-subtle uppercase">
               {rows.length} QBs · {label}
-              {season >= 2026 && overlay.throughWeek
-                ? ` · through week ${overlay.throughWeek}`
-                : ""}
             </span>
           </div>
+          {season >= 2026 ? <FeedStatus feed="labs" section="qbs" /> : null}
           <div className="flex flex-col gap-3 rounded-lg bg-elevated p-4">
             <div className="grid gap-3 lg:grid-cols-3">
               <Field label="Down">
@@ -221,6 +227,15 @@ function QbLab() {
             </div>
           </div>
         </div>
+
+        {season >= 2026 && weekRows.length === 0 && rows.length > 0 && (
+          <p data-testid="week-strip-note" className="mt-4 rounded-xl bg-surface px-4 py-3 text-sm text-muted">
+            No week-by-week line yet.{" "}
+            {labsSections.qbs.kind === "snapshot"
+              ? "The snapshot only has season totals; weekly rows appear when the live play-by-play loads."
+              : "The live file has no weekly rows for these quarterbacks."}
+          </p>
+        )}
 
         {weekRows.length > 0 && (
           <div className="mt-4 overflow-hidden rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
@@ -348,7 +363,7 @@ function QbLab() {
 
           <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             <h2 className="font-display text-xl uppercase tracking-[0.06em]">Pinned</h2>
-            <ul className="mt-4 space-y-2">
+            <ul data-testid="pinned-list" className="mt-4 space-y-2">
               {pinnedRows.length === 0 && (
                 <li className="text-sm text-muted">Click a row or a scatter point to compare.</li>
               )}

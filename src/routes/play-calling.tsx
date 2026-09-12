@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import playFile from "@/data/playcalling.json";
 import { AppShell } from "@/components/layout/AppShell";
+import { FeedStatus } from "@/components/DataStatus";
 import { FirstLook } from "@/components/FirstLook";
 import { SampleN } from "@/components/SampleN";
 import { StatTip } from "@/components/StatTip";
@@ -141,12 +142,9 @@ function PlayLab() {
               { value: "proe", label: "PROE" },
             ]}
           />
-          <span className="text-[11px] tracking-[0.14em] text-subtle uppercase">
-            {season >= 2026 && overlay.throughWeek
-              ? `through week ${overlay.throughWeek}`
-              : `${teams.length} teams`}
-          </span>
+          <span className="text-[11px] tracking-[0.14em] text-subtle uppercase">{teams.length} teams</span>
         </div>
+        {season >= 2026 ? <FeedStatus feed="labs" section="teams" className="mt-3" /> : null}
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <Insight

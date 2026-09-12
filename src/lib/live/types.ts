@@ -186,3 +186,45 @@ export type WeekPpr = {
   games: number;
   players: WeekSkill[];
 };
+
+/** Why a live request came back without new data. */
+export type FeedErrorCode =
+  /** Upstream unreachable, or the connection dropped mid-body. */
+  | "network"
+  /** An attempt or the whole load ran past its bound. */
+  | "timeout"
+  /** Upstream work is still running; this response stopped waiting for it. */
+  | "pending"
+  /** Upstream answered 429. */
+  | "rate-limited"
+  /** Upstream answered another non-OK status. */
+  | "http"
+  /** Upstream answered in a shape the parser does not accept. Never retried automatically. */
+  | "schema"
+  | "not-found"
+  | "aborted"
+  | "unknown";
+
+export type FeedError = {
+  code: FeedErrorCode;
+  message: string;
+  retryable: boolean;
+  /** Server hint for when asking again is useful (Retry-After, or a pending load). */
+  retryAfterMs: number | null;
+};
+
+/**
+ * What the server actually did for one live request. `source` "live" means upstream was fetched
+ * for this request wave, "cache" means an earlier retrieval was served. With `error` set, `data` is
+ * the last good retrieval (or null) and `fetchedAt` stays that retrieval's time.
+ */
+export type FeedResponse<T> = {
+  data: T | null;
+  source: "live" | "cache" | "none";
+  /** When `data` was retrieved from upstream; null without data. */
+  fetchedAt: string | null;
+  respondedAt: string;
+  error: FeedError | null;
+  /** Human-readable parts of `data` that are incomplete. Empty when complete. */
+  partial: string[];
+};
