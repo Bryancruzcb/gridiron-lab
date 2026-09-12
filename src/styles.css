@@ -158,6 +158,37 @@
   backdrop-filter: blur(var(--lg-blur, 24px)) saturate(1.7);
 }
 
+/* One-light rim on hover; flash on press. */
+.hit-shine {
+  transition: box-shadow 160ms var(--ease-out), background-color 160ms var(--ease-out);
+}
+.hit-shine:hover,
+.hit-shine:focus-visible {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.42),
+    0 0 16px rgb(241 240 234 / 0.22);
+}
+.hit-shine:active {
+  animation: hit-shine 420ms var(--ease-out);
+}
+@keyframes hit-shine {
+  0% {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.85),
+      0 0 28px rgb(255 255 255 / 0.5);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1px rgb(255 255 255 / 0.2),
+      0 0 0 rgb(255 255 255 / 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hit-shine:active {
+    animation: none;
+  }
+}
+
 .field-grid {
   background-image:
     linear-gradient(to right, rgba(241, 240, 234, 0.04) 1px, transparent 1px),
