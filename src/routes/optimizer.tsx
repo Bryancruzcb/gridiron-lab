@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { memo, useMemo, useState } from "react";
 import { Lock, Ban } from "lucide-react";
 import fantasyFile from "@/data/fantasy.json";
+import { FeedStatus } from "@/components/DataStatus";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
@@ -305,6 +306,8 @@ function OptimizerLab() {
             </div>
           </div>
         )}
+
+        <FeedStatus feed="weekPpr" className="mt-4" />
 
         <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_340px]">
           <div className="rounded-xl bg-surface shadow-[var(--shadow-border)]">
