@@ -30,6 +30,7 @@
   },
   "include": [
     "src",
-    "server"
+    "server",
+    "tests"
   ]
 }
