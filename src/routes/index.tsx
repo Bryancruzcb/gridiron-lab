@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import qbsFile from "@/data/qbs.json";
 import playFile from "@/data/playcalling.json";
 import { AppShell } from "@/components/layout/AppShell";
+import { Headshot } from "@/components/Headshot";
 import { SampleN } from "@/components/SampleN";
 import { Button } from "@/components/ui/button";
 import { getScoreboard } from "@/lib/live/functions";
@@ -109,6 +110,7 @@ function Home() {
                 <li key={q.id} className="flex items-center justify-between gap-3 py-3">
                   <div className="flex items-center gap-3">
                     <span className="w-5 font-mono text-xs text-subtle">{i + 1}</span>
+                    <Headshot src={q.headshot} name={q.name} team={q.team} className="size-10" />
                     <div>
                       <p className="text-sm font-medium">{q.name}</p>
                       <p className="text-xs text-muted">{teamNick(q.team)}</p>
