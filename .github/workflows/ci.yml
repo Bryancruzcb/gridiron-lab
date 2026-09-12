@@ -27,3 +27,4 @@ jobs:
           key: npm-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - run: npm run routes:generate
       - run: npm run typecheck
+      - run: npm run test:domain

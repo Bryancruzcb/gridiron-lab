@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from "node:fs";
-import { exactLineup, greedyLineup, hillClimbLineup } from "../src/lib/optimizer.ts";
+import { solveLineup } from "../src/lib/optimizer.ts";
+import type { SolveResult, SolverMethod } from "../src/lib/optimizer.ts";
 import { fnum, parseCsvLine, round, UA } from "../src/lib/live/csv.ts";
 import type { BacktestFile, FantasyFile, FantasyPlayer, QbLagFile, QbLagPoint, StudyWeek } from "../src/data/types.ts";
 
@@ -190,7 +191,6 @@ async function main() {
     return (byId.get(p.id) ?? []).find((r) => r.week === week)?.ppr ?? 0;
   }
 
-  const empty = { locked: new Set<string>(), excluded: new Set<string>() };
   const weeks: StudyWeek[] = [];
 
   for (let w = 2; w <= 18; w++) {
@@ -215,17 +215,19 @@ async function main() {
       });
       act.set(p.id, round(actual(p, w), 1));
     }
-    const pack = (lu: ReturnType<typeof exactLineup>) =>
-      lu
-        ? { proj: round(lu.proj, 1), actual: scoreOf(lu.players, act), salary: lu.salary }
+    const solve = (method: SolverMethod) => solveLineup({ players: slate, cap: fantasy.cap, method });
+    const pack = (r: SolveResult) =>
+      r.status === "ok"
+        ? { proj: round(r.lineup.proj, 1), actual: scoreOf(r.lineup.players, act), salary: r.lineup.salary }
         : null;
-    const exactLu = exactLineup({ players: slate, cap: fantasy.cap, ...empty })
-      ?? hillClimbLineup({ players: slate, cap: fantasy.cap, ...empty });
-    const exact = pack(exactLu);
-    const greedyProj = pack(greedyLineup({ players: slate, cap: fantasy.cap, ...empty, by: "proj" }));
-    const greedyValue = pack(greedyLineup({ players: slate, cap: fantasy.cap, ...empty, by: "value" }));
+    // Strict exact study: a failed exact solve makes the week invalid; it is never back-filled by hill-climb.
+    const results = { exact: solve("exact-dp"), greedyProj: solve("greedy-proj"), greedyValue: solve("greedy-value") };
+    const exact = pack(results.exact);
+    const greedyProj = pack(results.greedyProj);
+    const greedyValue = pack(results.greedyValue);
     if (!exact || !greedyProj || !greedyValue) {
-      console.log("skip week", w, { n: slate.length, exact: !!exact, greedyProj: !!greedyProj, greedyValue: !!greedyValue });
+      const failures = Object.entries(results).flatMap(([name, r]) => (r.status === "ok" ? [] : [`${name} ${r.status}/${r.code}`]));
+      console.log("invalid week", w, { n: slate.length, failures });
       continue;
     }
     weeks.push({ week: w, players: slate.length, exact, greedyProj, greedyValue });
@@ -242,7 +244,7 @@ async function main() {
     notes: [
       "Salaries are synthetic DraftKings-style prices from the 114-player slate, frozen all year — not live DK prices.",
       "Projection is trailing mean PPR over weeks 1..w-1. Week 1 is dropped.",
-      "Exact DP did not reconstruct a legal roster on some weeks; those weeks fall back to hill-climb.",
+      "Weeks where exact DP does not return a proven lineup are logged as invalid and left out; there is no hill-climb fallback.",
     ],
     weeks,
     summary: {

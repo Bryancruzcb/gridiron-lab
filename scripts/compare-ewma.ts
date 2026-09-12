@@ -1,6 +1,6 @@
 /** EWMA α sweep on the same 2025 holdout as compare-proj.ts */
 import { readFileSync, writeFileSync } from "node:fs";
-import { exactLineup, hillClimbLineup } from "../src/lib/optimizer.ts";
+import { solveLineup } from "../src/lib/optimizer.ts";
 import { fnum, parseCsvLine, round, UA } from "../src/lib/live/csv.ts";
 import type { FantasyFile, FantasyPlayer } from "../src/data/types.ts";
 
@@ -128,8 +128,6 @@ async function main() {
   }
   for (const arr of dstByTeam.values()) arr.sort((a, b) => a.week - b.week);
 
-  const empty = { locked: new Set<string>(), excluded: new Set<string>() };
-
   function prior(p: FantasyFile["players"][number], before: number) {
     if (p.pos === "DST") return (dstByTeam.get(p.team) ?? []).filter((r) => r.week < before).map((r) => r.ppr);
     return (byId.get(p.id) ?? []).filter((r) => r.week < before).map((r) => r.ppr);
@@ -167,11 +165,13 @@ async function main() {
         act.set(p.id, y ?? 0);
         if (y != null) err.push({ y, yhat });
       }
-      const lu =
-        exactLineup({ players: slate, cap: fantasy.cap, ...empty }) ??
-        hillClimbLineup({ players: slate, cap: fantasy.cap, ...empty });
-      if (!lu) continue;
-      luPts.push(lu.players.reduce((s, p) => s + (act.get(p.id) ?? 0), 0));
+      const solved = solveLineup({ players: slate, cap: fantasy.cap, method: "exact-dp" });
+      if (solved.status !== "ok") {
+        // Strict exact study: the week is invalid, never filled by a heuristic.
+        console.log(`w${w}: exact-dp ${solved.status}/${solved.code}, week invalid`);
+        continue;
+      }
+      luPts.push(solved.lineup.players.reduce((s, p) => s + (act.get(p.id) ?? 0), 0));
     }
     const sorted = [...luPts].sort((a, b) => a - b);
     return {
