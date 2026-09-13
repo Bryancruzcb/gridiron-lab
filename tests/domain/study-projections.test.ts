@@ -4,7 +4,7 @@ import type { StudyModelSpec } from "../../src/data/types.ts";
 import { RULESET_REF } from "../../src/lib/football/scoring.ts";
 import { makeModel, PROJECTION_METHODS } from "../../scripts/lib/study/models.ts";
 import { prepareSeason, type SeasonTexts } from "../../scripts/lib/study/prepare.ts";
-import { buildFeatures, ewma, project, snapshotBefore } from "../../scripts/lib/study/projections.ts";
+import { buildFeatures, ewma, historyGames, opponentFactor, project, snapshotBefore } from "../../scripts/lib/study/projections.ts";
 import { dropRows, fixtureUniverse, mapRows, reverseRows, runFixture, seasonTexts } from "../fixtures/football/study-fixture.ts";
 
 // Every method, plus non-default parameters so each branch reads its own settings.
@@ -137,7 +137,10 @@ describe("projection methods", () => {
     const opponent = new Map(data.games.flatMap((g) => [[`${g.gameId}|${g.away}`, g.home], [`${g.gameId}|${g.home}`, g.away]]));
     const vsBbb = data.players.filter((r) => r.week < 4 && r.position === "WR" && opponent.get(`${r.gameId}|${r.team}`) === "BBB");
     assert.deepEqual([...new Set(vsBbb.map((r) => r.team))].sort(), ["AAA", "DDD"]);
-    const factor = avg(vsBbb.map((r) => r.points!)) / avg(wrPool);
+    // The denominator is every WR row with a scheduled opponent, not the pool's WR mean.
+    const allWr = data.players.filter((r) => r.week < 4 && r.position === "WR" && r.points != null && opponent.has(`${r.gameId}|${r.team}`));
+    const factor = avg(vsBbb.map((r) => r.points!)) / avg(allWr.map((r) => r.points!));
+    near(features.leagueAllowed("WR")!, avg(allWr.map((r) => r.points!)));
     near(p("opp"), avg(prior) * Math.min(1.3, Math.max(0.7, factor)));
     near(p("opp", { clampLow: 1, clampHigh: 1 }), avg(prior));
   });
@@ -156,6 +159,68 @@ describe("projection methods", () => {
     assert.throws(() => ewma([], 0.5), /empty history/);
     const early = snapshotBefore(data, { season: 2041, seasonType: "REG", beforeWeek: 1 });
     assert.throws(() => project(makeModel("trail"), subject, early, buildFeatures(early, universe.players, 8)), /no scored history/);
+  });
+});
+
+describe("opponent factor", () => {
+  const data = prepareSeason(2041, seasonTexts(2041), { scoring: RULESET_REF });
+  const universe = fixtureUniverse();
+  // Starters only: their position mean sits well above the mean of every source row, like the
+  // study's top-N pools against nflverse rows that include backups.
+  const starters = universe.players.filter((u) => !u.id.endsWith("2"));
+  const teams = ["AAA", "BBB", "CCC", "DDD"];
+  const positions = ["QB", "RB", "WR", "TE", "DST"] as const;
+  const opponent = new Map(data.games.flatMap((g) => [[`${g.gameId}|${g.away}`, g.home], [`${g.gameId}|${g.home}`, g.away]]));
+  const near = (a: number, b: number) => assert.ok(Math.abs(a - b) < 1e-9, `${a} vs ${b}`);
+
+  /** Scored rows at the position against the team before the week, counted straight from the prepared season. */
+  const rowsAgainst = (pos: (typeof positions)[number], team: string, week: number) =>
+    pos === "DST"
+      ? data.defenses.filter((r) => r.week < week && r.points != null && opponent.get(`${r.gameId}|${r.team}`) === team).length
+      : data.players.filter((r) => r.week < week && r.points != null && r.position === pos && opponent.get(`${r.gameId}|${r.team}`) === team).length;
+
+  for (const week of [3, 4, 5]) {
+    it(`centres on 1 across opponents at every position before week ${week}, whatever the pool`, () => {
+      const features = buildFeatures(snapshotBefore(data, { season: 2041, seasonType: "REG", beforeWeek: week }), starters, 8);
+      for (const pos of positions) {
+        const weights = teams.map((t) => rowsAgainst(pos, t, week));
+        const factors = teams.map((t) => opponentFactor(features, pos, t));
+        const weighted = factors.reduce((s, f, i) => s + f * weights[i]!, 0) / weights.reduce((s, n) => s + n, 0);
+        near(weighted, 1);
+        const plain = factors.reduce((s, f) => s + f, 0) / factors.length;
+        assert.ok(Math.abs(plain - 1) < 0.05, `${pos} before week ${week}: mean factor ${plain}`);
+      }
+    });
+  }
+
+  it("does not read the pool, so opp projections match for a starters-only and a full pool", () => {
+    const snapshot = snapshotBefore(data, { season: 2041, seasonType: "REG", beforeWeek: 4 });
+    const full = buildFeatures(snapshot, universe.players, 8);
+    const top = buildFeatures(snapshot, starters, 8);
+    // opp@1 divided by the pool's position mean, so these pools gave different projections.
+    assert.ok(top.positionMean("WR") > full.positionMean("WR") + 3 && top.positionMean("RB") > full.positionMean("RB") + 3);
+    const wide = makeModel("opp", { params: { clampLow: 0.01, clampHigh: 10 } });
+    let compared = 0;
+    for (const u of universe.players) {
+      const team = u.pos === "DST" ? u.team : (snapshot.latestTeam.get(u.id) ?? u.team);
+      if (!historyGames(snapshot, { id: u.id, pos: u.pos, team })) continue;
+      for (const opp of teams.filter((t) => t !== team)) {
+        const subject = { id: u.id, pos: u.pos, team, opponent: opp };
+        assert.equal(project(wide, subject, snapshot, full), project(wide, subject, snapshot, top), `${u.id} vs ${opp}`);
+        compared += 1;
+      }
+    }
+    assert.ok(compared > 50);
+  });
+
+  it("is 1 without an opponent, without rows for that opponent, or before any history", () => {
+    const features = buildFeatures(snapshotBefore(data, { season: 2041, seasonType: "REG", beforeWeek: 4 }), universe.players, 8);
+    assert.equal(opponentFactor(features, "WR", null), 1);
+    assert.equal(features.opponentAllowed("WR", "ZZZ"), null);
+    assert.equal(opponentFactor(features, "WR", "ZZZ"), 1);
+    const empty = buildFeatures(snapshotBefore(data, { season: 2041, seasonType: "REG", beforeWeek: 1 }), universe.players, 8);
+    assert.equal(empty.leagueAllowed("WR"), null);
+    assert.equal(opponentFactor(empty, "WR", "BBB"), 1);
   });
 });
 

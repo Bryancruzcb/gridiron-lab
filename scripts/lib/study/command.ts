@@ -6,6 +6,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join, relative, sep } from "node:path";
 import type {
+  StudyFactsFile,
   StudyInputIdentity,
   StudyInputManifestEntry,
   StudyInputManifestFile,
@@ -17,8 +18,9 @@ import type {
   StudyUniverse,
 } from "../../../src/data/types.ts";
 import { RULESET_REF } from "../../../src/lib/football/scoring.ts";
-import type { StudyCliOptions, StudyPublishOptions } from "./cli.ts";
+import type { StudyCliOptions, StudyFactsOptions, StudyPublishOptions } from "./cli.ts";
 import { isRecord, StudyConfigError } from "./errors.ts";
+import { buildFactsFile } from "./facts.ts";
 import { canonicalJson, hashJson, sha256OfText } from "./hash.ts";
 import { buildInputManifest, buildSeasonsFile } from "./publish.ts";
 import { acquireInputs, describeInput, type AcquireOptions, type AcquiredInput, type FetchLike } from "./inputs.ts";
@@ -394,4 +396,26 @@ export function runPublishCommand(
     ctx.log(`wrote ${opts.manifest} (${manifest.inputs.length} inputs)`);
   }
   return { file, manifest };
+}
+
+/** Writes the facts file from written runs and the universe files in their directories. */
+export function runFactsCommand(opts: StudyFactsOptions, ctx: Pick<StudyCommandContext, "log">): StudyFactsFile {
+  const read = (p: string) => readSchema<StudyRunArtifact>(p, "run", "gridiron-lab-study-run@1");
+  const runs = opts.runs.map(read);
+  const shipped = opts.shippedSlate ? read(opts.shippedSlate) : null;
+  const sweeps = opts.sweeps.map(read);
+  const universes = new Map<string, StudyUniverse>();
+  const dirs = new Set([...opts.runs, ...(opts.shippedSlate ? [opts.shippedSlate] : [])].map((p) => dirname(p)));
+  for (const dir of dirs) {
+    for (const name of readdirSync(dir).filter((f) => /^universe-.*\.json$/.test(f)).sort()) {
+      const path = join(dir, name);
+      const universe = parseFrozenUniverse(readFileSync(path, "utf8"), path);
+      universes.set(hashJson(universe), universe);
+    }
+  }
+  const file = buildFactsFile({ runs, shippedSlate: shipped, sweeps, universes });
+  mkdirSync(dirname(opts.out), { recursive: true });
+  writeFileSync(opts.out, sortedJson(file));
+  ctx.log(`wrote ${opts.out} (${file.resultSha256})`);
+  return file;
 }

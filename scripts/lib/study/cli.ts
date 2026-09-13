@@ -54,7 +54,8 @@ export const STUDY_USAGE = `Usage: npm run study:build -- --seasons <list> --rol
   --qb-lag                              also write the QB week-to-week lag artifact
   --help
 
-Publishing written runs for the study page: npm run study:build -- publish --help`;
+Publishing written runs for the study page: npm run study:build -- publish --help
+Counting the facts the docs quote from written runs: npm run study:build -- facts --help`;
 
 export type StudyPublishOptions = {
   runs: string[];
@@ -108,6 +109,54 @@ export function parsePublishArgs(argv: string[], ctx: { cwd?: string } = {}): St
     qbLag: pathList(values["qb-lag"], cwd),
     out: values.out ? resolve(cwd, values.out) : "",
     manifest: values.manifest ? resolve(cwd, values.manifest) : null,
+    help,
+  };
+}
+
+export type StudyFactsOptions = {
+  runs: string[];
+  shippedSlate: string | null;
+  sweeps: string[];
+  out: string;
+  help: boolean;
+};
+
+export const FACTS_USAGE = `Usage: npm run study:build -- facts --runs <run.json>[,<run.json>] --out <file> [options]
+
+  --runs <files>              the season runs given to publish; universe-*.json files are read from their directories
+  --shipped-slate <run.json>  the shipped-slate run given to publish
+  --sweeps <files>            exploratory ewma-sweep runs, one per season (also pooled when two or more)
+  --out <file>                the facts file (docs/study/study-facts.json)
+  --help`;
+
+export function parseFactsArgs(argv: string[], ctx: { cwd?: string } = {}): StudyFactsOptions {
+  const cwd = ctx.cwd ?? process.cwd();
+  let values;
+  try {
+    ({ values } = parseArgs({
+      args: argv,
+      strict: true,
+      allowPositionals: false,
+      options: {
+        runs: { type: "string" },
+        "shipped-slate": { type: "string" },
+        sweeps: { type: "string" },
+        out: { type: "string" },
+        help: { type: "boolean" },
+      },
+    }));
+  } catch (e) {
+    throw new StudyConfigError((e as Error).message);
+  }
+  const help = values.help === true;
+  const runs = pathList(values.runs, cwd);
+  if (!help && !runs.length) throw new StudyConfigError("facts needs --runs");
+  if (!help && !values.out) throw new StudyConfigError("facts needs --out");
+  return {
+    runs,
+    shippedSlate: values["shipped-slate"] ? resolve(cwd, values["shipped-slate"]) : null,
+    sweeps: pathList(values.sweeps, cwd),
+    out: values.out ? resolve(cwd, values.out) : "",
     help,
   };
 }

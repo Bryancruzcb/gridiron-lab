@@ -29,13 +29,15 @@ import { runIdOf, sealRun, summarizeWeeks } from "./report.ts";
 import { ROUNDING, round, sum } from "./stats.ts";
 import { universeRef } from "./universe.ts";
 
-export const STUDY_PIPELINE_REF = "gridiron-lab-study-pipeline@1";
+/** @2: model specs carry a versioned definition, and the opponent factor compares one population (opp@2). */
+export const STUDY_PIPELINE_REF = "gridiron-lab-study-pipeline@2";
 /** The Task 1 solveLineup contract. Bump when the optimizer can return a different lineup for the same input. */
 export const STUDY_SOLVER_REF = "gridiron-lab-solveLineup@1";
 
 export const STUDY_POLICIES: readonly string[] = [
   "Cutoff: a week-w forecast reads only rows with (season, week) before (S, w) and schedule scores of earlier weeks; history is ordered by season, week, game id.",
   "Position priors, opponent features and recency models read the same pre-cutoff snapshot; the position prior falls back to positionPriorFallback when the pool has no history (or a mean of exactly 0).",
+  "Opponent factor: mean points of every pre-cutoff source row at the position (defense rows for DST) against the scheduled opponent, divided by the mean of those same rows against every opponent; 1 when either side has no rows. The pool's position mean is used only as the shrink prior.",
   "Scheduled opponents come from the schedule, for the player's latest team before the cutoff (else the universe team), never from a postgame row.",
   "Slate: universe players whose team has a game in week w and who have at least minHistoryGames scored games before the cutoff. A missing postgame row never removes a player.",
   "Actuals: played = a scored stat row (a zero is kept); inactive = final game, source covers the week, no row: 0 in a lineup, left out of player error; not-final, missing-source and unknown-identity stay missing.",
