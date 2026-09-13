@@ -205,7 +205,7 @@ async function run(browser) {
     await page.goto(`${BASE}/qb`);
     const sel = `${status("labs-qbs")}[data-freshness="stale"]`;
     await page.waitForSelector(sel, { timeout: WAIT });
-    const pinned = () => page.locator('[data-testid="pinned-list"] p.font-medium').allInnerTexts();
+    const pinned = () => page.locator('[data-testid="pinned-list"] [data-pin-name]').allInnerTexts();
     await page.locator("tr", { hasText: "Matthew Stafford" }).click();
     const before = await pinned();
     expect(before.length === 2 && !before.includes("Matthew Stafford"), `pins after unpinning: ${before}`);

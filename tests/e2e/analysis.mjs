@@ -436,7 +436,7 @@ async function run(browser) {
     const unknown = page.locator('li[data-pin-id="99-0000001"]');
     await page.locator('li[data-pin-id="99-0000001"][data-unresolved="pending"]').waitFor({ timeout: WAIT });
     assert.match(await unknown.innerText(), /Waiting for the live 2026 file/);
-    assert.equal(await page.locator('li[data-pin-id="00-0039851"] p.font-medium').innerText(), "Drake Maye");
+    assert.equal(await page.locator('li[data-pin-id="00-0039851"] [data-pin-name]').innerText(), "Drake Maye");
     s.releaseLabs();
     await page.locator('li[data-pin-id="99-0000001"][data-unresolved="explained"]').waitFor({ timeout: WAIT });
     assert.match(await unknown.innerText(), /No quarterback with id 99-0000001 in this data/);
