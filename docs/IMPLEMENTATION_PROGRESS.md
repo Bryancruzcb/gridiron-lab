@@ -7,9 +7,33 @@ Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main 
 
 ## Current next action
 
-All eight tasks' implementation branches are merged. Next:
-- Run the final Task 4 wave: a `test:e2e` command and a CI browser job, the five deliberate-regression bite checks, and the README/guide agreement check, including the Task 6 feature docs.
-- Then run one three-lens review (correctness, runtime/security, honesty + handoff §11 checklist) of ce5d6b1..HEAD, and fix what it confirms.
+All eight tasks, including the final Task 4 wave, are merged. Next:
+- Confirm the full browser gate passes after the mobile overflow fix on /optimizer.
+- Run one three-lens review (correctness, runtime/security, honesty + handoff §11 checklist) of ce5d6b1..HEAD, and fix what it confirms.
+
+## Task 4 final (merged at 8949724)
+
+The branch `wip/task4-final` has two commits: 49dd4de (browser gate) and 257befd (docs). Its agent hit the Opus session limit (reset 8pm PT) after committing both, so the owner collected the evidence from its logs.
+- `npm run test:e2e` runs `node tests/e2e/run.mjs`. It starts one production preview (`GRIDIRON_LIVE_FIXTURE=cookie`) on a free port and waits for it to answer, then runs, in order:
+  - the page smoke in `tests/e2e/pages.mjs`: 8 routes at 1280 px and 390 px, checking HTTP 200, page errors, console errors and horizontal overflow
+  - `data-freshness.mjs`, `optimizer-flows.mjs` and `analysis.mjs`
+  - `offline-guard.mjs`: fails if the server made any request outside 127.0.0.1
+  It always stops the server. It is not part of `npm test`, so unit runs need no browser.
+- CI, after build and lint: resolve the Playwright version from the lockfile, cache `~/.cache/ms-playwright`, run `npx playwright install --with-deps chromium`, then `npm run test:e2e`. `timeout-minutes` went from 10 to 20.
+- Bite checks. Each regression was introduced temporarily and the named suite failed; nothing was committed.
+
+  | Introduced regression | Failing tests |
+  |---|---|
+  | 1. Illegal lineup | Oracle, roster-shape, salary-precision, heuristic-label and real-slate tests |
+  | 2. Time-leaking projection | Forecast causality for weeks 2–4 in every method, projection-method tests, offline study command |
+  | 3. Weekly total from the season aggregate | "keeps week 2 at 20 while the season total is 30" |
+  | 4. Reducer accepts a stale result | "3. refreshed scores during a solve: only the newest configuration and data result lands" |
+  | 5. Failed attempt advances timestamps | "keeps a snapshot's old timestamp after a failed request", "never stamps live data with the time of a failed attempt" |
+
+- Docs: the README covers the Labs routes (saved views, copy link, exports, data status), the command table (study:build, test:ui, test:e2e) and the CI gates. The guide adds definitions for data status, copy link, saved views, exports, proven vs heuristic, and hindsight as an upper bound. `tests/domain/docs-agreement.test.ts` checks that the README's study numbers equal `src/data/study-*.json`.
+- Browser gate at 257befd: 47/48 on Windows (Chromium 153) and 47/48 on Linux (Playwright container, Node 24, `--network none`). The one failure on both was the page smoke's `mobile /optimizer`: 246 px of horizontal overflow. The same markup exists in ce5d6b1, so this was a pre-existing bug. The player-table card is a grid item with the default `min-width: auto`, so it stretched to the table's 620 px minimum.
+  - Owner fix: `min-w-0` on that card, then re-verify the full gate.
+- Docker node:22.23.2 at 257befd: npm ci, routes:generate, typecheck and `npm test` all exit 0 (scripts 194 + 4 skipped, TS 55, domain 262, ui 70).
 
 ## Task status
 
@@ -18,7 +42,7 @@ All eight tasks' implementation branches are merged. Next:
 | 1 Optimizer | Verified (wave 1) | Both handoff fixtures, a 400-slate exhaustive oracle, validation codes, bite tests |
 | 2 Scoring | Verified | Ruleset + live adapters (wave 1); all study consumers use it and results are regenerated (Task 5B) |
 | 3 Constraints | Verified (wave 2) | Reducer + fingerprints, 37 ui tests, optimizer browser flows 8/8 on the production preview after the merge. URL/saved persistence is handled in Task 6 |
-| 4 CI/testing | Part 1 verified; final wave pending | npm test/build/lint gated. Pending: e2e command + CI browser job, bite checks, docs agreement |
+| 4 CI/testing | Verified (wave 1 + final wave) | CI gates routes:generate, typecheck, `npm test` (scripts, TS scaffold, domain, ui), build without DATABASE_URL, lint, and `npm run test:e2e` (production preview with fixture data, offline guard). Five deliberate-regression bite checks each fail the suite. The docs agreement test ties README study numbers to the artifacts. GitHub Actions itself has not run (nothing pushed) |
 | 5 Reproducibility | Verified (wave 2 + 5B) | 2022–2025 inputs in docs/study/input-manifest.json; strict exact runs for 2023–2025 + shipped slate; pinned offline rerun byte-identical; docs/study/REGENERATION_REPORT.md |
 | 6 Sharing/saves | Verified (wave 3a) | 33 pure analysis tests (test:ui 70), `tests/e2e/analysis.mjs` 11/11 on the production preview with the fixture switch; optimizer flows 8/8 and data-freshness 11/11 still pass. Docs for the new features are pending (final Task 4 wave) |
 | 7 Data freshness | Verified (wave 2) | 57 pure tests, data-freshness browser checks 11/11 on the production preview after the merge |
@@ -214,6 +238,10 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries multip
 | After Task 5B merge (4724f44) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 257, ui 37; lint 0 errors / 4 warnings; study client chunk 157.6 kB (36.7 kB gzip) |
 | Task 6 head (aeda864) | typecheck, test:ui (70), npm test, build, lint; `tests/e2e/analysis.mjs`; optimizer-flows; data-freshness | Windows Node 26, Chromium 153; test:ui also Docker node:22 | all exit 0; analysis 11/11, optimizer 8/8, data 11/11 (agent report) |
 | After Task 6 merge (0624bfb) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 257, ui 70; lint 0 errors / 4 warnings |
+| Task 4 final head (257befd) | npm ci, routes:generate, typecheck, npm test | Docker node:22.23.2 | all exit 0; domain 262 (adds docs-agreement), ui 70 |
+| Task 4 final head (257befd) | `npm run test:e2e` | Windows Chromium 153; Linux Playwright container with `--network none` | 47/48 on both: the only failure was the page smoke on mobile `/optimizer`, 246 px horizontal overflow (pre-existing) |
+| Task 4 final head (257befd) | the five bite checks | Windows Node 26 | each introduced regression made its suite exit non-zero (table in "Task 4 final") |
+| Overflow fix (5f04c15) | typecheck, eslint optimizer.tsx, build, `npm run test:e2e` | Windows Node 26, Chromium 153 | all exit 0. Browser gate 48/48 in 226 s: pages 16/16, data-freshness 11/11, optimizer-flows 8/8, analysis 11/11, no server request outside 127.0.0.1, preview stopped |
 
 GitHub Actions has not run on this branch (nothing pushed).
 
