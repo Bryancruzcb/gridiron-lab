@@ -7,9 +7,34 @@ Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main 
 
 ## Current next action
 
-All eight tasks, including the final Task 4 wave, are merged. Next:
-- Confirm the full browser gate passes after the mobile overflow fix on /optimizer.
-- Run one three-lens review (correctness, runtime/security, honesty + handoff §11 checklist) of ce5d6b1..HEAD, and fix what it confirms.
+All eight tasks are merged. The final independent review is done. The owner fixed its non-study findings in 65ff670 (browser gate 48/48). Agent branch `wip/study-review-fixes` (from 5a00c2f) is fixing the study-pipeline findings and regenerating the study on refreshed inputs. After it merges:
+- re-verify: Docker node:22 full suite and `npm run test:e2e`
+- rewrite this file's header, the Data artifacts section, and the Task 6 row so they match the final state
+
+## Final review (at 5a00c2f)
+
+Three independent reviewers, run on Opus 5 because Fable 5.1 had no credits:
+- **Domain correctness:** brute force over 5,500 extra slates agreed with exact DP everywhere.
+- **Runtime robustness and security:** no worker leaks, and no fixture-switch exposure without the env var.
+- **Honesty and docs agreement:** it recomputed the published numbers and walked the §11 checklist with evidence for each item.
+
+The owner confirmed every finding against the code before fixing it.
+
+| # | Severity | Finding | Resolution |
+|---|---|---|---|
+| 1 | medium | Study "opp" model divided an all-rows opponent mean by a pool-only position mean, so RB/WR/TE factors sat at the 0.7 clamp and the published opponent-adjustment claims were wrong (the ce5d6b1 compare-proj.ts had the same mismatch) | `wip/study-review-fixes`: same-population factor, versioned model, regeneration, report/README corrections |
+| 2 | medium | Lineup export labelled every in-progress score "partial" (ESPN lines are always partial), so "not-final" could never appear | 65ff670: not-final takes precedence; the export uses games still in progress (`status !== "post"`), while the page's asterisk still covers either kind of provisional score. Unit and browser expectations updated |
+| 3 | medium | `/live` applied a late game-detail reply for a game the user had already left, blanking the selected box score until the next poll. This was a regression from the baseline's cancelled flag | 65ff670: replies for a game that is no longer selected are dropped. The reviewer's race probe now stays "ready" |
+| 4 | medium | Home page Study card still said "2025 test." | 65ff670: "2023–2025 look back." |
+| 5 | medium | Progress file sections were stale | This rewrite; finished after the study fixes merge |
+| 6 | low | Legacy wrapper scripts could write attribution-only scoring into the page's data files | `wip/study-review-fixes`: wrappers and adapters refuse such runs |
+| 7 | low | docs-agreement test checked fewer README numbers than the docs claimed; some README numbers came only from an uncommitted replay harness | `wip/study-review-fixes` |
+| 8 | low | REGENERATION_REPORT said only usage and opponent adjustment exclude zero in 2025, but the shipped-slate 60/40 blend also does, and loses | `wip/study-review-fixes` |
+| 9 | low | Lineup Backtest card linked the study as "2025 weeks 2–18" | 65ff670: "Study: 2023–2025, weeks 2–18" |
+| 10 | low | README called the Pts/$ greedy baseline "stars and scrubs" | `wip/study-review-fixes` |
+| 11 | low | Saved-views storage silently dropped stored records past the 500-entry read cap on the next write | 65ff670: records past the cap are carried along unread. New unit test; the reviewer's probe now keeps 520 of 520 |
+
+One more change in 65ff670, prompted by timing rather than a finding: `optimizer-flows` rapid-runs keeps each instrumented worker busy for 1.5 s instead of 0.3 s. Under CPU load one click took longer than 0.3 s, so a superseded solve replied before it was terminated. The shown-result invariant never broke, but the termination assertion is timing-dependent.
 
 ## Task 4 final (merged at 8949724)
 
@@ -242,6 +267,9 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries multip
 | Task 4 final head (257befd) | `npm run test:e2e` | Windows Chromium 153; Linux Playwright container with `--network none` | 47/48 on both: the only failure was the page smoke on mobile `/optimizer`, 246 px horizontal overflow (pre-existing) |
 | Task 4 final head (257befd) | the five bite checks | Windows Node 26 | each introduced regression made its suite exit non-zero (table in "Task 4 final") |
 | Overflow fix (5f04c15) | typecheck, eslint optimizer.tsx, build, `npm run test:e2e` | Windows Node 26, Chromium 153 | all exit 0. Browser gate 48/48 in 226 s: pages 16/16, data-freshness 11/11, optimizer-flows 8/8, analysis 11/11, no server request outside 127.0.0.1, preview stopped |
+| Overflow fix (5f04c15) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint | Docker node:22.23.2 | all exit 0; scripts 194 + 4 skipped, TS 55, domain 262, ui 70; lint 0 errors / 4 warnings |
+| Review fixes (before 65ff670) | typecheck, eslint touched files, test:ui, build; reviewer probes (storage tail, live race); `npm run test:e2e` | Windows Node 26, Chromium 153 (study agent running concurrently) | all exit 0 except test:e2e 46/48: the exports check still expected the old "partial" status for in-progress players, and rapid-runs hit a timing assertion under CPU load. test:ui 71/71; storage probe keeps 520/520 foreign records; live-race probe stays "ready" after the late reply |
+| Review fixes (65ff670) | typecheck, eslint e2e files, `npm run test:e2e` | Windows Node 26, Chromium 153 (under load) | all exit 0; 48/48 in 376 s: pages 16/16, data-freshness 11/11, optimizer-flows 8/8 (8 constructed / 8 terminated), analysis 11/11, no server request outside 127.0.0.1 |
 
 GitHub Actions has not run on this branch (nothing pushed).
 
