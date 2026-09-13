@@ -168,5 +168,14 @@ describe("model configuration", () => {
     assert.throws(bad([ok], "trail"), /baseline trail is not one of the models/);
     assert.throws(bad([{ ...makeModel("opp"), params: { clampLow: 2, clampHigh: 1 } }], "opp"), /clampLow 2 exceeds clampHigh 1/);
     assert.throws(bad([{ ...makeModel("last3"), params: { windowWeeks: 2.5 } }], "last3"), /whole number/);
+    assert.throws(bad([{ ...makeModel("opp"), definition: "opp@1" }], "opp"), /definition "opp@1" is no longer implemented; opp is opp@2/);
+  });
+
+  it("stamps every model with its current versioned definition", () => {
+    const config = validateModelConfig({ models: [{ id: "o", method: "opp", solver: "exact-dp" }], baseline: "o" }, "cfg");
+    assert.equal(config.models[0]!.definition, "opp@2");
+    assert.deepEqual(MODEL_PRESETS.core!().models.map((m) => m.definition), [
+      "trail@1", "last1@1", "last3@1", "blend@1", "ewma@1", "shrink@1", "usage@1", "opp@2", "trail@1", "trail@1",
+    ]);
   });
 });

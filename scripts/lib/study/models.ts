@@ -28,9 +28,10 @@ const windowWeeks: ParamRule = { min: 1, max: 18, integer: true, default: 3 };
 /**
  * trail: mean of prior weeks. last1: latest week. last3: mean of the last windowWeeks.
  * blend: seasonWeight x trail + rest x last windowWeeks. ewma: exponentially weighted, seeded by
- * the first week. shrink: n/(n+k) x trail + k/(n+k) x position mean. usage: mean volume of the
- * last windowWeeks x mean points per volume (QB attempts; others carries + targets; DST trail).
- * opp: trail x (opponent's allowed mean at the position / position mean), clamped.
+ * the first week. shrink: n/(n+k) x trail + k/(n+k) x the pool's position mean. usage: mean volume
+ * of the last windowWeeks x mean points per volume (QB attempts; others carries + targets; DST
+ * trail). opp: trail x (opponent's allowed mean at the position / every opponent's allowed mean
+ * over the same source rows), clamped.
  */
 export const METHOD_PARAMS: Record<StudyProjectionMethod, Record<string, ParamRule>> = {
   trail: {},
@@ -44,6 +45,22 @@ export const METHOD_PARAMS: Record<StudyProjectionMethod, Record<string, ParamRu
     clampLow: { min: 0, max: 10, integer: false, default: 0.7 },
     clampHigh: { min: 0, max: 10, integer: false, default: 1.3 },
   },
+};
+
+/**
+ * The versioned definition behind each method name, stored on every model spec so it enters the
+ * run id. Bump a method's version whenever the same parameters can give a different projection.
+ * opp@1 divided by the pool's position mean (a different population, so the factor sat far below 1).
+ */
+export const METHOD_DEFINITIONS: Record<StudyProjectionMethod, string> = {
+  trail: "trail@1",
+  last1: "last1@1",
+  last3: "last3@1",
+  blend: "blend@1",
+  ewma: "ewma@1",
+  shrink: "shrink@1",
+  usage: "usage@1",
+  opp: "opp@2",
 };
 
 export function defaultLabel(method: StudyProjectionMethod, params: Record<string, number>): string {
@@ -80,6 +97,7 @@ export function makeModel(
     id: opts.id ?? method,
     label: opts.label ?? defaultLabel(method, params),
     method,
+    definition: METHOD_DEFINITIONS[method],
     params,
     solver: opts.solver ?? "exact-dp",
   };
@@ -113,7 +131,7 @@ const ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
 
 function validateModel(value: unknown, where: string): StudyModelSpec {
   if (!isRecord(value)) throw new StudyConfigError(`${where}: expected an object`);
-  const { id, label, method, params, solver } = value;
+  const { id, label, method, definition, params, solver } = value;
   if (typeof id !== "string" || !ID_PATTERN.test(id)) {
     throw new StudyConfigError(`${where}: id must match ${ID_PATTERN}, got ${JSON.stringify(id)}`);
   }
@@ -121,6 +139,11 @@ function validateModel(value: unknown, where: string): StudyModelSpec {
     throw new StudyConfigError(`${where} (${id}): unknown method ${JSON.stringify(method)}; expected ${PROJECTION_METHODS.join(", ")}`);
   }
   const m = method as StudyProjectionMethod;
+  if (definition !== undefined && definition !== METHOD_DEFINITIONS[m]) {
+    throw new StudyConfigError(
+      `${where} (${id}): definition ${JSON.stringify(definition)} is no longer implemented; ${m} is ${METHOD_DEFINITIONS[m]}`,
+    );
+  }
   if (typeof solver !== "string" || !SOLVER_METHODS.includes(solver as StudySolverMethod)) {
     throw new StudyConfigError(`${where} (${id}): unknown solver ${JSON.stringify(solver)}; expected ${SOLVER_METHODS.join(", ")}`);
   }
@@ -150,6 +173,7 @@ function validateModel(value: unknown, where: string): StudyModelSpec {
     id,
     label: typeof label === "string" ? label : defaultLabel(m, out),
     method: m,
+    definition: METHOD_DEFINITIONS[m],
     params: out,
     solver: solver as StudySolverMethod,
   };

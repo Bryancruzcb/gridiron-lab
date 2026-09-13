@@ -320,6 +320,8 @@ export type StudyModelSpec = {
   id: string;
   label: string;
   method: StudyProjectionMethod;
+  /** Versioned definition of the method, such as "opp@2"; part of the run id (see METHOD_DEFINITIONS). */
+  definition: string;
   /** Method parameters; each method accepts a fixed set of names (see scripts/lib/study/models.ts). */
   params: Record<string, number>;
   solver: StudySolverMethod;

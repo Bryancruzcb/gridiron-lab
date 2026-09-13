@@ -70,11 +70,18 @@ export function snapshotBefore(data: PreparedSeason, cutoff: Cutoff): HistorySna
 }
 
 export type Features = {
-  /** Mean points of the pool's players at the position before the cutoff; the fallback when none (or a mean of exactly 0). */
+  /** Mean points of the pool's players at the position before the cutoff; the fallback when none (or a mean of exactly 0). The shrink prior. */
   positionMean(pos: FantasyPos): number;
-  /** Mean points scored against the opponent by any source row at the position before the cutoff, else positionMean. */
-  opponentAllowed(pos: FantasyPos, opponent: string): number;
+  /**
+   * Mean points against the opponent by every pre-cutoff source row at the position (backups
+   * included; defense rows for DST), or null when there are none.
+   */
+  opponentAllowed(pos: FantasyPos, opponent: string): number | null;
+  /** The same rows as opponentAllowed pooled over every opponent, or null when there are none. */
+  leagueAllowed(pos: FantasyPos): number | null;
 };
+
+type Cell = { total: number; n: number };
 
 export function buildFeatures(
   snapshot: HistorySnapshot,
@@ -82,7 +89,7 @@ export function buildFeatures(
   positionPriorFallback: number,
 ): Features {
   const positionMeans = new Map<FantasyPos, number>();
-  let allowed: Map<string, { total: number; n: number }> | null = null;
+  let allowed: Map<string, Cell> | null = null;
 
   const positionMean = (pos: FantasyPos) => {
     let v = positionMeans.get(pos);
@@ -99,34 +106,55 @@ export function buildFeatures(
     return v;
   };
 
-  const opponentAllowed = (pos: FantasyPos, opponent: string) => {
-    if (!allowed) {
-      const index = new Map<string, { total: number; n: number }>();
-      const add = (key: string, points: number) => {
+  // Keys `${pos}|${opponent}` and `${pos}` (every opponent) over one population of rows.
+  const allowedIndex = () => {
+    if (allowed) return allowed;
+    const index = new Map<string, Cell>();
+    const add = (pos: string, opp: string, points: number) => {
+      for (const key of [`${pos}|${opp}`, pos]) {
         const cell = index.get(key) ?? { total: 0, n: 0 };
         cell.total += points;
         cell.n += 1;
         index.set(key, cell);
-      };
-      for (const rows of snapshot.players.values()) {
-        for (const r of rows) {
-          const opp = r.gameId ? snapshot.opponents.get(`${r.gameId}|${r.team}`) : undefined;
-          if (opp && r.position) add(`${r.position}|${opp}`, r.points);
-        }
       }
-      for (const rows of snapshot.defenses.values()) {
-        for (const r of rows) {
-          const opp = r.gameId ? snapshot.opponents.get(`${r.gameId}|${r.team}`) : undefined;
-          if (opp) add(`DST|${opp}`, r.points);
-        }
+    };
+    for (const rows of snapshot.players.values()) {
+      for (const r of rows) {
+        const opp = r.gameId ? snapshot.opponents.get(`${r.gameId}|${r.team}`) : undefined;
+        if (opp && r.position) add(r.position, opp, r.points);
       }
-      allowed = index;
     }
-    const cell = allowed.get(`${pos}|${opponent}`);
-    return cell ? cell.total / cell.n : positionMean(pos);
+    for (const rows of snapshot.defenses.values()) {
+      for (const r of rows) {
+        const opp = r.gameId ? snapshot.opponents.get(`${r.gameId}|${r.team}`) : undefined;
+        if (opp) add("DST", opp, r.points);
+      }
+    }
+    allowed = index;
+    return index;
+  };
+  const cellMean = (key: string) => {
+    const cell = allowedIndex().get(key);
+    return cell ? cell.total / cell.n : null;
   };
 
-  return { positionMean, opponentAllowed };
+  return {
+    positionMean,
+    opponentAllowed: (pos, opponent) => cellMean(`${pos}|${opponent}`),
+    leagueAllowed: (pos) => cellMean(pos),
+  };
+}
+
+/**
+ * opp@2: what the opponent allowed at the position over what every opponent allowed, both from the
+ * same pre-cutoff rows, so the row-weighted mean factor across opponents is exactly 1. 1 without a
+ * scheduled opponent, without rows on either side, or when the league mean is not positive.
+ */
+export function opponentFactor(features: Features, pos: FantasyPos, opponent: string | null): number {
+  if (!opponent) return 1;
+  const against = features.opponentAllowed(pos, opponent);
+  const league = features.leagueAllowed(pos);
+  return against == null || league == null || !(league > 0) ? 1 : against / league;
 }
 
 export type ProjectionSubject = {
@@ -196,8 +224,7 @@ export function project(
       return mean(volume.slice(-param(model, "windowWeeks")))! * mean(rate)!;
     }
     case "opp": {
-      const pm = features.positionMean(subject.pos);
-      const factor = subject.opponent ? features.opponentAllowed(subject.pos, subject.opponent) / pm : 1;
+      const factor = opponentFactor(features, subject.pos, subject.opponent);
       return trail * Math.min(param(model, "clampHigh"), Math.max(param(model, "clampLow"), factor));
     }
   }
