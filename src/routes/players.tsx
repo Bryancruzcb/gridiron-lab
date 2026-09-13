@@ -5,12 +5,14 @@ import { AppShell } from "@/components/layout/AppShell";
 import { FeedStatus } from "@/components/DataStatus";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
+import { Pager } from "@/components/Pager";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
 import type { WeekSkill } from "@/lib/live/types";
 import { lastTeamKey, nameTeamKey } from "@/lib/live/names";
+import { usePaged } from "@/lib/paging";
 import { teamLogo, teamNick } from "@/lib/nfl";
 import { useSeason } from "@/lib/season-provider";
 import { cn } from "@/lib/utils";
@@ -130,6 +132,8 @@ function PlayersPage() {
       })
       .sort((a, b) => (b.week?.ppr ?? -1) - (a.week?.ppr ?? -1) || (b.season?.ppg ?? 0) - (a.season?.ppg ?? 0));
   }, [rows, pos, q]);
+  // One page at a time; a new position or search starts again at page 1.
+  const paged = usePaged(filtered, 25, `${pos}|${q}`);
 
   return (
     <AppShell>
@@ -168,9 +172,20 @@ function PlayersPage() {
           ) : null}
         </div>
 
-        <ul className="mt-4 overflow-hidden rounded-xl bg-surface">
-          {filtered.map((r) => (
-            <li key={r.key} className="border-b border-border/70 last:border-0 [content-visibility:auto] [contain-intrinsic-size:0_64px]">
+        <div ref={paged.topRef} className="mt-4 scroll-mt-24">
+          <Pager
+            where="top"
+            noun="players"
+            page={paged.page}
+            pages={paged.pages}
+            pageSize={paged.pageSize}
+            total={paged.total}
+            onPage={paged.goTo}
+            className="mb-3"
+          />
+        <ul className="overflow-hidden rounded-xl bg-surface">
+          {paged.rows.map((r) => (
+            <li key={r.key} className="border-b border-border/70 last:border-0">
               <button
                 type="button"
                 onClick={() => setOpen(r)}
@@ -205,6 +220,17 @@ function PlayersPage() {
             </li>
           ))}
         </ul>
+          <Pager
+            where="bottom"
+            noun="players"
+            page={paged.page}
+            pages={paged.pages}
+            pageSize={paged.pageSize}
+            total={paged.total}
+            onPage={paged.goTo}
+            className="mt-3"
+          />
+        </div>
       </div>
 
       <Sheet open={Boolean(open)} onOpenChange={(v) => !v && setOpen(null)}>
