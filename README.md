@@ -88,7 +88,7 @@ Open [http://localhost:8080](http://localhost:8080).
 |---|---|
 | `npm run typecheck` | TypeScript |
 | `npm test` | Every supported unit suite: scripts, auth and app-data, plus `test:domain` and `test:ui` |
-| `npm run test:domain` | Solver, scoring, study pipeline, live-data parsing and freshness, and every number in this README's Result and What failed sections against the committed study files |
+| `npm run test:domain` | Solver, scoring, study pipeline, live-data parsing and freshness; every number in this README's Result and What failed sections and the regeneration report's result tables, recomputed from the committed study files |
 | `npm run test:ui` | Lineup controller, worker protocol, links, saved views and exports |
 | `npm run build` | Production (the database migrator skips without `DATABASE_URL`) |
 | `npm run test:e2e` | Browser checks against the production build. Run `npm run build` and `npx playwright install chromium` first |

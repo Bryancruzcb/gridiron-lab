@@ -1,9 +1,12 @@
-// Every number in the README's "Result" and "What failed" sections is recomputed here from committed
-// files: src/data/study-seasons.json, src/data/study-ewma.json, src/data/fantasy.json and
-// docs/study/study-facts.json. The last check fails on any number in those sections, outside code
-// spans, that no assertion read, apart from the phrases in NOT_STUDY_NUMBERS. Counts that come only
-// from one-time replays of the old scripts belong in docs/study/REGENERATION_REPORT.md instead.
-// When a README sentence is reworded on purpose, update the matching pattern here.
+// Checks the study docs against committed files: src/data/study-seasons.json, src/data/study-ewma.json,
+// src/data/fantasy.json and docs/study/study-facts.json.
+// README: every number in the "Result" and "What failed" sections is recomputed, and the last README
+// check fails on any number in those sections, outside code spans, that no assertion read, apart from
+// the phrases in NOT_STUDY_NUMBERS. Counts that come only from one-time replays of the old scripts
+// belong in docs/study/REGENERATION_REPORT.md instead.
+// Regeneration report: the computer-vs-greedy, models-by-run, slates and EWMA sweep tables and the list
+// of ranges that exclude zero are rendered from those files and must appear verbatim.
+// When a sentence or table is reworded on purpose, update the matching pattern or renderer here.
 
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -334,5 +337,91 @@ describe("README study numbers match the committed study files", () => {
       unchecked.push(`${m[0]} in: ${line.slice(0, 120)}`);
     }
     assert.deepEqual(unchecked, [], "numbers in the README study sections that no check reads");
+  });
+});
+
+describe("docs/study/REGENERATION_REPORT.md tables match the committed study files", () => {
+  const report = readFileSync(new URL("../../docs/study/REGENERATION_REPORT.md", import.meta.url), "utf8").replace(/\r\n/g, "\n");
+  const runs = [
+    ...study.seasons.map((s) => ({ label: `${s.season} ${s.role}`, id: `\`${s.runId}\``, summary: s.summary })),
+    ...study.pools.map((p) => ({ label: `pooled ${p.seasons.join("+")}`, id: `\`${p.resultSha256.slice(0, 12)}…\``, summary: p.summary })),
+    { label: `${shipped!.season} shipped slate`, id: `\`${shipped!.runId}\``, summary: shipped!.summary },
+  ];
+  const range = (p: { meanDiff: number; interval: { low: number; high: number } }) =>
+    `${signed(p.meanDiff)} [${signed(p.interval.low)}, ${signed(p.interval.high)}]`;
+  const block = (lines: string[]) => lines.join("\n");
+  const has = (text: string, what: string) => assert.ok(report.includes(text), `the report's ${what} no longer matches the study files:\n${text}`);
+
+  it("has the computer-vs-greedy table", () => {
+    const rows = runs.map(({ label, summary }) => {
+      const t = model(summary, BASELINE);
+      const greedy = paired(summary, GREEDY);
+      const cheap = exactOver(summary, VALUE);
+      const g = exactOver(summary, GREEDY);
+      return `| ${label} | ${summary.commonWeeks.length} | ${fix(mean(t))} (${fix(t.lineupActualMedian!)}) | ${fix(t.lineupProjMean!)} | ${fix(mean(model(summary, GREEDY)))} | ${fix(mean(model(summary, VALUE)))} | ${signed(g.mean)}, ${signed(-greedy.medianDiff!)} [${signed(g.low)}, ${signed(g.high)}], ${g.exactWins}-${g.exactLosses}-${g.ties} | ${signed(cheap.mean)} [${signed(cheap.low)}, ${signed(cheap.high)}], ${cheap.exactWins}-${cheap.exactLosses}-${cheap.ties} |`;
+    });
+    has(block([
+      "| Run | Weeks | Computer mean (median) | Computer projected | Top names | Cheap picks | Computer − top names: mean, median [95%], W-L-T | Computer − cheap: mean [95%], W-L-T |",
+      "|---|---|---|---|---|---|---|---|",
+      ...rows,
+    ]), "computer-vs-greedy table");
+  });
+
+  it("has one models table per run", () => {
+    for (const { label, id, summary } of runs) {
+      const rows = summary.models.map((m) => {
+        const vs = m.model === BASELINE ? "baseline" : (() => {
+          const p = paired(summary, m.model);
+          return `${range(p)}, ${p.wins}-${p.losses}-${p.ties}`;
+        })();
+        const e = m.playerError;
+        return `| ${m.label} | ${m.solver} | ${fix(mean(m))} | ${fix(m.lineupActualMedian!)} | ${fix(m.lineupProjMean!)} | ${e.mae!.toFixed(2)} | ${e.rmse!.toFixed(2)} | ${signed(e.bias!, 2)} | ${e.n} | ${vs} |`;
+      });
+      has(block([
+        `#### ${label} (${id})`,
+        "",
+        "| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |",
+        "|---|---|---|---|---|---|---|---|---|---|",
+        ...rows,
+      ]), `${label} models table`);
+    }
+  });
+
+  it("lists the ranges against the trailing mean that exclude zero", () => {
+    for (const { label, summary } of runs) assert.ok(paired(summary, VALUE).interval.high < 0, `${label}: points-per-dollar greedy is below zero`);
+    const lines = runs.map(({ label, summary }) => {
+      const excluded = summary.models
+        .filter((m) => m.model !== BASELINE && m.model !== VALUE)
+        .map((m) => ({ m, p: paired(summary, m.model) }))
+        .filter(({ p }) => !includesZero(p))
+        .map(({ m, p }) => `${m.label} ${range(p)}`);
+      return `  - ${label}: ${excluded.join("; ") || "none"}`;
+    });
+    has(`Points-per-dollar greedy is below zero in every run and is left out:\n\n${block(lines)}\n`, "list of ranges that exclude zero");
+  });
+
+  it("has the slates table", () => {
+    const rows = [...facts.runs, facts.shippedSlate!].map((f) => {
+      const statuses = Object.entries(f.slateStatuses).map(([k, v]) => `${k} ${v}`).join(", ");
+      const solver = Object.entries(f.solverRecords).map(([k, v]) => `${k} ${v}`).join(", ");
+      return `| ${f.season} ${f.universe.lookAhead ? "shipped slate" : f.role} | ${f.universe.id} (\`${f.universe.sha256.slice(0, 12)}\`) | ${f.slateSize!.min}–${f.slateSize!.max} | ${f.offSlate.bye} / ${f.offSlate["no-history"]} / ${f.offSlate["unknown-identity"]} | ${statuses} | ${f.baselineInactiveSlots} | ${solver} | ${f.excludedWeeks || "none"} |`;
+    });
+    has(block([
+      "| Run | Universe (sha256) | Slate size | Off slate: bye / no history / unknown id | Slate statuses | Inactive slots in trailing-mean lineups | Solver records | Excluded weeks |",
+      "|---|---|---|---|---|---|---|---|",
+      ...rows,
+    ]), "slates table");
+  });
+
+  it("has the EWMA sweep table", () => {
+    const sweeps = facts.sweeps;
+    for (const s of sweeps) assert.deepEqual(s.points.map((p) => p.alpha), ewmaFile.points.map((p) => p.alpha));
+    const head = sweeps.map((s) => (s.seasons.length > 1 ? `Pooled ${s.seasons[0]}–${s.seasons.at(-1)}` : String(s.seasons[0])));
+    has(block([
+      `| Model | ${head.join(" | ")} | ${ewmaFile.season} shipped slate |`,
+      `|---|${sweeps.map(() => "---|").join("")}---|`,
+      `| trail | ${sweeps.map((s) => fix(s.baseline.lineupMean)).join(" | ")} | ${fix(ewmaFile.trail.lineupMean)} |`,
+      ...ewmaFile.points.map((p, i) => `| ewma-${p.alpha.toFixed(2)} | ${sweeps.map((s) => fix(s.points[i]!.lineupMean)).join(" | ")} | ${fix(p.lineupMean)} |`),
+    ]), "EWMA sweep table");
   });
 });

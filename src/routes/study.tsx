@@ -590,8 +590,9 @@ function BetterGuesses({ summary, label }: { summary: StudyRunSummary; label: st
       </p>
       {shippedTrail && shippedEwma && shippedBestMae && shippedBestTeam ? (
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          On the shipped {projections.season} slate the story shifts: {shippedBestMae.label} still missed
-          least ({fix(shippedBestMae.mae, 2)}), {shippedBestTeam.label} built the best teams (
+          On the shipped {projections.season} slate the story shifts: {shippedBestMae.label}{" "}
+          {shippedBestMae.id === bestMae.spec.id ? "still " : ""}missed least ({fix(shippedBestMae.mae, 2)}),{" "}
+          {shippedBestTeam.label} built the best teams (
           {fix(shippedBestTeam.lineupMean, 1)}), and EWMA scored {fix(shippedEwma.lineupMean, 1)} against
           the trailing mean’s {fix(shippedTrail.lineupMean, 1)}. One pool and one season can flip a
           ranking.
@@ -617,8 +618,8 @@ function EwmaText() {
       their average so far.” This sweep runs on the shipped {ewma.season} slate, after we had already
       studied {ewma.season}, so it is a look back, not a result. The best-looking setting was{" "}
       {ewma.bestLineup.alpha} ({ewma.bestLineup.lineupMean}) against {ewma.trail.lineupMean} for the
-      average. Neighbouring settings differ by up to {fix(step, 1)} points. 17 weeks is too few to
-      treat the peak as a discovery.
+      average. Neighbouring settings differ by up to {fix(step, 1)} points. {ewma.trail.weeks} weeks is
+      too few to treat the peak as a discovery.
     </p>
   );
 }
@@ -678,6 +679,7 @@ function WhatWentWrong() {
   const s = backtest.summary;
   const shipped = study.shippedSlate;
   const inactive = study.policies.some((p) => p.includes("inactive"));
+  const oppFloor = study.models.find((m) => m.method === "opp")?.params.clampLow ?? null;
   return (
     <section className="mt-10">
       <h2 className="font-display text-2xl uppercase tracking-[0.04em]">What went wrong</h2>
@@ -703,6 +705,15 @@ function WhatWentWrong() {
           counted every extra point twice when estimating a defense’s points allowed. Both are fixed,
           and every number here was rebuilt.
         </li>
+        {oppFloor != null ? (
+          <li>
+            The first opponent-adjusted guess compared the wrong groups: what an opponent gave up to
+            every player at a position, backups included, against the average of only the pool’s top
+            players. Most running backs, receivers and tight ends got the full{" "}
+            {Math.round((1 - oppFloor) * 100)}% cut whoever they played. It now compares each opponent
+            with every opponent over the same players, and its numbers here were rebuilt.
+          </li>
+        ) : null}
         {inactive ? (
           <li>
             A player with no stat line in a final game counts 0. The data can’t tell a benched
