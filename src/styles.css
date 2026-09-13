@@ -123,7 +123,7 @@
   background-size: 48px 48px;
 }
 
-/* iOS material: blur the wash behind the panel. Specular is --spec-*, not a baked angle. */
+/* iOS material surface. Specular is --spec-*, scrolls smoothly on GPU layers. */
 .bg-surface {
   background-color: rgb(241 240 234 / 0.055);
   background-image: radial-gradient(
@@ -131,9 +131,6 @@
     rgb(255 255 255 / 0.18),
     transparent 55%
   );
-  background-attachment: fixed;
-  -webkit-backdrop-filter: blur(28px) saturate(1.85) brightness(1.12);
-  backdrop-filter: blur(28px) saturate(1.85) brightness(1.12);
 }
 .bg-elevated {
   background-color: rgb(241 240 234 / 0.08);
@@ -142,9 +139,6 @@
     rgb(255 255 255 / 0.14),
     transparent 55%
   );
-  background-attachment: fixed;
-  -webkit-backdrop-filter: blur(18px) saturate(1.65) brightness(1.1);
-  backdrop-filter: blur(18px) saturate(1.65) brightness(1.1);
 }
 
 .glass-bar,

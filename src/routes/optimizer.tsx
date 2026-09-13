@@ -14,7 +14,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Segmented } from "@/components/ui/segmented";
 import { Badge } from "@/components/ui/badge";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { FantasyFile, FantasyPlayer, FantasyPos } from "@/data/types";
 import { buildLineupExport, exportFilename, lineupCsv, lineupJson } from "@/lib/analysis/export";
 import {
@@ -180,7 +179,7 @@ const PlayerRows = memo(function PlayerRows({ rows, lockedIds, excludedIds, actu
             key={p.id}
             data-player-id={p.id}
             className={cn(
-              "border-b border-border/70",
+              "border-b border-border/70 [content-visibility:auto] [contain-intrinsic-size:0_52px]",
               isX && "opacity-40",
               isL && "bg-elevated",
             )}
@@ -213,52 +212,42 @@ const PlayerRows = memo(function PlayerRows({ rows, lockedIds, excludedIds, actu
             </td>
             <td className="px-3 py-2">
               <div className="flex justify-end gap-1">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label={isL ? "Unlock" : "Lock into lineup"}
-                      aria-pressed={isL}
-                      onClick={() => onLock(p.id)}
-                      className={cn(
-                        "grid size-9 place-items-center rounded-sm",
-                        lockUnusable
-                          ? "bg-rust/20 text-rust"
-                          : isL
-                            ? "bg-sage/20 text-sage"
-                            : "text-subtle hover:bg-elevated hover:text-fg",
-                      )}
-                    >
-                      <Lock className="size-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {lockUnusable
+                <button
+                  type="button"
+                  aria-label={isL ? "Unlock" : "Lock into lineup"}
+                  aria-pressed={isL}
+                  title={
+                    lockUnusable
                       ? "Locked, but no actual score yet, so hindsight can’t use him"
                       : isL
                         ? "Locked — always in the lineup"
-                        : "Lock: force this player into the lineup"}
-                  </TooltipContent>
-                </Tooltip>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label={isX ? "Include" : "Bench / exclude"}
-                      aria-pressed={isX}
-                      onClick={() => onBench(p.id)}
-                      className={cn(
-                        "grid size-9 place-items-center rounded-sm",
-                        isX ? "bg-rust/20 text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
-                      )}
-                    >
-                      <Ban className="size-3.5" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {isX ? "Benched — tap to put back in the pool" : "Bench: never pick this player"}
-                  </TooltipContent>
-                </Tooltip>
+                        : "Lock: force this player into the lineup"
+                  }
+                  onClick={() => onLock(p.id)}
+                  className={cn(
+                    "grid size-9 place-items-center rounded-sm",
+                    lockUnusable
+                      ? "bg-rust/20 text-rust"
+                      : isL
+                        ? "bg-sage/20 text-sage"
+                        : "text-subtle hover:bg-elevated hover:text-fg",
+                  )}
+                >
+                  <Lock className="size-3.5" />
+                </button>
+                <button
+                  type="button"
+                  aria-label={isX ? "Include" : "Bench / exclude"}
+                  aria-pressed={isX}
+                  title={isX ? "Benched — tap to put back in the pool" : "Bench: never pick this player"}
+                  onClick={() => onBench(p.id)}
+                  className={cn(
+                    "grid size-9 place-items-center rounded-sm",
+                    isX ? "bg-rust/20 text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
+                  )}
+                >
+                  <Ban className="size-3.5" />
+                </button>
               </div>
             </td>
           </tr>

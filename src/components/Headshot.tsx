@@ -32,6 +32,8 @@ export function Headshot({
     <img
       src={src}
       alt=""
+      loading="lazy"
+      decoding="async"
       className={cn("shrink-0 rounded-full bg-elevated object-cover object-top", className ?? "size-9")}
       onError={() => setFailed(true)}
     />

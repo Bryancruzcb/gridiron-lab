@@ -170,7 +170,7 @@ function PlayersPage() {
 
         <ul className="mt-4 overflow-hidden rounded-xl bg-surface">
           {filtered.map((r) => (
-            <li key={r.key} className="border-b border-border/70 last:border-0">
+            <li key={r.key} className="border-b border-border/70 last:border-0 [content-visibility:auto] [contain-intrinsic-size:0_64px]">
               <button
                 type="button"
                 onClick={() => setOpen(r)}
@@ -181,7 +181,7 @@ function PlayersPage() {
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium">{r.name}</p>
                     <p className="flex items-center gap-1.5 text-xs text-muted">
-                      <img src={teamLogo(r.team)} alt="" className="size-3.5 object-contain" />
+                      <img src={teamLogo(r.team)} alt="" loading="lazy" decoding="async" className="size-3.5 object-contain" />
                       {r.pos} · {teamNick(r.team)}
                     </p>
                     {r.week ? (

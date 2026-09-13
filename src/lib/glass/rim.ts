@@ -63,11 +63,14 @@ function compile(gl: WebGLRenderingContext, type: number, src: string): WebGLSha
   return sh;
 }
 
+let currentLight: [number, number] = [0.5, 0.08];
+
+export function setRimLight(x: number, y: number) {
+  currentLight = [x, y];
+}
+
 function lightFromCss(): [number, number] {
-  const s = getComputedStyle(document.documentElement);
-  const x = Number.parseFloat(s.getPropertyValue("--spec-x")) || 50;
-  const y = Number.parseFloat(s.getPropertyValue("--spec-y")) || 8;
-  return [x / 100, y / 100];
+  return currentLight;
 }
 
 /** Overlay only. Does not sample the DOM. Sleeps when the light is still. */

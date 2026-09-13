@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, type ElementType, type ReactNode } from "react";
-import { prefersReducedMotion, supportsBackdropUrl, supportsWebGL } from "@/lib/glass/detect";
+import { prefersReducedMotion, supportsWebGL } from "@/lib/glass/detect";
 import { bakeMap } from "@/lib/glass/map";
 import { createRim, type Rim } from "@/lib/glass/rim";
 import { blurPx } from "@/lib/glass/sdf";
@@ -26,7 +26,9 @@ export function LiquidChrome({
     if (!node) return;
 
     const reduced = prefersReducedMotion();
-    const useSvg = supportsBackdropUrl() && !reduced;
+    // SVG displacement map on backdrop-filter bypasses GPU compositor and forces CPU rasterization during scroll.
+    // Native frost is fully GPU-accelerated while WebGL canvas provides the 3D refraction rim.
+    const useSvg = false;
     const useGl = supportsWebGL() && !reduced;
     let rim: Rim | null = null;
     let t = 0;
