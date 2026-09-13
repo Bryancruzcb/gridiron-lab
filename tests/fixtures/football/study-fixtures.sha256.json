@@ -1,0 +1,11 @@
+{
+  "note": "sha256 of each fixture with CRLF folded to LF; regenerate with study-fixture-generator.ts",
+  "files": {
+    "study-stats_player_week_2040.csv": "331a1c56495dcfbee5a66cf18fd8d7f80d9b4f1d95f9fd6c28ba8d826fbdb67d",
+    "study-stats_team_week_2040.csv": "53e5049f2496d5292b07d3b6b2106b14c18baeea48675d6a64ce1b49503ce43a",
+    "study-stats_player_week_2041.csv": "51874e51d1650edcbbac64923466b45877d0380de3a3d26277b7ca746e57931f",
+    "study-stats_team_week_2041.csv": "c3595de2f2b5463a961fc5604fd35ae7f43df72a3134111593fcb7ef6ef575a0",
+    "study-games.csv": "efc5319f331f101f0f17cb2e34d7dea720152d7ba9c11a75cbe7caaf21884622",
+    "study-fantasy.json": "e660feb68cf516351827651d57a19526eb80650b07e7d2b49467fef248fda860"
+  }
+}

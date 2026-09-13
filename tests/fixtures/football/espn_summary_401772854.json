@@ -1,0 +1,944 @@
+{
+  "header": {
+    "id": "401772854",
+    "season": {
+      "year": 2025,
+      "current": false,
+      "type": 2
+    },
+    "week": 5,
+    "competitions": [
+      {
+        "competitors": [
+          {
+            "homeAway": "home",
+            "score": "24",
+            "team": {
+              "abbreviation": "CIN"
+            }
+          },
+          {
+            "homeAway": "away",
+            "score": "37",
+            "team": {
+              "abbreviation": "DET"
+            }
+          }
+        ],
+        "status": {
+          "type": {
+            "state": "post"
+          }
+        }
+      }
+    ]
+  },
+  "boxscore": {
+    "teams": [
+      {
+        "homeAway": "away",
+        "team": {
+          "abbreviation": "DET"
+        },
+        "statistics": [
+          {
+            "name": "thirdDownEff",
+            "label": "3rd down efficiency",
+            "displayValue": "2-8"
+          },
+          {
+            "name": "fourthDownEff",
+            "label": "4th down efficiency",
+            "displayValue": "0-0"
+          },
+          {
+            "name": "totalOffensivePlays",
+            "label": "Total Plays",
+            "displayValue": "61"
+          },
+          {
+            "name": "totalYards",
+            "label": "Total Yards",
+            "displayValue": "365"
+          },
+          {
+            "name": "netPassingYards",
+            "label": "Passing",
+            "displayValue": "247"
+          },
+          {
+            "name": "completionAttempts",
+            "label": "Comp/Att",
+            "displayValue": "20/24"
+          },
+          {
+            "name": "interceptions",
+            "label": "Interceptions thrown",
+            "displayValue": "0"
+          },
+          {
+            "name": "sacksYardsLost",
+            "label": "Sacks-Yards Lost",
+            "displayValue": "4-14"
+          },
+          {
+            "name": "rushingYards",
+            "label": "Rushing",
+            "displayValue": "118"
+          },
+          {
+            "name": "turnovers",
+            "label": "Turnovers",
+            "displayValue": "1"
+          },
+          {
+            "name": "fumblesLost",
+            "label": "Fumbles lost",
+            "displayValue": "1"
+          },
+          {
+            "name": "interceptions",
+            "label": "Interceptions thrown",
+            "displayValue": "0"
+          },
+          {
+            "name": "defensiveTouchdowns",
+            "label": "Defensive / Special Teams TDs",
+            "displayValue": "0"
+          },
+          {
+            "name": "possessionTime",
+            "label": "Possession",
+            "displayValue": "34:21"
+          }
+        ]
+      },
+      {
+        "homeAway": "home",
+        "team": {
+          "abbreviation": "CIN"
+        },
+        "statistics": [
+          {
+            "name": "thirdDownEff",
+            "label": "3rd down efficiency",
+            "displayValue": "4-11"
+          },
+          {
+            "name": "fourthDownEff",
+            "label": "4th down efficiency",
+            "displayValue": "0-0"
+          },
+          {
+            "name": "totalOffensivePlays",
+            "label": "Total Plays",
+            "displayValue": "58"
+          },
+          {
+            "name": "totalYards",
+            "label": "Total Yards",
+            "displayValue": "322"
+          },
+          {
+            "name": "netPassingYards",
+            "label": "Passing",
+            "displayValue": "237"
+          },
+          {
+            "name": "completionAttempts",
+            "label": "Comp/Att",
+            "displayValue": "26/40"
+          },
+          {
+            "name": "interceptions",
+            "label": "Interceptions thrown",
+            "displayValue": "3"
+          },
+          {
+            "name": "sacksYardsLost",
+            "label": "Sacks-Yards Lost",
+            "displayValue": "2-14"
+          },
+          {
+            "name": "rushingYards",
+            "label": "Rushing",
+            "displayValue": "85"
+          },
+          {
+            "name": "turnovers",
+            "label": "Turnovers",
+            "displayValue": "3"
+          },
+          {
+            "name": "fumblesLost",
+            "label": "Fumbles lost",
+            "displayValue": "0"
+          },
+          {
+            "name": "interceptions",
+            "label": "Interceptions thrown",
+            "displayValue": "3"
+          },
+          {
+            "name": "defensiveTouchdowns",
+            "label": "Defensive / Special Teams TDs",
+            "displayValue": "0"
+          },
+          {
+            "name": "possessionTime",
+            "label": "Possession",
+            "displayValue": "25:39"
+          }
+        ]
+      }
+    ],
+    "players": [
+      {
+        "team": {
+          "abbreviation": "DET"
+        },
+        "statistics": [
+          {
+            "name": "passing",
+            "keys": [
+              "completions/passingAttempts",
+              "passingYards",
+              "yardsPerPassAttempt",
+              "passingTouchdowns",
+              "interceptions",
+              "sacks-sackYardsLost",
+              "adjQBR",
+              "QBRating"
+            ],
+            "labels": [
+              "C/ATT",
+              "YDS",
+              "AVG",
+              "TD",
+              "INT",
+              "SACKS",
+              "QBR",
+              "RTG"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "3046779",
+                  "displayName": "Jared Goff"
+                },
+                "stats": [
+                  "19/23",
+                  "258",
+                  "11.2",
+                  "3",
+                  "0",
+                  "4-14",
+                  "63.5",
+                  "153.0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4035538",
+                  "displayName": "David Montgomery"
+                },
+                "stats": [
+                  "1/1",
+                  "3",
+                  "3.0",
+                  "1",
+                  "0",
+                  "0-0",
+                  "99.6",
+                  "118.8"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "rushing",
+            "keys": [
+              "rushingAttempts",
+              "rushingYards",
+              "yardsPerRushAttempt",
+              "rushingTouchdowns",
+              "longRushing"
+            ],
+            "labels": [
+              "CAR",
+              "YDS",
+              "AVG",
+              "TD",
+              "LONG"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "4035538",
+                  "displayName": "David Montgomery"
+                },
+                "stats": [
+                  "18",
+                  "65",
+                  "3.6",
+                  "1",
+                  "19"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4429795",
+                  "displayName": "Jahmyr Gibbs"
+                },
+                "stats": [
+                  "12",
+                  "54",
+                  "4.5",
+                  "0",
+                  "9"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3046779",
+                  "displayName": "Jared Goff"
+                },
+                "stats": [
+                  "2",
+                  "-2",
+                  "-1.0",
+                  "0",
+                  "-1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "receiving",
+            "keys": [
+              "receptions",
+              "receivingYards",
+              "yardsPerReception",
+              "receivingTouchdowns",
+              "longReception",
+              "receivingTargets"
+            ],
+            "labels": [
+              "REC",
+              "YDS",
+              "AVG",
+              "TD",
+              "LONG",
+              "TGTS"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "4374302",
+                  "displayName": "Amon-Ra St. Brown"
+                },
+                "stats": [
+                  "8",
+                  "100",
+                  "12.5",
+                  "0",
+                  "26",
+                  "9"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4430027",
+                  "displayName": "Sam LaPorta"
+                },
+                "stats": [
+                  "5",
+                  "92",
+                  "18.4",
+                  "1",
+                  "39",
+                  "6"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4429795",
+                  "displayName": "Jahmyr Gibbs"
+                },
+                "stats": [
+                  "2",
+                  "33",
+                  "16.5",
+                  "1",
+                  "20",
+                  "2"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4035538",
+                  "displayName": "David Montgomery"
+                },
+                "stats": [
+                  "1",
+                  "6",
+                  "6.0",
+                  "0",
+                  "6",
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "fumbles",
+            "keys": [
+              "fumbles",
+              "fumblesLost",
+              "fumblesRecovered"
+            ],
+            "labels": [
+              "FUM",
+              "LOST",
+              "REC"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "3046779",
+                  "displayName": "Jared Goff"
+                },
+                "stats": [
+                  "1",
+                  "1",
+                  "0"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "kickReturns",
+            "keys": [
+              "kickReturns",
+              "kickReturnYards",
+              "yardsPerKickReturn",
+              "longKickReturn",
+              "kickReturnTouchdowns"
+            ],
+            "labels": [
+              "NO",
+              "YDS",
+              "AVG",
+              "LONG",
+              "TD"
+            ],
+            "athletes": []
+          },
+          {
+            "name": "puntReturns",
+            "keys": [
+              "puntReturns",
+              "puntReturnYards",
+              "yardsPerPuntReturn",
+              "longPuntReturn",
+              "puntReturnTouchdowns"
+            ],
+            "labels": [
+              "NO",
+              "YDS",
+              "AVG",
+              "LONG",
+              "TD"
+            ],
+            "athletes": []
+          }
+        ]
+      },
+      {
+        "team": {
+          "abbreviation": "CIN"
+        },
+        "statistics": [
+          {
+            "name": "passing",
+            "keys": [
+              "completions/passingAttempts",
+              "passingYards",
+              "yardsPerPassAttempt",
+              "passingTouchdowns",
+              "interceptions",
+              "sacks-sackYardsLost",
+              "adjQBR",
+              "QBRating"
+            ],
+            "labels": [
+              "C/ATT",
+              "YDS",
+              "AVG",
+              "TD",
+              "INT",
+              "SACKS",
+              "QBR",
+              "RTG"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "3886812",
+                  "displayName": "Jake Browning"
+                },
+                "stats": [
+                  "26/40",
+                  "251",
+                  "6.3",
+                  "3",
+                  "3",
+                  "2-14",
+                  "16.8",
+                  "76.1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "rushing",
+            "keys": [
+              "rushingAttempts",
+              "rushingYards",
+              "yardsPerRushAttempt",
+              "rushingTouchdowns",
+              "longRushing"
+            ],
+            "labels": [
+              "CAR",
+              "YDS",
+              "AVG",
+              "TD",
+              "LONG"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "3886812",
+                  "displayName": "Jake Browning"
+                },
+                "stats": [
+                  "4",
+                  "31",
+                  "7.8",
+                  "0",
+                  "13"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3116389",
+                  "displayName": "Samaje Perine"
+                },
+                "stats": [
+                  "4",
+                  "27",
+                  "6.8",
+                  "0",
+                  "10"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4362238",
+                  "displayName": "Chase Brown"
+                },
+                "stats": [
+                  "8",
+                  "27",
+                  "3.4",
+                  "0",
+                  "6"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "receiving",
+            "keys": [
+              "receptions",
+              "receivingYards",
+              "yardsPerReception",
+              "receivingTouchdowns",
+              "longReception",
+              "receivingTargets"
+            ],
+            "labels": [
+              "REC",
+              "YDS",
+              "AVG",
+              "TD",
+              "LONG",
+              "TGTS"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "4362628",
+                  "displayName": "Ja'Marr Chase"
+                },
+                "stats": [
+                  "6",
+                  "110",
+                  "18.3",
+                  "2",
+                  "64",
+                  "10"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4368003",
+                  "displayName": "Andrei Iosivas"
+                },
+                "stats": [
+                  "5",
+                  "82",
+                  "16.4",
+                  "0",
+                  "30",
+                  "7"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4239993",
+                  "displayName": "Tee Higgins"
+                },
+                "stats": [
+                  "3",
+                  "22",
+                  "7.3",
+                  "1",
+                  "13",
+                  "7"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4362238",
+                  "displayName": "Chase Brown"
+                },
+                "stats": [
+                  "7",
+                  "21",
+                  "3.0",
+                  "0",
+                  "9",
+                  "8"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3116389",
+                  "displayName": "Samaje Perine"
+                },
+                "stats": [
+                  "2",
+                  "2",
+                  "1.0",
+                  "0",
+                  "5",
+                  "2"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "fumbles",
+            "keys": [
+              "fumbles",
+              "fumblesLost",
+              "fumblesRecovered"
+            ],
+            "labels": [
+              "FUM",
+              "LOST",
+              "REC"
+            ],
+            "athletes": [
+              {
+                "athlete": {
+                  "id": "3886812",
+                  "displayName": "Jake Browning"
+                },
+                "stats": [
+                  "1",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4362238",
+                  "displayName": "Chase Brown"
+                },
+                "stats": [
+                  "1",
+                  "0",
+                  "0"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "4239993",
+                  "displayName": "Tee Higgins"
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "1"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3116370",
+                  "displayName": "Orlando Brown Jr."
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "1"
+                ]
+              },
+              {
+                "athlete": {
+                  "id": "3918330",
+                  "displayName": "Logan Wilson"
+                },
+                "stats": [
+                  "0",
+                  "0",
+                  "1"
+                ]
+              }
+            ]
+          },
+          {
+            "name": "kickReturns",
+            "keys": [
+              "kickReturns",
+              "kickReturnYards",
+              "yardsPerKickReturn",
+              "longKickReturn",
+              "kickReturnTouchdowns"
+            ],
+            "labels": [
+              "NO",
+              "YDS",
+              "AVG",
+              "LONG",
+              "TD"
+            ],
+            "athletes": []
+          },
+          {
+            "name": "puntReturns",
+            "keys": [
+              "puntReturns",
+              "puntReturnYards",
+              "yardsPerPuntReturn",
+              "longPuntReturn",
+              "puntReturnTouchdowns"
+            ],
+            "labels": [
+              "NO",
+              "YDS",
+              "AVG",
+              "LONG",
+              "TD"
+            ],
+            "athletes": []
+          }
+        ]
+      }
+    ]
+  },
+  "scoringPlays": [
+    {
+      "id": "401772854200",
+      "type": {
+        "text": "Passing Touchdown"
+      },
+      "text": "Sam LaPorta 10 Yd pass from Jared Goff (Jake Bates Kick)",
+      "awayScore": 7,
+      "homeScore": 0,
+      "period": {
+        "number": 1
+      },
+      "clock": {
+        "displayValue": "10:50"
+      },
+      "team": {
+        "abbreviation": "DET"
+      }
+    },
+    {
+      "id": "4017728541227",
+      "type": {
+        "text": "Passing Touchdown"
+      },
+      "text": "Brock Wright 3 Yd pass from David Montgomery (Jake Bates Kick)",
+      "awayScore": 14,
+      "homeScore": 0,
+      "period": {
+        "number": 2
+      },
+      "clock": {
+        "displayValue": "12:16"
+      },
+      "team": {
+        "abbreviation": "DET"
+      }
+    },
+    {
+      "id": "4017728542182",
+      "type": {
+        "text": "Field Goal Good"
+      },
+      "text": "Evan McPherson 50 Yd Field Goal",
+      "awayScore": 14,
+      "homeScore": 3,
+      "period": {
+        "number": 2
+      },
+      "clock": {
+        "displayValue": "0:00"
+      },
+      "team": {
+        "abbreviation": "CIN"
+      }
+    },
+    {
+      "id": "4017728542429",
+      "type": {
+        "text": "Passing Touchdown"
+      },
+      "text": "Jahmyr Gibbs 20 Yd pass from Jared Goff (Jake Bates Kick)",
+      "awayScore": 21,
+      "homeScore": 3,
+      "period": {
+        "number": 3
+      },
+      "clock": {
+        "displayValue": "11:25"
+      },
+      "team": {
+        "abbreviation": "DET"
+      }
+    },
+    {
+      "id": "4017728542740",
+      "type": {
+        "text": "Rushing Touchdown"
+      },
+      "text": "David Montgomery 8 Yd Rush (Jake Bates Kick)",
+      "awayScore": 28,
+      "homeScore": 3,
+      "period": {
+        "number": 3
+      },
+      "clock": {
+        "displayValue": "5:43"
+      },
+      "team": {
+        "abbreviation": "DET"
+      }
+    },
+    {
+      "id": "4017728543146",
+      "type": {
+        "text": "Passing Touchdown"
+      },
+      "text": "Ja'Marr Chase 15 Yd pass from Jake Browning (Evan McPherson Kick)",
+      "awayScore": 28,
+      "homeScore": 10,
+      "period": {
+        "number": 4
+      },
+      "clock": {
+        "displayValue": "14:51"
+      },
+      "team": {
+        "abbreviation": "CIN"
+      }
+    },
+    {
+      "id": "4017728543424",
+      "type": {
+        "text": "Passing Touchdown"
+      },
+      "text": "Ja'Marr Chase 64 Yd pass from Jake Browning (Evan McPherson Kick)",
+      "awayScore": 28,
+      "homeScore": 17,
+      "period": {
+        "number": 4
+      },
+      "clock": {
+        "displayValue": "10:22"
+      },
+      "team": {
+        "abbreviation": "CIN"
+      }
+    },
+    {
+      "id": "4017728543667",
+      "type": {
+        "text": "Passing Touchdown"
+      },
+      "text": "Isaac TeSlaa 12 Yd pass from Jared Goff (Jake Bates Kick)",
+      "awayScore": 35,
+      "homeScore": 17,
+      "period": {
+        "number": 4
+      },
+      "clock": {
+        "displayValue": "5:14"
+      },
+      "team": {
+        "abbreviation": "DET"
+      }
+    },
+    {
+      "id": "4017728543915",
+      "type": {
+        "text": "Passing Touchdown"
+      },
+      "text": "Tee Higgins 2 Yd pass from Jake Browning (Evan McPherson Kick)",
+      "awayScore": 35,
+      "homeScore": 24,
+      "period": {
+        "number": 4
+      },
+      "clock": {
+        "displayValue": "3:01"
+      },
+      "team": {
+        "abbreviation": "CIN"
+      }
+    },
+    {
+      "id": "4017728544094",
+      "type": {
+        "text": "Safety"
+      },
+      "text": "Derrick Barnes Safety",
+      "awayScore": 37,
+      "homeScore": 24,
+      "period": {
+        "number": 4
+      },
+      "clock": {
+        "displayValue": "1:49"
+      },
+      "team": {
+        "abbreviation": "DET"
+      }
+    }
+  ]
+}

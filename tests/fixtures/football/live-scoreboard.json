@@ -1,0 +1,145 @@
+{
+  "season": {
+    "type": 2,
+    "year": 2026
+  },
+  "week": {
+    "number": 2
+  },
+  "events": [
+    {
+      "id": "401772854",
+      "date": "2026-09-20T17:00Z",
+      "competitions": [
+        {
+          "competitors": [
+            {
+              "homeAway": "home",
+              "score": "24",
+              "winner": false,
+              "team": {
+                "abbreviation": "CIN",
+                "displayName": "Cincinnati Bengals",
+                "shortDisplayName": "Bengals"
+              }
+            },
+            {
+              "homeAway": "away",
+              "score": "37",
+              "winner": false,
+              "team": {
+                "abbreviation": "DET",
+                "displayName": "Detroit Lions",
+                "shortDisplayName": "Lions"
+              }
+            }
+          ],
+          "status": {
+            "displayClock": "2:00",
+            "period": 4,
+            "type": {
+              "state": "in",
+              "shortDetail": "2:00 - 4th"
+            }
+          },
+          "broadcasts": [
+            {
+              "names": [
+                "FOX"
+              ]
+            }
+          ],
+          "venue": {
+            "fullName": "Paycor Stadium"
+          }
+        }
+      ]
+    },
+    {
+      "id": "401900002",
+      "date": "2026-09-20T17:00Z",
+      "competitions": [
+        {
+          "competitors": [
+            {
+              "homeAway": "home",
+              "score": "20",
+              "winner": false,
+              "team": {
+                "abbreviation": "MIA",
+                "displayName": "Miami Dolphins",
+                "shortDisplayName": "Dolphins"
+              }
+            },
+            {
+              "homeAway": "away",
+              "score": "27",
+              "winner": true,
+              "team": {
+                "abbreviation": "BUF",
+                "displayName": "Buffalo Bills",
+                "shortDisplayName": "Bills"
+              }
+            }
+          ],
+          "status": {
+            "type": {
+              "state": "post",
+              "shortDetail": "Final"
+            }
+          },
+          "broadcasts": [
+            {
+              "names": [
+                "CBS"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401900003",
+      "date": "2026-09-20T20:25Z",
+      "competitions": [
+        {
+          "competitors": [
+            {
+              "homeAway": "home",
+              "score": "0",
+              "winner": false,
+              "team": {
+                "abbreviation": "SEA",
+                "displayName": "Seattle Seahawks",
+                "shortDisplayName": "Seahawks"
+              }
+            },
+            {
+              "homeAway": "away",
+              "score": "0",
+              "winner": false,
+              "team": {
+                "abbreviation": "SF",
+                "displayName": "San Francisco 49ers",
+                "shortDisplayName": "49ers"
+              }
+            }
+          ],
+          "status": {
+            "type": {
+              "state": "pre",
+              "shortDetail": "9/20 - 4:25 PM EDT"
+            }
+          },
+          "broadcasts": [
+            {
+              "names": [
+                "FOX"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

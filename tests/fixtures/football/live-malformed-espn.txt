@@ -1,0 +1,1 @@
+{"season":{"type":2,"year":2026},"week":{"number":2},"events":[{"id":"401772854","competitions":[

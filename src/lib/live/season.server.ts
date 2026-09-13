@@ -1,17 +1,20 @@
-import { createGunzip } from "node:zlib";
-import { Readable } from "node:stream";
-import readline from "node:readline";
 import type { QbBox, QbSeason, SplitStats, TeamSeason } from "@/data/types";
-import type { AdvancedBlock, AdvQb, AdvTeam, SeasonLabs } from "./types";
+import type { AdvancedBlock, AdvQb, AdvTeam, FeedResponse, SeasonLabs } from "./types";
 import { fnum, parseCsvLine, round, truthy, UA } from "./csv";
 import { lastTeamKey, nameTeamKey, seedPosMap, type SkillPos } from "./names";
+import { FEED_POLICY } from "./feed-state";
+import { forEachGzipLine } from "./lines";
+import { createLoader, httpError, schemaError, toFeedResponse, UpstreamError, type LoadResult } from "./loader";
+import { parsePlayerWeeks } from "../football/nflverse";
+import { aggregateSeason, throughWeek, type PlayerSeason, type PlayerWeek } from "../football/player-weeks";
 
+const SEASON = 2026;
 const PBP_URL =
   "https://github.com/nflverse/nflverse-data/releases/download/pbp/play_by_play_2026.csv.gz";
 const WEEK_URL =
   "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2026.csv";
 
-const TTL_MS = 20 * 60 * 1000;
+const TTL_MS = FEED_POLICY.labs.serverTtlMs;
 
 type SplitAcc = {
   plays: number;
@@ -71,30 +74,22 @@ type GameAcc = {
   teams: Map<string, { team: string; plays: number; epa: number; epaN: number; pass: number; rush: number; xpass: number; xpassN: number; fourthGo: number; fourthOpp: number }>;
 };
 
-type WeekPlayer = {
-  id: string;
-  name: string;
-  team: string;
-  pos: string;
-  headshot: string | null;
-  week: number;
-  ppr: number;
-  box: QbBox;
+type PlayerWeekBundle = {
+  /** Every published row, keyed by season + season type + week + player. */
+  weeks: PlayerWeek[];
+  /** Regular-season totals derived from `weeks`, for season views. */
+  byId: Map<string, PlayerSeason>;
+  pos: Map<string, SkillPos>;
 };
 
 type PbpBundle = {
-  at: number;
   throughWeek: number;
   games: Map<string, AdvancedBlock>;
   qbs: QbSeason[];
   teams: TeamSeason[];
 };
 
-let pbpCache: PbpBundle | null = null;
-let pbpInflight: Promise<PbpBundle> | null = null;
-let weekCache: { at: number; rows: WeekPlayer[]; byId: Map<string, WeekPlayer>; pos: Map<string, SkillPos> } | null =
-  null;
-let weekInflight: ReturnType<typeof loadPlayerWeek> | null = null;
+const PBP_REQUIRED = ["game_id", "week", "posteam", "play_type"];
 
 function emptySplit(): SplitAcc {
   return {
@@ -281,12 +276,13 @@ function finishGame(acc: GameAcc): AdvancedBlock {
   return { source: "nflverse play-by-play 2026", gameId: acc.gameId, qbs, teams };
 }
 
-async function buildPbp(): Promise<PbpBundle> {
-  const res = await fetch(PBP_URL, { headers: UA, redirect: "follow" });
-  if (!res.ok || !res.body) throw new Error(`nflverse pbp ${res.status}`);
-
-  const nodeIn = Readable.fromWeb(res.body as import("stream/web").ReadableStream);
-  const rl = readline.createInterface({ input: nodeIn.pipe(createGunzip()) });
+async function buildPbp(signal: AbortSignal): Promise<PbpBundle> {
+  const res = await fetch(PBP_URL, { headers: UA, redirect: "follow", signal });
+  if (!res.ok) {
+    await res.body?.cancel().catch(() => {});
+    throw httpError("nflverse play-by-play", res.status, res.headers.get("retry-after"), Date.now());
+  }
+  if (!res.body) throw new UpstreamError("network", "nflverse play-by-play sent no body");
 
   let header: string[] | null = null;
   const idx: Record<string, number> = {};
@@ -331,28 +327,30 @@ async function buildPbp(): Promise<PbpBundle> {
     "fourth_down_converted",
   ];
 
-  for await (const line of rl) {
+  await forEachGzipLine(res.body, signal, (line) => {
     if (!header) {
       header = parseCsvLine(line);
       for (const col of want) {
         const i = header.indexOf(col);
         if (i >= 0) idx[col] = i;
       }
-      continue;
+      const missing = PBP_REQUIRED.filter((c) => idx[c] == null);
+      if (missing.length) throw schemaError(`nflverse play-by-play is missing column(s): ${missing.join(", ")}`);
+      return;
     }
     const cells = parseCsvLine(line);
     const get = (c: string) => {
       const i = idx[c];
       return i == null ? "" : (cells[i] ?? "");
     };
-    if (get("season_type") && get("season_type") !== "REG") continue;
+    if (get("season_type") && get("season_type") !== "REG") return;
 
     const gameId = get("game_id");
     const away = get("away_team");
     const home = get("home_team");
     const week = fnum(get("week")) ?? 0;
     const season = get("season") || "2026";
-    if (!gameId || !away || !home) continue;
+    if (!gameId || !away || !home) return;
     if (week > throughWeek) throughWeek = week;
     const gkey = `${season}_${String(week).padStart(2, "0")}_${away}_${home}`;
 
@@ -364,7 +362,7 @@ async function buildPbp(): Promise<PbpBundle> {
 
     const posteam = get("posteam");
     const playType = get("play_type");
-    if (!posteam || playType === "no_play" || playType === "qb_kneel" || playType === "qb_spike") continue;
+    if (!posteam || playType === "no_play" || playType === "qb_kneel" || playType === "qb_spike") return;
 
     const isPass = truthy(get("pass")) || playType === "pass";
     const isRush = truthy(get("rush")) || playType === "run";
@@ -576,10 +574,11 @@ async function buildPbp(): Promise<PbpBundle> {
         bumpSplit(sp, row);
       }
     }
-  }
+  });
 
-  const weekRows = weekCache?.rows ?? [];
-  const byId = new Map(weekRows.map((r) => [r.id, r]));
+  // The header check throws on missing columns, so an unset game_id index means no header line at all.
+  if (idx.game_id == null) throw schemaError("nflverse play-by-play file is empty");
+  const byId = weekLoader.peek()?.data.byId ?? new Map<string, PlayerSeason>();
 
   const qbSeasons: QbSeason[] = [...qbs.values()]
     .filter((q) => q.overall.plays >= 5)
@@ -597,7 +596,7 @@ async function buildPbp(): Promise<PbpBundle> {
         season: 2026,
         games: q.games.size,
         headshot: w?.headshot ?? null,
-        box: w?.box ?? null,
+        box: w ? qbBox(w) : null,
         overall: finishSplit(q.overall),
         splits,
         weeks: [...q.weeks.entries()]
@@ -651,139 +650,96 @@ async function buildPbp(): Promise<PbpBundle> {
   const byKey = new Map<string, AdvancedBlock>();
   for (const [k, acc] of games) byKey.set(k, finishGame(acc));
 
-  return { at: Date.now(), throughWeek, games: byKey, qbs: qbSeasons, teams: teamSeasons };
+  return { throughWeek, games: byKey, qbs: qbSeasons, teams: teamSeasons };
 }
 
-async function loadPlayerWeek() {
-  const res = await fetch(WEEK_URL, { headers: UA, redirect: "follow" });
-  if (!res.ok) throw new Error(`nflverse week ${res.status}`);
-  const text = await res.text();
-  const lines = text.split(/\r?\n/).filter(Boolean);
-  if (!lines[0]) return { at: Date.now(), rows: [] as WeekPlayer[], byId: new Map<string, WeekPlayer>(), pos: seedPosMap() };
-  const header = parseCsvLine(lines[0]);
-  const idx: Record<string, number> = {};
-  for (const col of header) idx[col] = header.indexOf(col);
-  const get = (cells: string[], c: string) => {
-    const i = idx[c];
-    return i == null ? "" : (cells[i] ?? "");
+function qbBox(s: PlayerSeason): QbBox {
+  const b = s.box;
+  return {
+    games: s.games,
+    cmp: b.completions,
+    att: b.attempts,
+    yds: b.passingYards,
+    td: b.passingTds,
+    int: b.interceptions,
+    sk: b.sacksSuffered,
+    rushYds: b.rushingYards,
+    rushTd: b.rushingTds,
+    ppr: s.ppr,
   };
-  const rows: WeekPlayer[] = [];
+}
+
+async function loadPlayerWeek(signal: AbortSignal): Promise<PlayerWeekBundle> {
+  const res = await fetch(WEEK_URL, { headers: UA, redirect: "follow", signal });
+  if (!res.ok) {
+    await res.body?.cancel().catch(() => {});
+    throw httpError("nflverse weekly stats", res.status, res.headers.get("retry-after"), Date.now());
+  }
+  const { rows: weeks } = parsePlayerWeeks(await res.text(), WEEK_URL);
   const pos = seedPosMap();
-  const agg = new Map<string, WeekPlayer>();
-  for (const line of lines.slice(1)) {
-    const cells = parseCsvLine(line);
-    if (get(cells, "season_type") && get(cells, "season_type") !== "REG") continue;
-    const id = get(cells, "player_id");
-    const name = get(cells, "player_display_name") || get(cells, "player_name");
-    const team = get(cells, "team");
-    const position = get(cells, "position");
-    if (!id || !name || !team) continue;
-    const skill = position === "QB" || position === "RB" || position === "WR" || position === "TE" ? position : null;
-    if (skill) {
-      pos.set(nameTeamKey(name, team), skill);
-      pos.set(lastTeamKey(name, team), skill);
-    }
-    const week = fnum(get(cells, "week")) ?? 1;
-    const ppr = fnum(get(cells, "fantasy_points_ppr")) ?? 0;
-    const prev = agg.get(id);
-    const add = {
-      cmp: fnum(get(cells, "completions")) ?? 0,
-      att: fnum(get(cells, "attempts")) ?? 0,
-      yds: fnum(get(cells, "passing_yards")) ?? 0,
-      td: fnum(get(cells, "passing_tds")) ?? 0,
-      int: fnum(get(cells, "passing_interceptions")) ?? 0,
-      sk: fnum(get(cells, "sacks_suffered")) ?? 0,
-      rushYds: fnum(get(cells, "rushing_yards")) ?? 0,
-      rushTd: fnum(get(cells, "rushing_tds")) ?? 0,
-    };
-    if (!prev) {
-      agg.set(id, {
-        id,
-        name,
-        team,
-        pos: position,
-        headshot: get(cells, "headshot_url") || null,
-        week,
-        ppr,
-        box: { games: 1, ...add, ppr },
-      });
-    } else {
-      prev.team = team;
-      prev.week = Math.max(prev.week, week);
-      prev.ppr = round(prev.ppr + ppr, 1);
-      prev.box.games += 1;
-      prev.box.cmp += add.cmp;
-      prev.box.att += add.att;
-      prev.box.yds += add.yds;
-      prev.box.td += add.td;
-      prev.box.int += add.int;
-      prev.box.sk += add.sk;
-      prev.box.rushYds += add.rushYds;
-      prev.box.rushTd += add.rushTd;
-      prev.box.ppr = prev.ppr;
+  for (const w of weeks) {
+    const p = w.position;
+    if (p === "QB" || p === "RB" || p === "WR" || p === "TE") {
+      pos.set(nameTeamKey(w.name, w.team), p);
+      pos.set(lastTeamKey(w.name, w.team), p);
     }
   }
-  rows.push(...agg.values());
-  const byId = new Map(rows.map((r) => [r.id, r]));
-  return { at: Date.now(), rows, byId, pos };
+  const byId = new Map(aggregateSeason(weeks, SEASON, "REG").map((s) => [s.playerId, s]));
+  return { weeks, byId, pos };
 }
 
-async function playerWeek() {
-  if (weekCache && Date.now() - weekCache.at < TTL_MS) return weekCache;
-  if (weekInflight) return weekInflight;
-  weekInflight = loadPlayerWeek()
-    .then((v) => {
-      weekCache = v;
-      return v;
-    })
-    .finally(() => {
-      weekInflight = null;
-    });
-  try {
-    return await weekInflight;
-  } catch {
-    return weekCache ?? { at: 0, rows: [], byId: new Map(), pos: seedPosMap() };
-  }
-}
+// Both files keep the 20-minute cache. Play-by-play is a gzip stream that grows all season, so its
+// bound is generous; a request waits at most LABS_WAIT_MS and a slower load finishes in the background.
+const weekLoader = createLoader<PlayerWeekBundle>({
+  name: "nflverse weekly stats",
+  ttlMs: TTL_MS,
+  attemptTimeoutMs: 45_000,
+  deadlineMs: 90_000,
+  maxAttempts: 3,
+  backoffMs: 1_000,
+  maxRetryWaitMs: 10_000,
+  failureCooldownMs: 15_000,
+  minForceAgeMs: 60_000,
+  load: loadPlayerWeek,
+});
 
-async function pbpBundle(): Promise<PbpBundle> {
-  if (pbpCache && Date.now() - pbpCache.at < TTL_MS) return pbpCache;
-  if (pbpInflight) return pbpInflight;
-  pbpInflight = buildPbp()
-    .then((v) => {
-      pbpCache = v;
-      return v;
-    })
-    .finally(() => {
-      pbpInflight = null;
-    });
-  return pbpInflight;
-}
+const pbpLoader = createLoader<PbpBundle>({
+  name: "nflverse play-by-play",
+  ttlMs: TTL_MS,
+  attemptTimeoutMs: 120_000,
+  deadlineMs: 180_000,
+  maxAttempts: 2,
+  backoffMs: 2_000,
+  maxRetryWaitMs: 10_000,
+  failureCooldownMs: 30_000,
+  minForceAgeMs: 60_000,
+  load: buildPbp,
+});
+
+const LABS_WAIT_MS = 10_000;
 
 export function peekAdvancedKeys(): Set<string> {
-  return pbpCache ? new Set(pbpCache.games.keys()) : new Set();
+  const pbp = pbpLoader.peek();
+  return pbp ? new Set(pbp.data.games.keys()) : new Set();
 }
 
 export function peekAdvanced(key: string): AdvancedBlock | null {
-  return pbpCache?.games.get(key) ?? null;
+  return pbpLoader.peek()?.data.games.get(key) ?? null;
 }
 
 export function peekPosMap() {
-  return weekCache?.pos ?? null;
+  return weekLoader.peek()?.data.pos ?? null;
 }
 
+/** Starts both loads if their caches are cold. Loader results never reject. */
 export function warmNflverse() {
-  void pbpBundle().catch(() => {});
-  void playerWeek().catch(() => {});
+  void pbpLoader.get();
+  void weekLoader.get();
 }
 
 export async function advancedIndex(): Promise<Map<string, AdvancedBlock>> {
-  try {
-    const b = await pbpBundle();
-    return b.games;
-  } catch {
-    return pbpCache?.games ?? new Map();
-  }
+  const r = await pbpLoader.get({ waitMs: LABS_WAIT_MS });
+  return (r.ok ? r.data : r.stale?.data)?.games ?? new Map();
 }
 
 export async function advancedFor(key: string): Promise<AdvancedBlock | null> {
@@ -796,33 +752,44 @@ export async function advancedKeys(): Promise<Set<string>> {
   return new Set(idx.keys());
 }
 
-export async function positionMap(): Promise<Map<string, SkillPos>> {
-  const w = await playerWeek();
-  return w.pos;
+/** Published weekly rows (last good retrieval included), waiting at most `waitMs`. */
+export function loadWeekPlayers(waitMs: number): Promise<LoadResult<PlayerWeekBundle>> {
+  return weekLoader.get({ waitMs });
 }
 
-export async function weekPlayers() {
-  return playerWeek();
-}
+export type { PlayerWeekBundle, SkillPos };
 
-export async function loadSeasonLabs(): Promise<SeasonLabs> {
-  const [bundle, week] = await Promise.all([pbpBundle(), playerWeek()]);
+function labsFrom(bundle: PbpBundle, week: PlayerWeekBundle | null, fetchedAt: number): SeasonLabs {
   const qbs = bundle.qbs.map((q) => {
-    const w = week.byId.get(q.id);
+    const w = week?.byId.get(q.id);
     if (!w) return q;
-    return { ...q, name: w.name, team: w.team, headshot: w.headshot ?? q.headshot, box: w.box };
+    return { ...q, name: w.name, team: w.team, headshot: w.headshot ?? q.headshot, box: qbBox(w) };
   });
   return {
-    season: 2026,
-    throughWeek: bundle.throughWeek || Math.max(0, ...week.rows.map((r) => r.week)),
-    fetchedAt: new Date(bundle.at).toISOString(),
-    source: "nflverse play-by-play + player week 2026",
+    season: SEASON,
+    throughWeek: bundle.throughWeek || (week ? (throughWeek(week.weeks, SEASON, "REG") ?? 0) : 0),
+    fetchedAt: new Date(fetchedAt).toISOString(),
+    source: week ? "nflverse play-by-play + player week 2026" : "nflverse play-by-play 2026",
     qbs,
     teams: bundle.teams,
   };
 }
 
-export function bustSeasonCache() {
-  pbpCache = null;
-  weekCache = null;
+/**
+ * Season labs as the server actually has them. `force` re-downloads files older than a minute
+ * (the old cache bust dropped the last good data; this keeps it for fallback).
+ */
+export async function seasonLabsResponse({ force = false } = {}): Promise<FeedResponse<SeasonLabs>> {
+  const [pbp, week] = await Promise.all([
+    pbpLoader.get({ force, waitMs: LABS_WAIT_MS }),
+    weekLoader.get({ force, waitMs: LABS_WAIT_MS }),
+  ]);
+  const weekData = week.ok ? week.data : (week.stale?.data ?? null);
+  const retrieval = pbp.ok ? pbp.fetchedAt : (pbp.stale?.fetchedAt ?? 0);
+  return toFeedResponse(
+    pbp,
+    (bundle) => labsFrom(bundle, weekData, retrieval),
+    Date.now(),
+    () => (weekData ? [] : ["QB box scores and headshots (nflverse weekly stats did not load)"]),
+  );
 }

@@ -1,0 +1,6 @@
+{
+  "file": "live-scoreboard.json",
+  "synthetic": true,
+  "created": "2026-09-12",
+  "notes": "Browser and unit fixture in ESPN scoreboard shape. Invented 2026 week 2 board: DET@CIN in progress (event id reuses espn_summary_401772854.json so the detail fixture has a real box), BUF@MIA final, SF@SEA pregame."
+}

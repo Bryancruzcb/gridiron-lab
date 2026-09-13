@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import fantasyFile from "@/data/fantasy.json";
 import { AppShell } from "@/components/layout/AppShell";
+import { FeedStatus } from "@/components/DataStatus";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
 import { Input } from "@/components/ui/input";
@@ -110,6 +111,15 @@ function PlayersPage() {
     return out;
   }, [weekPpr]);
 
+  const mix = useMemo(() => {
+    const lines = weekPpr?.players ?? [];
+    return {
+      provisional: lines.filter((w) => w.source === "espn").length,
+      published: lines.filter((w) => w.source === "nflverse").length,
+      partial: lines.filter((w) => w.score.status === "partial").length,
+    };
+  }, [weekPpr]);
+
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
     return rows
@@ -148,6 +158,14 @@ function PlayersPage() {
             {filtered.length} players
             {weekPpr ? ` · week ${weekPpr.week}` : ""}
           </p>
+          <FeedStatus feed="weekPpr" />
+          {weekPpr && weekPpr.players.length > 0 ? (
+            <p data-testid="week-source-mix" className="text-xs text-muted">
+              {mix.provisional} provisional ESPN line{mix.provisional === 1 ? "" : "s"} · {mix.published} published by
+              nflverse
+              {mix.partial ? ` · ${mix.partial} partly scored (a stat ESPN didn't report)` : ""}
+            </p>
+          ) : null}
         </div>
 
         <ul className="mt-4 overflow-hidden rounded-xl bg-surface">
@@ -169,7 +187,9 @@ function PlayersPage() {
                     {r.week ? (
                       <p className="mt-0.5 font-mono text-[11px] text-muted tabular-nums">{weekLine(r.week)}</p>
                     ) : (
-                      <p className="mt-0.5 text-[11px] text-subtle">No box this week</p>
+                      <p className="mt-0.5 text-[11px] text-subtle">
+                        {weekPpr ? "No box this week" : "This week's box not loaded"}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -189,14 +209,19 @@ function PlayersPage() {
 
       <Sheet open={Boolean(open)} onOpenChange={(v) => !v && setOpen(null)}>
         <SheetContent side="bottom" className="bg-surface">
-          {open ? <PlayerSheet row={open} /> : null}
+          {open ? <PlayerSheet row={open} weekLoaded={weekPpr != null} /> : null}
         </SheetContent>
       </Sheet>
     </AppShell>
   );
 }
 
-function PlayerSheet({ row }: { row: Row }) {
+function weekSource(w: WeekSkill) {
+  if (w.source === "nflverse") return "published by nflverse";
+  return w.status === "in" ? "provisional ESPN box, game in progress" : "provisional ESPN box";
+}
+
+function PlayerSheet({ row, weekLoaded }: { row: Row; weekLoaded: boolean }) {
   const s = row.season;
   const w = row.week;
   return (
@@ -215,7 +240,14 @@ function PlayerSheet({ row }: { row: Row }) {
         </div>
       </div>
 
-      <p className="mt-6 text-[11px] tracking-[0.16em] text-subtle uppercase">This week</p>
+      <p className="mt-6 text-[11px] tracking-[0.16em] text-subtle uppercase">
+        This week{w ? ` · ${weekSource(w)}` : ""}
+      </p>
+      {w && w.score.status === "partial" ? (
+        <p className="mt-1 text-xs text-muted">
+          Partly scored: {w.score.unavailable.join(", ")} not reported, so those points are left out.
+        </p>
+      ) : null}
       {w ? (
         <dl className="mt-2 grid grid-cols-3 gap-2">
           <Cell label="PPR" value={w.ppr.toFixed(1)} />
@@ -240,7 +272,11 @@ function PlayerSheet({ row }: { row: Row }) {
           )}
         </dl>
       ) : (
-        <p className="mt-2 text-sm text-muted">Hasn’t played this week, or isn’t on the ESPN box yet.</p>
+        <p className="mt-2 text-sm text-muted">
+          {weekLoaded
+            ? "Hasn’t played this week, or isn’t on the ESPN box yet."
+            : "This week’s box scores didn’t load. Retry from the list."}
+        </p>
       )}
 
       <p className="mt-6 text-[11px] tracking-[0.16em] text-subtle uppercase">2025 season</p>

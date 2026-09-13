@@ -1,0 +1,483 @@
+{
+  "cache": "Raw bytes are not committed. Fetched inputs live in the gitignored study cache at snapshots/<sha256>/<file>; a run with --offline --pin-inputs <this file> reads exactly these hashes.",
+  "inputs": [
+    {
+      "bytes": 34840,
+      "http": null,
+      "id": "fantasy.json",
+      "localPath": "src/data/fantasy.json",
+      "retrievedAt": "2026-09-12T22:16:05.707Z",
+      "role": "universe-file",
+      "schema": {
+        "columns": null,
+        "headerSha256": null,
+        "id": "gridiron-lab-universe-file@1",
+        "requiredColumns": []
+      },
+      "season": null,
+      "sha256": "7f401dfb3e230b7b6e3d037452cff38d4679a495fe41e122e23c526949d6891b",
+      "url": "repo:src/data/fantasy.json",
+      "usedBy": [
+        "run-51125c0f6f553bcb"
+      ]
+    },
+    {
+      "bytes": 2179657,
+      "http": {
+        "etag": "W/\"a4a62149395a7e1dbd44a567f571f1e9f03c1b84e02a618ffc5e968fa6802ebc\"",
+        "lastModified": null
+      },
+      "id": "nfldata_games",
+      "localPath": "snapshots/613dbce57073af64559ae689dd4e53527c1cc2e0c4417fbb23bedb5d21ba85da/games.csv",
+      "retrievedAt": "2026-09-13T04:58:22.478Z",
+      "role": "schedule",
+      "schema": {
+        "columns": 46,
+        "headerSha256": "4dbd75f9f0db72cede6b8a938a28724cc622f164a5acf3d67e1c4e1ace142d78",
+        "id": "nfldata-games/study-columns@1",
+        "requiredColumns": [
+          "game_id",
+          "season",
+          "game_type",
+          "week",
+          "away_team",
+          "away_score",
+          "home_team",
+          "home_score"
+        ]
+      },
+      "season": null,
+      "sha256": "613dbce57073af64559ae689dd4e53527c1cc2e0c4417fbb23bedb5d21ba85da",
+      "url": "https://github.com/nflverse/nfldata/raw/master/data/games.csv",
+      "usedBy": [
+        "run-00f774f034aafef8",
+        "run-51125c0f6f553bcb",
+        "run-85628408012ca98e",
+        "run-9e1e548b6e174b76"
+      ]
+    },
+    {
+      "bytes": 8408729,
+      "http": {
+        "etag": "\"0x8DEF95AAA9FC20B\"",
+        "lastModified": "Thu, 13 Aug 2026 16:48:13 GMT"
+      },
+      "id": "stats_player_week_2022",
+      "localPath": "snapshots/ad426c3fe5bf1cc30c3f137fdfe96d054e19d400879ee4413129da49fa7b54be/stats_player_week_2022.csv",
+      "retrievedAt": "2026-09-12T22:13:53.890Z",
+      "role": "player-week",
+      "schema": {
+        "columns": 150,
+        "headerSha256": "fe56f58a6d51a78acc50a5940f2f39d8572b9ebe20723080fdf2bb520e9fa75e",
+        "id": "nflverse-stats-player-week/study-columns@1",
+        "requiredColumns": [
+          "player_id",
+          "player_name",
+          "player_display_name",
+          "position",
+          "headshot_url",
+          "season",
+          "week",
+          "season_type",
+          "game_id",
+          "team",
+          "opponent_team",
+          "completions",
+          "attempts",
+          "passing_yards",
+          "passing_tds",
+          "passing_interceptions",
+          "sacks_suffered",
+          "sack_fumbles_lost",
+          "passing_2pt_conversions",
+          "carries",
+          "rushing_yards",
+          "rushing_tds",
+          "rushing_fumbles_lost",
+          "rushing_2pt_conversions",
+          "receptions",
+          "receiving_yards",
+          "receiving_tds",
+          "receiving_fumbles_lost",
+          "receiving_2pt_conversions",
+          "special_teams_tds",
+          "targets",
+          "passing_epa",
+          "passing_cpoe"
+        ]
+      },
+      "season": 2022,
+      "sha256": "ad426c3fe5bf1cc30c3f137fdfe96d054e19d400879ee4413129da49fa7b54be",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2022.csv",
+      "usedBy": [
+        "run-85628408012ca98e"
+      ]
+    },
+    {
+      "bytes": 8332874,
+      "http": {
+        "etag": "\"0x8DEF95AB85FE52E\"",
+        "lastModified": "Thu, 13 Aug 2026 16:48:36 GMT"
+      },
+      "id": "stats_player_week_2023",
+      "localPath": "snapshots/f19cb71a5de0dce7fd09376026237c9ee9d5a93fe13815a2ea3ec2d37204cb17/stats_player_week_2023.csv",
+      "retrievedAt": "2026-09-12T22:13:50.911Z",
+      "role": "player-week",
+      "schema": {
+        "columns": 150,
+        "headerSha256": "fe56f58a6d51a78acc50a5940f2f39d8572b9ebe20723080fdf2bb520e9fa75e",
+        "id": "nflverse-stats-player-week/study-columns@1",
+        "requiredColumns": [
+          "player_id",
+          "player_name",
+          "player_display_name",
+          "position",
+          "headshot_url",
+          "season",
+          "week",
+          "season_type",
+          "game_id",
+          "team",
+          "opponent_team",
+          "completions",
+          "attempts",
+          "passing_yards",
+          "passing_tds",
+          "passing_interceptions",
+          "sacks_suffered",
+          "sack_fumbles_lost",
+          "passing_2pt_conversions",
+          "carries",
+          "rushing_yards",
+          "rushing_tds",
+          "rushing_fumbles_lost",
+          "rushing_2pt_conversions",
+          "receptions",
+          "receiving_yards",
+          "receiving_tds",
+          "receiving_fumbles_lost",
+          "receiving_2pt_conversions",
+          "special_teams_tds",
+          "targets",
+          "passing_epa",
+          "passing_cpoe"
+        ]
+      },
+      "season": 2023,
+      "sha256": "f19cb71a5de0dce7fd09376026237c9ee9d5a93fe13815a2ea3ec2d37204cb17",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2023.csv",
+      "usedBy": [
+        "run-85628408012ca98e",
+        "run-9e1e548b6e174b76"
+      ]
+    },
+    {
+      "bytes": 8470040,
+      "http": {
+        "etag": "\"0x8DEF95ACCB97E00\"",
+        "lastModified": "Thu, 13 Aug 2026 16:49:11 GMT"
+      },
+      "id": "stats_player_week_2024",
+      "localPath": "snapshots/3ddc45a84f759aa348ce465ae001752c530575455717657cdfe1f8abfcdb4759/stats_player_week_2024.csv",
+      "retrievedAt": "2026-09-12T22:13:59.329Z",
+      "role": "player-week",
+      "schema": {
+        "columns": 150,
+        "headerSha256": "fe56f58a6d51a78acc50a5940f2f39d8572b9ebe20723080fdf2bb520e9fa75e",
+        "id": "nflverse-stats-player-week/study-columns@1",
+        "requiredColumns": [
+          "player_id",
+          "player_name",
+          "player_display_name",
+          "position",
+          "headshot_url",
+          "season",
+          "week",
+          "season_type",
+          "game_id",
+          "team",
+          "opponent_team",
+          "completions",
+          "attempts",
+          "passing_yards",
+          "passing_tds",
+          "passing_interceptions",
+          "sacks_suffered",
+          "sack_fumbles_lost",
+          "passing_2pt_conversions",
+          "carries",
+          "rushing_yards",
+          "rushing_tds",
+          "rushing_fumbles_lost",
+          "rushing_2pt_conversions",
+          "receptions",
+          "receiving_yards",
+          "receiving_tds",
+          "receiving_fumbles_lost",
+          "receiving_2pt_conversions",
+          "special_teams_tds",
+          "targets",
+          "passing_epa",
+          "passing_cpoe"
+        ]
+      },
+      "season": 2024,
+      "sha256": "3ddc45a84f759aa348ce465ae001752c530575455717657cdfe1f8abfcdb4759",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2024.csv",
+      "usedBy": [
+        "run-00f774f034aafef8",
+        "run-9e1e548b6e174b76"
+      ]
+    },
+    {
+      "bytes": 8656387,
+      "http": {
+        "etag": "\"0x8DEF95B1AFD7169\"",
+        "lastModified": "Thu, 13 Aug 2026 16:51:22 GMT"
+      },
+      "id": "stats_player_week_2025",
+      "localPath": "snapshots/e5e0615b3d96a3eaebfaee91e55afb4a4e7fe0caf057454177bcd7d6ad4bcfc2/stats_player_week_2025.csv",
+      "retrievedAt": "2026-09-12T22:15:59.153Z",
+      "role": "player-week",
+      "schema": {
+        "columns": 150,
+        "headerSha256": "fe56f58a6d51a78acc50a5940f2f39d8572b9ebe20723080fdf2bb520e9fa75e",
+        "id": "nflverse-stats-player-week/study-columns@1",
+        "requiredColumns": [
+          "player_id",
+          "player_name",
+          "player_display_name",
+          "position",
+          "headshot_url",
+          "season",
+          "week",
+          "season_type",
+          "game_id",
+          "team",
+          "opponent_team",
+          "completions",
+          "attempts",
+          "passing_yards",
+          "passing_tds",
+          "passing_interceptions",
+          "sacks_suffered",
+          "sack_fumbles_lost",
+          "passing_2pt_conversions",
+          "carries",
+          "rushing_yards",
+          "rushing_tds",
+          "rushing_fumbles_lost",
+          "rushing_2pt_conversions",
+          "receptions",
+          "receiving_yards",
+          "receiving_tds",
+          "receiving_fumbles_lost",
+          "receiving_2pt_conversions",
+          "special_teams_tds",
+          "targets",
+          "passing_epa",
+          "passing_cpoe"
+        ]
+      },
+      "season": 2025,
+      "sha256": "e5e0615b3d96a3eaebfaee91e55afb4a4e7fe0caf057454177bcd7d6ad4bcfc2",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_player/stats_player_week_2025.csv",
+      "usedBy": [
+        "run-00f774f034aafef8",
+        "run-51125c0f6f553bcb"
+      ]
+    },
+    {
+      "bytes": 228947,
+      "http": {
+        "etag": "\"0x8DEF95AABEF8A89\"",
+        "lastModified": "Thu, 13 Aug 2026 16:48:16 GMT"
+      },
+      "id": "stats_team_week_2022",
+      "localPath": "snapshots/9803875bd0b74aa49230288d45359c75e45910f1cf1953ea0f07b9d3db35e4d1/stats_team_week_2022.csv",
+      "retrievedAt": "2026-09-12T22:13:54.180Z",
+      "role": "team-week",
+      "schema": {
+        "columns": 138,
+        "headerSha256": "40af9f9b056e5d41d182cd70bbf8c23fa8b6848f2fe567929080f535e3b39ca4",
+        "id": "nflverse-stats-team-week/study-columns@1",
+        "requiredColumns": [
+          "season",
+          "week",
+          "team",
+          "season_type",
+          "game_id",
+          "opponent_team",
+          "passing_interceptions",
+          "sacks_suffered",
+          "fumbles_lost_total",
+          "passing_tds",
+          "rushing_tds",
+          "special_teams_tds",
+          "def_tds",
+          "fumble_recovery_tds",
+          "def_safeties",
+          "def_2pt_made",
+          "def_punt_blocks",
+          "def_fg_blocks",
+          "def_pat_blocks",
+          "pat_made",
+          "fg_made",
+          "passing_2pt_conversions",
+          "rushing_2pt_conversions"
+        ]
+      },
+      "season": 2022,
+      "sha256": "9803875bd0b74aa49230288d45359c75e45910f1cf1953ea0f07b9d3db35e4d1",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2022.csv",
+      "usedBy": [
+        "run-85628408012ca98e"
+      ]
+    },
+    {
+      "bytes": 229582,
+      "http": {
+        "etag": "\"0x8DEF95AB9763CFE\"",
+        "lastModified": "Thu, 13 Aug 2026 16:48:38 GMT"
+      },
+      "id": "stats_team_week_2023",
+      "localPath": "snapshots/dc5a387daabe8663deaddac492ad7020d47fb1a66048690b355b406cd8e4c454/stats_team_week_2023.csv",
+      "retrievedAt": "2026-09-12T22:13:51.361Z",
+      "role": "team-week",
+      "schema": {
+        "columns": 138,
+        "headerSha256": "40af9f9b056e5d41d182cd70bbf8c23fa8b6848f2fe567929080f535e3b39ca4",
+        "id": "nflverse-stats-team-week/study-columns@1",
+        "requiredColumns": [
+          "season",
+          "week",
+          "team",
+          "season_type",
+          "game_id",
+          "opponent_team",
+          "passing_interceptions",
+          "sacks_suffered",
+          "fumbles_lost_total",
+          "passing_tds",
+          "rushing_tds",
+          "special_teams_tds",
+          "def_tds",
+          "fumble_recovery_tds",
+          "def_safeties",
+          "def_2pt_made",
+          "def_punt_blocks",
+          "def_fg_blocks",
+          "def_pat_blocks",
+          "pat_made",
+          "fg_made",
+          "passing_2pt_conversions",
+          "rushing_2pt_conversions"
+        ]
+      },
+      "season": 2023,
+      "sha256": "dc5a387daabe8663deaddac492ad7020d47fb1a66048690b355b406cd8e4c454",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2023.csv",
+      "usedBy": [
+        "run-85628408012ca98e",
+        "run-9e1e548b6e174b76"
+      ]
+    },
+    {
+      "bytes": 229712,
+      "http": {
+        "etag": "\"0x8DEF95ACE02F956\"",
+        "lastModified": "Thu, 13 Aug 2026 16:49:13 GMT"
+      },
+      "id": "stats_team_week_2024",
+      "localPath": "snapshots/b207a1430c2715d03bbf1844c4eae98695f364851ff6025f422febc2c13f5255/stats_team_week_2024.csv",
+      "retrievedAt": "2026-09-12T22:13:59.643Z",
+      "role": "team-week",
+      "schema": {
+        "columns": 138,
+        "headerSha256": "40af9f9b056e5d41d182cd70bbf8c23fa8b6848f2fe567929080f535e3b39ca4",
+        "id": "nflverse-stats-team-week/study-columns@1",
+        "requiredColumns": [
+          "season",
+          "week",
+          "team",
+          "season_type",
+          "game_id",
+          "opponent_team",
+          "passing_interceptions",
+          "sacks_suffered",
+          "fumbles_lost_total",
+          "passing_tds",
+          "rushing_tds",
+          "special_teams_tds",
+          "def_tds",
+          "fumble_recovery_tds",
+          "def_safeties",
+          "def_2pt_made",
+          "def_punt_blocks",
+          "def_fg_blocks",
+          "def_pat_blocks",
+          "pat_made",
+          "fg_made",
+          "passing_2pt_conversions",
+          "rushing_2pt_conversions"
+        ]
+      },
+      "season": 2024,
+      "sha256": "b207a1430c2715d03bbf1844c4eae98695f364851ff6025f422febc2c13f5255",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2024.csv",
+      "usedBy": [
+        "run-00f774f034aafef8",
+        "run-9e1e548b6e174b76"
+      ]
+    },
+    {
+      "bytes": 229660,
+      "http": {
+        "etag": "\"0x8DEF95B1C06E364\"",
+        "lastModified": "Thu, 13 Aug 2026 16:51:24 GMT"
+      },
+      "id": "stats_team_week_2025",
+      "localPath": "snapshots/91058a59d894855377b2f39f40c4e7bdbeef96d12144289dc68215209a1c93cb/stats_team_week_2025.csv",
+      "retrievedAt": "2026-09-12T22:15:59.347Z",
+      "role": "team-week",
+      "schema": {
+        "columns": 138,
+        "headerSha256": "40af9f9b056e5d41d182cd70bbf8c23fa8b6848f2fe567929080f535e3b39ca4",
+        "id": "nflverse-stats-team-week/study-columns@1",
+        "requiredColumns": [
+          "season",
+          "week",
+          "team",
+          "season_type",
+          "game_id",
+          "opponent_team",
+          "passing_interceptions",
+          "sacks_suffered",
+          "fumbles_lost_total",
+          "passing_tds",
+          "rushing_tds",
+          "special_teams_tds",
+          "def_tds",
+          "fumble_recovery_tds",
+          "def_safeties",
+          "def_2pt_made",
+          "def_punt_blocks",
+          "def_fg_blocks",
+          "def_pat_blocks",
+          "pat_made",
+          "fg_made",
+          "passing_2pt_conversions",
+          "rushing_2pt_conversions"
+        ]
+      },
+      "season": 2025,
+      "sha256": "91058a59d894855377b2f39f40c4e7bdbeef96d12144289dc68215209a1c93cb",
+      "url": "https://github.com/nflverse/nflverse-data/releases/download/stats_team/stats_team_week_2025.csv",
+      "usedBy": [
+        "run-00f774f034aafef8",
+        "run-51125c0f6f553bcb"
+      ]
+    }
+  ],
+  "schemaVersion": "gridiron-lab-study-input-manifest@1"
+}

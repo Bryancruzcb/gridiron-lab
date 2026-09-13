@@ -1,0 +1,6 @@
+{
+  "file": "live-labs.json",
+  "synthetic": true,
+  "created": "2026-09-12",
+  "notes": "Browser and unit fixture. First three QBs and teams of src/data/season2026.json (snapshot through week 1). Week 1 points equal the snapshot's one-game totals; week 2 points and throughWeek 2 are invented so live rows are distinguishable from the snapshot."
+}

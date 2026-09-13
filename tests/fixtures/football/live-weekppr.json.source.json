@@ -1,0 +1,6 @@
+{
+  "file": "live-weekppr.json",
+  "synthetic": true,
+  "created": "2026-09-12",
+  "notes": "Browser and unit fixture. Invented week-2 lines for players on the synthetic slate plus one off-slate player; mixes ESPN provisional, nflverse published and one partial score."
+}

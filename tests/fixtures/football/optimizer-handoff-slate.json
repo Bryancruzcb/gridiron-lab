@@ -1,0 +1,15 @@
+[
+  { "id": "0", "name": "0", "pos": "QB", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 5.5, "proj": 5.5, "recencyPpg": 5.5, "salary": 6200 },
+  { "id": "1", "name": "1", "pos": "QB", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 9.5, "proj": 9.5, "recencyPpg": 9.5, "salary": 2300 },
+  { "id": "2", "name": "2", "pos": "RB", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 2.8, "proj": 2.8, "recencyPpg": 2.8, "salary": 3500 },
+  { "id": "3", "name": "3", "pos": "RB", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 0.7, "proj": 0.7, "recencyPpg": 0.7, "salary": 4800 },
+  { "id": "4", "name": "4", "pos": "RB", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 16.3, "proj": 16.3, "recencyPpg": 16.3, "salary": 4700 },
+  { "id": "5", "name": "5", "pos": "WR", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 9.4, "proj": 9.4, "recencyPpg": 9.4, "salary": 2100 },
+  { "id": "6", "name": "6", "pos": "WR", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 8.9, "proj": 8.9, "recencyPpg": 8.9, "salary": 2500 },
+  { "id": "7", "name": "7", "pos": "WR", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 24.8, "proj": 24.8, "recencyPpg": 24.8, "salary": 2500 },
+  { "id": "8", "name": "8", "pos": "WR", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 27.0, "proj": 27.0, "recencyPpg": 27.0, "salary": 2600 },
+  { "id": "9", "name": "9", "pos": "TE", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 4.6, "proj": 4.6, "recencyPpg": 4.6, "salary": 5400 },
+  { "id": "10", "name": "10", "pos": "TE", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 22.6, "proj": 22.6, "recencyPpg": 22.6, "salary": 5900 },
+  { "id": "11", "name": "11", "pos": "DST", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 7.1, "proj": 7.1, "recencyPpg": 7.1, "salary": 5400 },
+  { "id": "12", "name": "12", "pos": "DST", "team": "T", "headshot": null, "games": 1, "ppr": null, "ppg": 8.1, "proj": 8.1, "recencyPpg": 8.1, "salary": 3200 }
+]

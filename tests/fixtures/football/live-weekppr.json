@@ -1,0 +1,158 @@
+{
+  "season": 2026,
+  "seasonType": "REG",
+  "week": 2,
+  "fetchedAt": "2026-09-19T12:00:00.000Z",
+  "gamesFinal": 1,
+  "gamesLive": 1,
+  "games": 3,
+  "players": [
+    {
+      "gsisId": null,
+      "headshot": null,
+      "passCmp": 22,
+      "passAtt": 31,
+      "passYds": 262,
+      "passTd": 2,
+      "ints": 0,
+      "rushAtt": 7,
+      "rushYds": 41,
+      "rushTd": 1,
+      "rec": 0,
+      "recYds": 0,
+      "recTd": 0,
+      "score": {
+        "status": "complete",
+        "unavailable": []
+      },
+      "espnId": "3918298",
+      "name": "Josh Allen",
+      "team": "BUF",
+      "pos": "QB",
+      "ppr": 24.3,
+      "status": "post",
+      "source": "espn"
+    },
+    {
+      "gsisId": "00-0039075",
+      "headshot": null,
+      "passCmp": null,
+      "passAtt": null,
+      "passYds": 0,
+      "passTd": 0,
+      "ints": 0,
+      "rushAtt": 1,
+      "rushYds": 6,
+      "rushTd": 0,
+      "rec": 9,
+      "recYds": 112,
+      "recTd": 0,
+      "score": {
+        "status": "complete",
+        "unavailable": []
+      },
+      "espnId": "00-0039075",
+      "name": "Puka Nacua",
+      "team": "LA",
+      "pos": "WR",
+      "ppr": 21.8,
+      "status": "post",
+      "source": "nflverse"
+    },
+    {
+      "gsisId": null,
+      "headshot": null,
+      "passCmp": null,
+      "passAtt": null,
+      "passYds": 0,
+      "passTd": 0,
+      "ints": 0,
+      "rushAtt": 15,
+      "rushYds": 88,
+      "rushTd": 1,
+      "rec": 3,
+      "recYds": 18,
+      "recTd": 0,
+      "score": {
+        "status": "partial",
+        "unavailable": [
+          "fumblesLost"
+        ]
+      },
+      "espnId": "4429795",
+      "name": "Jahmyr Gibbs",
+      "team": "DET",
+      "pos": "RB",
+      "ppr": 18.6,
+      "status": "in",
+      "source": "espn"
+    },
+    {
+      "gsisId": null,
+      "headshot": null,
+      "passCmp": null,
+      "passAtt": null,
+      "passYds": 0,
+      "passTd": 0,
+      "ints": 0,
+      "rushAtt": 0,
+      "rushYds": 0,
+      "rushTd": 0,
+      "rec": 6,
+      "recYds": 82,
+      "recTd": 0,
+      "score": {
+        "status": "complete",
+        "unavailable": []
+      },
+      "espnId": "4362628",
+      "name": "Ja'Marr Chase",
+      "team": "CIN",
+      "pos": "WR",
+      "ppr": 14.2,
+      "status": "in",
+      "source": "espn"
+    },
+    {
+      "gsisId": null,
+      "espnId": "DST-BUF",
+      "name": "BUF D/ST",
+      "team": "BUF",
+      "pos": "DST",
+      "ppr": 7,
+      "headshot": null,
+      "status": "post",
+      "source": "espn",
+      "score": {
+        "status": "complete",
+        "unavailable": []
+      }
+    },
+    {
+      "gsisId": null,
+      "headshot": null,
+      "passCmp": null,
+      "passAtt": null,
+      "passYds": 0,
+      "passTd": 0,
+      "ints": 0,
+      "rushAtt": 0,
+      "rushYds": 0,
+      "rushTd": 0,
+      "rec": 2,
+      "recYds": 11,
+      "recTd": 0,
+      "score": {
+        "status": "complete",
+        "unavailable": []
+      },
+      "espnId": "5000001",
+      "name": "Fixture Rookie",
+      "team": "MIA",
+      "pos": "WR",
+      "ppr": 3.1,
+      "status": "post",
+      "source": "espn"
+    }
+  ]
+}

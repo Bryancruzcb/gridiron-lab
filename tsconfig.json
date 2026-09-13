@@ -30,6 +30,8 @@
   },
   "include": [
     "src",
-    "server"
+    "server",
+    "tests",
+    "scripts/**/*.ts"
   ]
 }
