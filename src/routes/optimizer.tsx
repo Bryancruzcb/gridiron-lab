@@ -418,7 +418,8 @@ function OptimizerLab() {
         <FeedStatus feed="weekPpr" className="mt-4" />
 
         <div className="mt-8 grid gap-4 lg:grid-cols-[1fr_340px]">
-          <div className="rounded-xl bg-surface shadow-[var(--shadow-border)]">
+          {/* min-w-0: a grid item defaults to min-width:auto and would stretch to the table's 620px minimum on phones. */}
+          <div className="min-w-0 rounded-xl bg-surface shadow-[var(--shadow-border)]">
             <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
               <Segmented
                 value={pos}
