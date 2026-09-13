@@ -3,6 +3,7 @@
   "minHistoryGames": 1,
   "models": [
     {
+      "definition": "trail@1",
       "id": "trail",
       "label": "Trailing mean",
       "method": "trail",
@@ -10,6 +11,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "last1@1",
       "id": "last1",
       "label": "Last week",
       "method": "last1",
@@ -17,6 +19,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "last3@1",
       "id": "last3",
       "label": "Last 3",
       "method": "last3",
@@ -26,6 +29,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "blend@1",
       "id": "blend",
       "label": "60/40 season + last 3",
       "method": "blend",
@@ -36,6 +40,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "ewma@1",
       "id": "ewma",
       "label": "EWMA α=0.35",
       "method": "ewma",
@@ -45,6 +50,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "shrink@1",
       "id": "shrink",
       "label": "Shrink to position",
       "method": "shrink",
@@ -54,6 +60,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "usage@1",
       "id": "usage",
       "label": "Usage × rate",
       "method": "usage",
@@ -63,6 +70,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "opp@2",
       "id": "opp",
       "label": "Opponent-adjusted trail",
       "method": "opp",
@@ -73,6 +81,7 @@
       "solver": "exact-dp"
     },
     {
+      "definition": "trail@1",
       "id": "trail-greedy-proj",
       "label": "Trailing mean, greedy by projection",
       "method": "trail",
@@ -80,6 +89,7 @@
       "solver": "greedy-proj"
     },
     {
+      "definition": "trail@1",
       "id": "trail-greedy-value",
       "label": "Trailing mean, greedy by value",
       "method": "trail",
@@ -87,10 +97,11 @@
       "solver": "greedy-value"
     }
   ],
-  "pipeline": "gridiron-lab-study-pipeline@1",
+  "pipeline": "gridiron-lab-study-pipeline@2",
   "policies": [
     "Cutoff: a week-w forecast reads only rows with (season, week) before (S, w) and schedule scores of earlier weeks; history is ordered by season, week, game id.",
     "Position priors, opponent features and recency models read the same pre-cutoff snapshot; the position prior falls back to positionPriorFallback when the pool has no history (or a mean of exactly 0).",
+    "Opponent factor: mean points of every pre-cutoff source row at the position (defense rows for DST) against the scheduled opponent, divided by the mean of those same rows against every opponent; 1 when either side has no rows. The pool's position mean is used only as the shrink prior.",
     "Scheduled opponents come from the schedule, for the player's latest team before the cutoff (else the universe team), never from a postgame row.",
     "Slate: universe players whose team has a game in week w and who have at least minHistoryGames scored games before the cutoff. A missing postgame row never removes a player.",
     "Actuals: played = a scored stat row (a zero is kept); inactive = final game, source covers the week, no row: 0 in a lineup, left out of player error; not-final, missing-source and unknown-identity stay missing.",
@@ -103,14 +114,14 @@
   ],
   "pools": [
     {
-      "resultSha256": "ae7a13d474057d3ca7c21512eb591f1a2f98c8a88fd10a336b3f076b1fb8f2d7",
+      "resultSha256": "61c897405c53d39f379ca050d87effd661b7342a42107889cf7d1fe82c27b75e",
       "roles": [
         "development",
         "development"
       ],
       "runIds": [
-        "run-ccd95ce80683a5be",
-        "run-9bb334f25c8c50d0"
+        "run-85628408012ca98e",
+        "run-9e1e548b6e174b76"
       ],
       "seasons": [
         2023,
@@ -371,15 +382,15 @@
           },
           {
             "label": "Opponent-adjusted trail",
-            "lineupActualMean": 132.192,
-            "lineupActualMedian": 126.5,
-            "lineupProjMean": 142.298,
+            "lineupActualMean": 135.701,
+            "lineupActualMedian": 136.65,
+            "lineupProjMean": 198.024,
             "model": "opp",
             "playerError": {
-              "bias": -3.212,
-              "mae": 6.445,
+              "bias": -0.182,
+              "mae": 6.377,
               "n": 2995,
-              "rmse": 8.613
+              "rmse": 8.324
             },
             "solver": "exact-dp",
             "validWeeks": 34,
@@ -512,17 +523,17 @@
           {
             "baseline": "trail",
             "interval": {
-              "high": 9.556,
+              "high": 15.369,
               "level": 0.95,
-              "low": -5.423
+              "low": -4.951
             },
-            "losses": 16,
-            "meanDiff": 1.742,
-            "medianDiff": 0,
+            "losses": 14,
+            "meanDiff": 5.252,
+            "medianDiff": 10.32,
             "model": "opp",
             "n": 34,
-            "ties": 4,
-            "wins": 14
+            "ties": 0,
+            "wins": 20
           },
           {
             "baseline": "trail",
@@ -563,16 +574,16 @@
       }
     },
     {
-      "resultSha256": "0f11b3819fd6d21cfa37518afca309b9d3399a85c1a99edeb695bd06be753c9b",
+      "resultSha256": "71179fb604facd03bdac95a265809caacfd2898ffc981a371be249648c2095b5",
       "roles": [
         "development",
         "development",
         "retrospective"
       ],
       "runIds": [
-        "run-ccd95ce80683a5be",
-        "run-9bb334f25c8c50d0",
-        "run-2a18ed7b1af9319f"
+        "run-85628408012ca98e",
+        "run-9e1e548b6e174b76",
+        "run-00f774f034aafef8"
       ],
       "seasons": [
         2023,
@@ -902,15 +913,15 @@
           },
           {
             "label": "Opponent-adjusted trail",
-            "lineupActualMean": 137.26,
-            "lineupActualMedian": 133.84,
-            "lineupProjMean": 143.011,
+            "lineupActualMean": 138.275,
+            "lineupActualMedian": 142.02,
+            "lineupProjMean": 197.864,
             "model": "opp",
             "playerError": {
-              "bias": -3.133,
-              "mae": 6.386,
+              "bias": -0.107,
+              "mae": 6.357,
               "n": 4517,
-              "rmse": 8.599
+              "rmse": 8.311
             },
             "solver": "exact-dp",
             "validWeeks": 51,
@@ -1043,17 +1054,17 @@
           {
             "baseline": "trail",
             "interval": {
-              "high": 9.391,
+              "high": 14.092,
               "level": 0.95,
-              "low": -2.003
+              "low": -3.795
             },
-            "losses": 21,
-            "meanDiff": 3.711,
-            "medianDiff": 0,
+            "losses": 23,
+            "meanDiff": 4.726,
+            "medianDiff": 7.7,
             "model": "opp",
             "n": 51,
-            "ties": 5,
-            "wins": 25
+            "ties": 0,
+            "wins": 28
           },
           {
             "baseline": "trail",
@@ -1094,7 +1105,7 @@
       }
     }
   ],
-  "resultSha256": "3483f5176058996e886d1bd72e276ca85fd276062292928e8aace1a250e2afb5",
+  "resultSha256": "e932d030c2fefa6f70909bcf284e30e4ebd8c9d49b225f8e4576fecfdd35b287",
   "schemaVersion": "gridiron-lab-study-seasons@1",
   "scoring": "gridiron-lab-ppr-dst@1",
   "seasons": [
@@ -1107,9 +1118,9 @@
         "n": 433,
         "resultSha256": "de1436b85bceec77ed9419e72910c69fc3a906141fc0a10e2026c0208a379852"
       },
-      "resultSha256": "7f52eda7adb19a8cfa0e70bf91be79050b259db9b31de4b30bee9a26537140aa",
+      "resultSha256": "a9b7aed986ed1406b1331acd320f9a6a31686902edf6326b29244aa9f411735a",
       "role": "development",
-      "runId": "run-ccd95ce80683a5be",
+      "runId": "run-85628408012ca98e",
       "season": 2023,
       "summary": {
         "commonWeeks": [
@@ -1298,15 +1309,15 @@
           },
           {
             "label": "Opponent-adjusted trail",
-            "lineupActualMean": 137.842,
-            "lineupActualMedian": 127.74,
-            "lineupProjMean": 144.287,
+            "lineupActualMean": 138.159,
+            "lineupActualMedian": 139.54,
+            "lineupProjMean": 198.18,
             "model": "opp",
             "playerError": {
-              "bias": -3.119,
-              "mae": 6.421,
+              "bias": -0.176,
+              "mae": 6.343,
               "n": 1500,
-              "rmse": 8.558
+              "rmse": 8.27
             },
             "solver": "exact-dp",
             "validWeeks": 17,
@@ -1439,17 +1450,17 @@
           {
             "baseline": "trail",
             "interval": {
-              "high": 19.385,
+              "high": 22.135,
               "level": 0.95,
-              "low": -7.099
+              "low": -10.202
             },
-            "losses": 8,
-            "meanDiff": 5.909,
-            "medianDiff": 4.5,
+            "losses": 6,
+            "meanDiff": 6.226,
+            "medianDiff": 17.5,
             "model": "opp",
             "n": 17,
             "ties": 0,
-            "wins": 9
+            "wins": 11
           },
           {
             "baseline": "trail",
@@ -1494,7 +1505,7 @@
         "players": 114,
         "rule": "synthetic-prior-season@1",
         "season": 2023,
-        "sha256": "f462cf7709cb9195573a5b9a395e308a1f7f2d0e6936b46b2b8d9c7f1cad2e72"
+        "sha256": "efb986f3f509274b85c7028a9f1162db5859d8485d7e490ea701f60c474d449c"
       },
       "weekly": [
         {
@@ -1516,8 +1527,8 @@
               "proj": 258.94
             },
             "opp": {
-              "actual": 96.36,
-              "proj": 202.4855
+              "actual": 106.26,
+              "proj": 278.8126
             },
             "shrink": {
               "actual": 88.76,
@@ -1563,7 +1574,7 @@
             },
             "opp": {
               "actual": 155.88,
-              "proj": 177.9358
+              "proj": 243.7929
             },
             "shrink": {
               "actual": 160.6,
@@ -1608,8 +1619,8 @@
               "proj": 213.9734
             },
             "opp": {
-              "actual": 114.28,
-              "proj": 158.1728
+              "actual": 112.58,
+              "proj": 229.5559
             },
             "shrink": {
               "actual": 152.08,
@@ -1654,8 +1665,8 @@
               "proj": 198.4333
             },
             "opp": {
-              "actual": 182.24,
-              "proj": 137.9248
+              "actual": 139.54,
+              "proj": 178.3827
             },
             "shrink": {
               "actual": 133.64,
@@ -1700,8 +1711,8 @@
               "proj": 226.0801
             },
             "opp": {
-              "actual": 137.62,
-              "proj": 150.2123
+              "actual": 127.92,
+              "proj": 206.1627
             },
             "shrink": {
               "actual": 143.38,
@@ -1746,8 +1757,8 @@
               "proj": 210.7267
             },
             "opp": {
-              "actual": 127.74,
-              "proj": 143.9151
+              "actual": 113.84,
+              "proj": 195.267
             },
             "shrink": {
               "actual": 160.76,
@@ -1792,8 +1803,8 @@
               "proj": 211.6667
             },
             "opp": {
-              "actual": 157.3,
-              "proj": 143.7303
+              "actual": 169.28,
+              "proj": 199.0531
             },
             "shrink": {
               "actual": 186.32,
@@ -1838,8 +1849,8 @@
               "proj": 199.06
             },
             "opp": {
-              "actual": 125.86,
-              "proj": 133.4086
+              "actual": 103.1,
+              "proj": 183.6665
             },
             "shrink": {
               "actual": 80.44,
@@ -1884,8 +1895,8 @@
               "proj": 198.8601
             },
             "opp": {
-              "actual": 191.12,
-              "proj": 135.4881
+              "actual": 181.48,
+              "proj": 177.3479
             },
             "shrink": {
               "actual": 164.78,
@@ -1930,8 +1941,8 @@
               "proj": 213.4933
             },
             "opp": {
-              "actual": 124.18,
-              "proj": 133.8893
+              "actual": 96.6,
+              "proj": 177.9912
             },
             "shrink": {
               "actual": 169,
@@ -1976,8 +1987,8 @@
               "proj": 204.16
             },
             "opp": {
-              "actual": 193.36,
-              "proj": 140.4124
+              "actual": 189.44,
+              "proj": 193.3073
             },
             "shrink": {
               "actual": 157.68,
@@ -2022,8 +2033,8 @@
               "proj": 205.8199
             },
             "opp": {
-              "actual": 151.2,
-              "proj": 127.2806
+              "actual": 142.3,
+              "proj": 179.0155
             },
             "shrink": {
               "actual": 152.36,
@@ -2068,8 +2079,8 @@
               "proj": 203.12
             },
             "opp": {
-              "actual": 133.84,
-              "proj": 140.7415
+              "actual": 121.84,
+              "proj": 201.6361
             },
             "shrink": {
               "actual": 119.84,
@@ -2114,8 +2125,8 @@
               "proj": 205.7267
             },
             "opp": {
-              "actual": 106.3,
-              "proj": 131.4058
+              "actual": 126,
+              "proj": 184.4051
             },
             "shrink": {
               "actual": 82.16,
@@ -2160,8 +2171,8 @@
               "proj": 202.5467
             },
             "opp": {
-              "actual": 117.18,
-              "proj": 132.5029
+              "actual": 154.28,
+              "proj": 173.5081
             },
             "shrink": {
               "actual": 118.52,
@@ -2206,8 +2217,8 @@
               "proj": 203.0535
             },
             "opp": {
-              "actual": 120.6,
-              "proj": 133.0757
+              "actual": 163.6,
+              "proj": 186.777
             },
             "shrink": {
               "actual": 147,
@@ -2252,8 +2263,8 @@
               "proj": 210.4201
             },
             "opp": {
-              "actual": 108.26,
-              "proj": 130.3025
+              "actual": 144.76,
+              "proj": 180.3716
             },
             "shrink": {
               "actual": 113.96,
@@ -2294,9 +2305,9 @@
         "n": 425,
         "resultSha256": "509e0ae13a2fa35f05992d70fcf8d2145c5ee79fa2e37091dfe52aac250a1730"
       },
-      "resultSha256": "d6140bd4c2bcf0f4e20960119950e300b2e9098ba1dc6340885c6cfafd4dbc7b",
+      "resultSha256": "69d273903fb778eddf78537d0dec3b1cc9ba4f065daa497d3169a22b79f45b13",
       "role": "development",
-      "runId": "run-9bb334f25c8c50d0",
+      "runId": "run-9e1e548b6e174b76",
       "season": 2024,
       "summary": {
         "commonWeeks": [
@@ -2485,15 +2496,15 @@
           },
           {
             "label": "Opponent-adjusted trail",
-            "lineupActualMean": 126.541,
-            "lineupActualMedian": 126,
-            "lineupProjMean": 140.308,
+            "lineupActualMean": 133.244,
+            "lineupActualMedian": 133.76,
+            "lineupProjMean": 197.869,
             "model": "opp",
             "playerError": {
-              "bias": -3.305,
-              "mae": 6.469,
+              "bias": -0.189,
+              "mae": 6.411,
               "n": 1495,
-              "rmse": 8.669
+              "rmse": 8.378
             },
             "solver": "exact-dp",
             "validWeeks": 17,
@@ -2626,17 +2637,17 @@
           {
             "baseline": "trail",
             "interval": {
-              "high": 5.102,
+              "high": 18.565,
               "level": 0.95,
-              "low": -8.781
+              "low": -8.913
             },
             "losses": 8,
-            "meanDiff": -2.425,
-            "medianDiff": 0,
+            "meanDiff": 4.278,
+            "medianDiff": 0.1,
             "model": "opp",
             "n": 17,
-            "ties": 4,
-            "wins": 5
+            "ties": 0,
+            "wins": 9
           },
           {
             "baseline": "trail",
@@ -2681,7 +2692,7 @@
         "players": 114,
         "rule": "synthetic-prior-season@1",
         "season": 2024,
-        "sha256": "be9a19bb2ada6906fc6c0eeef5d8d65193f6ab1796f4679805eb1fe56a4754ca"
+        "sha256": "4ee04f01f8fd8c307bfc6a37aebc256e5299ad6e5f005b200db959fe4b02df40"
       },
       "weekly": [
         {
@@ -2703,8 +2714,8 @@
               "proj": 235.78
             },
             "opp": {
-              "actual": 118.76,
-              "proj": 183.7214
+              "actual": 133.76,
+              "proj": 255.4919
             },
             "shrink": {
               "actual": 98.76,
@@ -2749,8 +2760,8 @@
               "proj": 206.81
             },
             "opp": {
-              "actual": 103.18,
-              "proj": 163.3322
+              "actual": 82.18,
+              "proj": 222.3139
             },
             "shrink": {
               "actual": 126.68,
@@ -2795,8 +2806,8 @@
               "proj": 196.0198
             },
             "opp": {
-              "actual": 88.5,
-              "proj": 152.3868
+              "actual": 118.9,
+              "proj": 211.9791
             },
             "shrink": {
               "actual": 106.3,
@@ -2841,8 +2852,8 @@
               "proj": 197.33
             },
             "opp": {
-              "actual": 144.62,
-              "proj": 141.1326
+              "actual": 114.62,
+              "proj": 192.1861
             },
             "shrink": {
               "actual": 158.32,
@@ -2887,8 +2898,8 @@
               "proj": 203.6066
             },
             "opp": {
-              "actual": 136.92,
-              "proj": 141.2963
+              "actual": 145.22,
+              "proj": 189.6671
             },
             "shrink": {
               "actual": 125.72,
@@ -2933,8 +2944,8 @@
               "proj": 196.7433
             },
             "opp": {
-              "actual": 150.94,
-              "proj": 146.9043
+              "actual": 147.54,
+              "proj": 206.1257
             },
             "shrink": {
               "actual": 148.64,
@@ -2979,8 +2990,8 @@
               "proj": 195.6267
             },
             "opp": {
-              "actual": 115.72,
-              "proj": 140.3787
+              "actual": 93.72,
+              "proj": 199.4002
             },
             "shrink": {
               "actual": 105.66,
@@ -3025,8 +3036,8 @@
               "proj": 188.2534
             },
             "opp": {
-              "actual": 132.94,
-              "proj": 126.3419
+              "actual": 167.3,
+              "proj": 187.8553
             },
             "shrink": {
               "actual": 129,
@@ -3071,8 +3082,8 @@
               "proj": 195.9667
             },
             "opp": {
-              "actual": 101.22,
-              "proj": 135.6472
+              "actual": 146.2,
+              "proj": 204.3092
             },
             "shrink": {
               "actual": 109.2,
@@ -3117,8 +3128,8 @@
               "proj": 202.3732
             },
             "opp": {
-              "actual": 126,
-              "proj": 138.2321
+              "actual": 131.5,
+              "proj": 189.1886
             },
             "shrink": {
               "actual": 155.48,
@@ -3163,8 +3174,8 @@
               "proj": 192.0401
             },
             "opp": {
-              "actual": 159.68,
-              "proj": 131.5376
+              "actual": 145.18,
+              "proj": 182.6684
             },
             "shrink": {
               "actual": 151.68,
@@ -3209,8 +3220,8 @@
               "proj": 208.9934
             },
             "opp": {
-              "actual": 105.32,
-              "proj": 135.6239
+              "actual": 126.02,
+              "proj": 195.0171
             },
             "shrink": {
               "actual": 113.08,
@@ -3255,8 +3266,8 @@
               "proj": 212.84
             },
             "opp": {
-              "actual": 168.02,
-              "proj": 126.9927
+              "actual": 164.82,
+              "proj": 186.6855
             },
             "shrink": {
               "actual": 155.12,
@@ -3301,8 +3312,8 @@
               "proj": 226.9933
             },
             "opp": {
-              "actual": 117,
-              "proj": 133.1259
+              "actual": 117.1,
+              "proj": 185.7372
             },
             "shrink": {
               "actual": 117,
@@ -3347,8 +3358,8 @@
               "proj": 223.2333
             },
             "opp": {
-              "actual": 106.26,
-              "proj": 132.7839
+              "actual": 167.26,
+              "proj": 184.3805
             },
             "shrink": {
               "actual": 121.58,
@@ -3393,8 +3404,8 @@
               "proj": 227.9133
             },
             "opp": {
-              "actual": 149.12,
-              "proj": 127.3897
+              "actual": 148.82,
+              "proj": 180.7985
             },
             "shrink": {
               "actual": 160.02,
@@ -3439,8 +3450,8 @@
               "proj": 216.68
             },
             "opp": {
-              "actual": 127,
-              "proj": 128.4126
+              "actual": 115,
+              "proj": 189.9668
             },
             "shrink": {
               "actual": 143.98,
@@ -3481,9 +3492,9 @@
         "n": 409,
         "resultSha256": "c2e07103894611171d9931921c8fabf46c8c78f3ef908c56db98e7a4ddc09e8e"
       },
-      "resultSha256": "e7ae6f1606ac34cdbcdec57fbaf0fe3376d76848fb5339bf145b92d5d2562b03",
+      "resultSha256": "4cccb2e9ab678d6f4e33a34c64ba2ec4dfe93c23c8d72671019be093ba80efdb",
       "role": "retrospective",
-      "runId": "run-2a18ed7b1af9319f",
+      "runId": "run-00f774f034aafef8",
       "season": 2025,
       "summary": {
         "commonWeeks": [
@@ -3672,15 +3683,15 @@
           },
           {
             "label": "Opponent-adjusted trail",
-            "lineupActualMean": 147.396,
-            "lineupActualMedian": 154.54,
-            "lineupProjMean": 144.439,
+            "lineupActualMean": 143.424,
+            "lineupActualMedian": 144.64,
+            "lineupProjMean": 197.543,
             "model": "opp",
             "playerError": {
-              "bias": -2.977,
-              "mae": 6.27,
+              "bias": 0.041,
+              "mae": 6.318,
               "n": 1522,
-              "rmse": 8.571
+              "rmse": 8.284
             },
             "solver": "exact-dp",
             "validWeeks": 17,
@@ -3813,17 +3824,17 @@
           {
             "baseline": "trail",
             "interval": {
-              "high": 15.402,
+              "high": 19.283,
               "level": 0.95,
-              "low": 0.493
+              "low": -10.59
             },
-            "losses": 5,
-            "meanDiff": 7.647,
-            "medianDiff": 7,
+            "losses": 9,
+            "meanDiff": 3.674,
+            "medianDiff": -1,
             "model": "opp",
             "n": 17,
-            "ties": 1,
-            "wins": 11
+            "ties": 0,
+            "wins": 8
           },
           {
             "baseline": "trail",
@@ -3868,7 +3879,7 @@
         "players": 114,
         "rule": "synthetic-prior-season@1",
         "season": 2025,
-        "sha256": "f1f1f4bf09c212e761e2def3ff3522c9cf48c03e9a7f659fb7ed129e5940e3ef"
+        "sha256": "90ff6c40780bd074b4eb16051034cbf41490236ffda62a38ce09896d6cdaeda4"
       },
       "weekly": [
         {
@@ -3890,8 +3901,8 @@
               "proj": 217.16
             },
             "opp": {
-              "actual": 122.52,
-              "proj": 187.043
+              "actual": 101.12,
+              "proj": 239.6714
             },
             "shrink": {
               "actual": 113.72,
@@ -3936,8 +3947,8 @@
               "proj": 198.38
             },
             "opp": {
-              "actual": 129.82,
-              "proj": 154.6809
+              "actual": 137.42,
+              "proj": 216.9882
             },
             "shrink": {
               "actual": 143.82,
@@ -3982,8 +3993,8 @@
               "proj": 192.2932
             },
             "opp": {
-              "actual": 173.5,
-              "proj": 141.0986
+              "actual": 153.3,
+              "proj": 191.7889
             },
             "shrink": {
               "actual": 164.78,
@@ -4028,8 +4039,8 @@
               "proj": 198.9667
             },
             "opp": {
-              "actual": 154.54,
-              "proj": 142.8462
+              "actual": 101.44,
+              "proj": 193.0207
             },
             "shrink": {
               "actual": 149.02,
@@ -4074,8 +4085,8 @@
               "proj": 195.0466
             },
             "opp": {
-              "actual": 173.36,
-              "proj": 142.0017
+              "actual": 157.1,
+              "proj": 195.8008
             },
             "shrink": {
               "actual": 171,
@@ -4120,8 +4131,8 @@
               "proj": 205.4334
             },
             "opp": {
-              "actual": 164.94,
-              "proj": 144.3425
+              "actual": 148.24,
+              "proj": 188.2308
             },
             "shrink": {
               "actual": 178.44,
@@ -4166,8 +4177,8 @@
               "proj": 219.68
             },
             "opp": {
-              "actual": 156.96,
-              "proj": 141.9318
+              "actual": 171.56,
+              "proj": 210.2249
             },
             "shrink": {
               "actual": 142.86,
@@ -4212,8 +4223,8 @@
               "proj": 217.2433
             },
             "opp": {
-              "actual": 161.56,
-              "proj": 147.4557
+              "actual": 138.26,
+              "proj": 201.107
             },
             "shrink": {
               "actual": 145.6,
@@ -4258,8 +4269,8 @@
               "proj": 208.7533
             },
             "opp": {
-              "actual": 172.84,
-              "proj": 142.4639
+              "actual": 208.3,
+              "proj": 203.0308
             },
             "shrink": {
               "actual": 165.84,
@@ -4304,8 +4315,8 @@
               "proj": 201.4266
             },
             "opp": {
-              "actual": 147.34,
-              "proj": 138.2775
+              "actual": 92.34,
+              "proj": 189.1483
             },
             "shrink": {
               "actual": 157.24,
@@ -4350,8 +4361,8 @@
               "proj": 218.9468
             },
             "opp": {
-              "actual": 165.46,
-              "proj": 142.6039
+              "actual": 218.06,
+              "proj": 197.0765
             },
             "shrink": {
               "actual": 129.62,
@@ -4396,8 +4407,8 @@
               "proj": 216.8466
             },
             "opp": {
-              "actual": 137.72,
-              "proj": 146.0481
+              "actual": 108.72,
+              "proj": 192.0355
             },
             "shrink": {
               "actual": 123.04,
@@ -4442,8 +4453,8 @@
               "proj": 202.9199
             },
             "opp": {
-              "actual": 123.56,
-              "proj": 134.6347
+              "actual": 144.64,
+              "proj": 184.4777
             },
             "shrink": {
               "actual": 126.7,
@@ -4488,8 +4499,8 @@
               "proj": 215.6268
             },
             "opp": {
-              "actual": 134.42,
-              "proj": 137.3202
+              "actual": 142.02,
+              "proj": 189.9437
             },
             "shrink": {
               "actual": 113.32,
@@ -4534,8 +4545,8 @@
               "proj": 205.4934
             },
             "opp": {
-              "actual": 191.2,
-              "proj": 139.5313
+              "actual": 155.86,
+              "proj": 190.8198
             },
             "shrink": {
               "actual": 140.9,
@@ -4580,8 +4591,8 @@
               "proj": 205.34
             },
             "opp": {
-              "actual": 119.7,
-              "proj": 139.166
+              "actual": 163.02,
+              "proj": 189.9756
             },
             "shrink": {
               "actual": 125.2,
@@ -4626,8 +4637,8 @@
               "proj": 219.0068
             },
             "opp": {
-              "actual": 76.3,
-              "proj": 134.0099
+              "actual": 96.8,
+              "proj": 184.8892
             },
             "shrink": {
               "actual": 102.2,
@@ -4663,9 +4674,9 @@
   "shippedSlate": {
     "cap": 50000,
     "qbLag": null,
-    "resultSha256": "e49bf5d9951b8e93ab5bd4ede7d5777ca09898f8d63ef70e14b674090125378b",
+    "resultSha256": "7c79dfca98f8b3716a4742dd1571a7dd2f7ac926a91b554881b88644c4bdb073",
     "role": "retrospective",
-    "runId": "run-541d16551040108e",
+    "runId": "run-51125c0f6f553bcb",
     "season": 2025,
     "summary": {
       "commonWeeks": [
@@ -4854,15 +4865,15 @@
         },
         {
           "label": "Opponent-adjusted trail",
-          "lineupActualMean": 129.769,
-          "lineupActualMedian": 127.98,
-          "lineupProjMean": 138.421,
+          "lineupActualMean": 122.653,
+          "lineupActualMedian": 121.82,
+          "lineupProjMean": 195.767,
           "model": "opp",
           "playerError": {
-            "bias": -4.18,
-            "mae": 7.122,
+            "bias": -0.868,
+            "mae": 6.856,
             "n": 1552,
-            "rmse": 9.47
+            "rmse": 8.9
           },
           "solver": "exact-dp",
           "validWeeks": 17,
@@ -4995,16 +5006,16 @@
         {
           "baseline": "trail",
           "interval": {
-            "high": 11.633,
+            "high": 8.678,
             "level": 0.95,
-            "low": -5.574
+            "low": -16.792
           },
-          "losses": 6,
-          "meanDiff": 3.025,
-          "medianDiff": 0,
+          "losses": 9,
+          "meanDiff": -4.092,
+          "medianDiff": -0.1,
           "model": "opp",
           "n": 17,
-          "ties": 3,
+          "ties": 0,
           "wins": 8
         },
         {
@@ -5072,8 +5083,8 @@
             "proj": 217.86
           },
           "opp": {
-            "actual": 119.62,
-            "proj": 189.865
+            "actual": 121.82,
+            "proj": 248.0068
           },
           "shrink": {
             "actual": 114.62,
@@ -5118,8 +5129,8 @@
             "proj": 197.31
           },
           "opp": {
-            "actual": 119.72,
-            "proj": 159.6133
+            "actual": 141.12,
+            "proj": 238.0778
           },
           "shrink": {
             "actual": 137.92,
@@ -5164,8 +5175,8 @@
             "proj": 185.2666
           },
           "opp": {
-            "actual": 161.38,
-            "proj": 140.806
+            "actual": 141.68,
+            "proj": 195.7435
           },
           "shrink": {
             "actual": 155.18,
@@ -5210,8 +5221,8 @@
             "proj": 198.1467
           },
           "opp": {
-            "actual": 110.14,
-            "proj": 138.5809
+            "actual": 77.24,
+            "proj": 196.2159
           },
           "shrink": {
             "actual": 135.9,
@@ -5256,8 +5267,8 @@
             "proj": 196.3599
           },
           "opp": {
-            "actual": 90.46,
-            "proj": 136.8116
+            "actual": 135.52,
+            "proj": 198.6272
           },
           "shrink": {
             "actual": 100.82,
@@ -5302,8 +5313,8 @@
             "proj": 205.9267
           },
           "opp": {
-            "actual": 141.34,
-            "proj": 136.5211
+            "actual": 156.54,
+            "proj": 190.8003
           },
           "shrink": {
             "actual": 174.64,
@@ -5348,8 +5359,8 @@
             "proj": 216.8267
           },
           "opp": {
-            "actual": 172.06,
-            "proj": 141.4614
+            "actual": 181.26,
+            "proj": 201.5636
           },
           "shrink": {
             "actual": 161.36,
@@ -5394,8 +5405,8 @@
             "proj": 211.3834
           },
           "opp": {
-            "actual": 127.98,
-            "proj": 139.5484
+            "actual": 121.68,
+            "proj": 189.0487
           },
           "shrink": {
             "actual": 142.38,
@@ -5440,8 +5451,8 @@
             "proj": 208.22
           },
           "opp": {
-            "actual": 171.7,
-            "proj": 133.7497
+            "actual": 179.04,
+            "proj": 198.4708
           },
           "shrink": {
             "actual": 169.02,
@@ -5486,8 +5497,8 @@
             "proj": 204.9799
           },
           "opp": {
-            "actual": 132.54,
-            "proj": 130.5791
+            "actual": 87.84,
+            "proj": 188.3296
           },
           "shrink": {
             "actual": 129.7,
@@ -5532,8 +5543,8 @@
             "proj": 215.58
           },
           "opp": {
-            "actual": 141.26,
-            "proj": 135.8953
+            "actual": 135.26,
+            "proj": 187.8038
           },
           "shrink": {
             "actual": 148.86,
@@ -5578,8 +5589,8 @@
             "proj": 219.38
           },
           "opp": {
-            "actual": 158.02,
-            "proj": 135.0605
+            "actual": 110.92,
+            "proj": 186.2776
           },
           "shrink": {
             "actual": 109.3,
@@ -5624,8 +5635,8 @@
             "proj": 211.1266
           },
           "opp": {
-            "actual": 134.36,
-            "proj": 131.4535
+            "actual": 105.84,
+            "proj": 184.7222
           },
           "shrink": {
             "actual": 118,
@@ -5670,8 +5681,8 @@
             "proj": 212.8334
           },
           "opp": {
-            "actual": 114.34,
-            "proj": 127.0459
+            "actual": 94.1,
+            "proj": 178.5823
           },
           "shrink": {
             "actual": 86.26,
@@ -5716,8 +5727,8 @@
             "proj": 206.9401
           },
           "opp": {
-            "actual": 126.66,
-            "proj": 129.1447
+            "actual": 118.66,
+            "proj": 184.4995
           },
           "shrink": {
             "actual": 116.4,
@@ -5762,8 +5773,8 @@
             "proj": 206.2066
           },
           "opp": {
-            "actual": 92.3,
-            "proj": 125.4959
+            "actual": 125.18,
+            "proj": 183.7766
           },
           "shrink": {
             "actual": 86.3,
@@ -5808,8 +5819,8 @@
             "proj": 204.7732
           },
           "opp": {
-            "actual": 92.2,
-            "proj": 121.5237
+            "actual": 51.4,
+            "proj": 177.4921
           },
           "shrink": {
             "actual": 51.5,

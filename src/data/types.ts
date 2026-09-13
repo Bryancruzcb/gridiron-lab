@@ -585,4 +585,57 @@ export type StudyInputManifestFile = {
   inputs: (StudyInputManifestEntry & { usedBy: string[] })[];
 };
 
+/** Availability, inactive lineup slots and solver records of one run, counted from its week records. */
+export type StudyRunFacts = {
+  season: number;
+  role: StudyRole;
+  runId: string;
+  resultSha256: string;
+  universe: StudyUniverseRef;
+  commonWeeks: number;
+  excludedWeeks: number;
+  /** Slate sizes over the common weeks. */
+  slateSize: { min: number; max: number } | null;
+  /** Off-slate player-weeks over the common weeks, by reason. */
+  offSlate: Record<StudyOffSlate["reason"], number>;
+  /** Slate player-weeks over the common weeks, by availability. */
+  slateStatuses: Record<string, number>;
+  baselineModel: string;
+  /** Inactive slots (each counted as 0) in the baseline model's lineups over the common weeks. */
+  baselineInactiveSlots: number;
+  /** Model-weeks over the whole range, keyed `${requested}/${optimality, or the failure status}`. */
+  solverRecords: Record<string, number>;
+};
+
+/** An exploratory EWMA sweep: one run, or several seasons pooled. */
+export type StudySweepFacts = {
+  seasons: number[];
+  runIds: string[];
+  universeRule: StudyUniverse["rule"];
+  lookAhead: boolean;
+  commonWeeks: number;
+  baseline: { model: string; lineupMean: number };
+  points: { alpha: number; lineupMean: number; mae: number | null }[];
+  /** Highest lineup mean, ties to the lower alpha. Never a preselected setting. */
+  best: { alpha: number; lineupMean: number };
+};
+
+/** docs/study/study-facts.json, written by `npm run study:build -- facts` from written runs. */
+export type StudyFactsFile = {
+  schemaVersion: "gridiron-lab-study-facts@1";
+  runs: StudyRunFacts[];
+  shippedSlate: StudyRunFacts | null;
+  pooledBaselineInactiveSlots: { seasons: number[]; commonWeeks: number; slots: number };
+  /** Players of the shipped slate that are also in the clean pool of the same season, by id. */
+  universeOverlap: {
+    season: number;
+    shipped: StudyUniverseRef;
+    clean: StudyUniverseRef;
+    shared: number;
+    byPosition: Record<FantasyPos, number>;
+  } | null;
+  sweeps: StudySweepFacts[];
+  resultSha256: string;
+};
+
 

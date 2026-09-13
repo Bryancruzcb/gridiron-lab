@@ -1,0 +1,676 @@
+{
+  "pooledBaselineInactiveSlots": {
+    "commonWeeks": 51,
+    "seasons": [
+      2023,
+      2024,
+      2025
+    ],
+    "slots": 49
+  },
+  "resultSha256": "884fbd8bb391263c34a5bf35ee7bd9cb69754da0184b6935215c584acc9d2851",
+  "runs": [
+    {
+      "baselineInactiveSlots": 15,
+      "baselineModel": "trail",
+      "commonWeeks": 17,
+      "excludedWeeks": 0,
+      "offSlate": {
+        "bye": 114,
+        "no-history": 56,
+        "unknown-identity": 17
+      },
+      "resultSha256": "a9b7aed986ed1406b1331acd320f9a6a31686902edf6326b29244aa9f411735a",
+      "role": "development",
+      "runId": "run-85628408012ca98e",
+      "season": 2023,
+      "slateSize": {
+        "max": 113,
+        "min": 88
+      },
+      "slateStatuses": {
+        "inactive": 251,
+        "played": 1500
+      },
+      "solverRecords": {
+        "exact-dp/proven": 136,
+        "greedy-proj/heuristic": 17,
+        "greedy-value/heuristic": 17
+      },
+      "universe": {
+        "id": "synthetic-prior-season@1:2023",
+        "lookAhead": false,
+        "players": 114,
+        "rule": "synthetic-prior-season@1",
+        "season": 2023,
+        "sha256": "efb986f3f509274b85c7028a9f1162db5859d8485d7e490ea701f60c474d449c"
+      }
+    },
+    {
+      "baselineInactiveSlots": 21,
+      "baselineModel": "trail",
+      "commonWeeks": 17,
+      "excludedWeeks": 0,
+      "offSlate": {
+        "bye": 113,
+        "no-history": 28,
+        "unknown-identity": 17
+      },
+      "resultSha256": "69d273903fb778eddf78537d0dec3b1cc9ba4f065daa497d3169a22b79f45b13",
+      "role": "development",
+      "runId": "run-9e1e548b6e174b76",
+      "season": 2024,
+      "slateSize": {
+        "max": 113,
+        "min": 91
+      },
+      "slateStatuses": {
+        "inactive": 285,
+        "played": 1495
+      },
+      "solverRecords": {
+        "exact-dp/proven": 136,
+        "greedy-proj/heuristic": 17,
+        "greedy-value/heuristic": 17
+      },
+      "universe": {
+        "id": "synthetic-prior-season@1:2024",
+        "lookAhead": false,
+        "players": 114,
+        "rule": "synthetic-prior-season@1",
+        "season": 2024,
+        "sha256": "4ee04f01f8fd8c307bfc6a37aebc256e5299ad6e5f005b200db959fe4b02df40"
+      }
+    },
+    {
+      "baselineInactiveSlots": 13,
+      "baselineModel": "trail",
+      "commonWeeks": 17,
+      "excludedWeeks": 0,
+      "offSlate": {
+        "bye": 112,
+        "no-history": 16,
+        "unknown-identity": 17
+      },
+      "resultSha256": "4cccb2e9ab678d6f4e33a34c64ba2ec4dfe93c23c8d72671019be093ba80efdb",
+      "role": "retrospective",
+      "runId": "run-00f774f034aafef8",
+      "season": 2025,
+      "slateSize": {
+        "max": 113,
+        "min": 89
+      },
+      "slateStatuses": {
+        "inactive": 271,
+        "played": 1522
+      },
+      "solverRecords": {
+        "exact-dp/proven": 136,
+        "greedy-proj/heuristic": 17,
+        "greedy-value/heuristic": 17
+      },
+      "universe": {
+        "id": "synthetic-prior-season@1:2025",
+        "lookAhead": false,
+        "players": 114,
+        "rule": "synthetic-prior-season@1",
+        "season": 2025,
+        "sha256": "90ff6c40780bd074b4eb16051034cbf41490236ffda62a38ce09896d6cdaeda4"
+      }
+    }
+  ],
+  "schemaVersion": "gridiron-lab-study-facts@1",
+  "shippedSlate": {
+    "baselineInactiveSlots": 11,
+    "baselineModel": "trail",
+    "commonWeeks": 17,
+    "excludedWeeks": 0,
+    "offSlate": {
+      "bye": 114,
+      "no-history": 25,
+      "unknown-identity": 0
+    },
+    "resultSha256": "7c79dfca98f8b3716a4742dd1571a7dd2f7ac926a91b554881b88644c4bdb073",
+    "role": "retrospective",
+    "runId": "run-51125c0f6f553bcb",
+    "season": 2025,
+    "slateSize": {
+      "max": 114,
+      "min": 87
+    },
+    "slateStatuses": {
+      "inactive": 247,
+      "played": 1552
+    },
+    "solverRecords": {
+      "exact-dp/proven": 136,
+      "greedy-proj/heuristic": 17,
+      "greedy-value/heuristic": 17
+    },
+    "universe": {
+      "id": "legacy-fantasy-json",
+      "lookAhead": true,
+      "players": 114,
+      "rule": "legacy-fantasy-json",
+      "season": 2025,
+      "sha256": "666a3b3de6346af7edae36a0ddde28a44d5f103551de7aeae1d4d54317a868da"
+    }
+  },
+  "sweeps": [
+    {
+      "baseline": {
+        "lineupMean": 131.933,
+        "model": "trail"
+      },
+      "best": {
+        "alpha": 0.4,
+        "lineupMean": 145.555
+      },
+      "commonWeeks": 17,
+      "lookAhead": false,
+      "points": [
+        {
+          "alpha": 0.05,
+          "lineupMean": 117.889,
+          "mae": 7.081
+        },
+        {
+          "alpha": 0.1,
+          "lineupMean": 130.625,
+          "mae": 6.575
+        },
+        {
+          "alpha": 0.15,
+          "lineupMean": 131.066,
+          "mae": 6.373
+        },
+        {
+          "alpha": 0.2,
+          "lineupMean": 136.62,
+          "mae": 6.291
+        },
+        {
+          "alpha": 0.25,
+          "lineupMean": 139.416,
+          "mae": 6.266
+        },
+        {
+          "alpha": 0.3,
+          "lineupMean": 139.349,
+          "mae": 6.279
+        },
+        {
+          "alpha": 0.35,
+          "lineupMean": 145.369,
+          "mae": 6.313
+        },
+        {
+          "alpha": 0.4,
+          "lineupMean": 145.555,
+          "mae": 6.358
+        },
+        {
+          "alpha": 0.45,
+          "lineupMean": 144.804,
+          "mae": 6.415
+        },
+        {
+          "alpha": 0.5,
+          "lineupMean": 141.798,
+          "mae": 6.486
+        },
+        {
+          "alpha": 0.55,
+          "lineupMean": 139.241,
+          "mae": 6.57
+        },
+        {
+          "alpha": 0.6,
+          "lineupMean": 135.511,
+          "mae": 6.664
+        },
+        {
+          "alpha": 0.65,
+          "lineupMean": 131.573,
+          "mae": 6.765
+        },
+        {
+          "alpha": 0.7,
+          "lineupMean": 132.085,
+          "mae": 6.873
+        },
+        {
+          "alpha": 0.75,
+          "lineupMean": 131.328,
+          "mae": 6.99
+        },
+        {
+          "alpha": 0.8,
+          "lineupMean": 130.681,
+          "mae": 7.119
+        },
+        {
+          "alpha": 0.85,
+          "lineupMean": 128.352,
+          "mae": 7.259
+        },
+        {
+          "alpha": 0.9,
+          "lineupMean": 125.192,
+          "mae": 7.412
+        },
+        {
+          "alpha": 0.95,
+          "lineupMean": 127.982,
+          "mae": 7.579
+        },
+        {
+          "alpha": 1,
+          "lineupMean": 130.239,
+          "mae": 7.759
+        }
+      ],
+      "runIds": [
+        "run-8a32276580494753"
+      ],
+      "seasons": [
+        2023
+      ],
+      "universeRule": "synthetic-prior-season@1"
+    },
+    {
+      "baseline": {
+        "lineupMean": 128.966,
+        "model": "trail"
+      },
+      "best": {
+        "alpha": 0.3,
+        "lineupMean": 139.394
+      },
+      "commonWeeks": 17,
+      "lookAhead": false,
+      "points": [
+        {
+          "alpha": 0.05,
+          "lineupMean": 113.267,
+          "mae": 6.766
+        },
+        {
+          "alpha": 0.1,
+          "lineupMean": 126.602,
+          "mae": 6.422
+        },
+        {
+          "alpha": 0.15,
+          "lineupMean": 127.646,
+          "mae": 6.256
+        },
+        {
+          "alpha": 0.2,
+          "lineupMean": 134.886,
+          "mae": 6.191
+        },
+        {
+          "alpha": 0.25,
+          "lineupMean": 138.626,
+          "mae": 6.188
+        },
+        {
+          "alpha": 0.3,
+          "lineupMean": 139.394,
+          "mae": 6.214
+        },
+        {
+          "alpha": 0.35,
+          "lineupMean": 137.824,
+          "mae": 6.263
+        },
+        {
+          "alpha": 0.4,
+          "lineupMean": 137.468,
+          "mae": 6.325
+        },
+        {
+          "alpha": 0.45,
+          "lineupMean": 138.906,
+          "mae": 6.395
+        },
+        {
+          "alpha": 0.5,
+          "lineupMean": 138.42,
+          "mae": 6.475
+        },
+        {
+          "alpha": 0.55,
+          "lineupMean": 134.508,
+          "mae": 6.564
+        },
+        {
+          "alpha": 0.6,
+          "lineupMean": 136.088,
+          "mae": 6.659
+        },
+        {
+          "alpha": 0.65,
+          "lineupMean": 132.532,
+          "mae": 6.773
+        },
+        {
+          "alpha": 0.7,
+          "lineupMean": 137.149,
+          "mae": 6.899
+        },
+        {
+          "alpha": 0.75,
+          "lineupMean": 138.038,
+          "mae": 7.031
+        },
+        {
+          "alpha": 0.8,
+          "lineupMean": 136.767,
+          "mae": 7.169
+        },
+        {
+          "alpha": 0.85,
+          "lineupMean": 135.204,
+          "mae": 7.315
+        },
+        {
+          "alpha": 0.9,
+          "lineupMean": 133.351,
+          "mae": 7.47
+        },
+        {
+          "alpha": 0.95,
+          "lineupMean": 132.791,
+          "mae": 7.632
+        },
+        {
+          "alpha": 1,
+          "lineupMean": 130.38,
+          "mae": 7.807
+        }
+      ],
+      "runIds": [
+        "run-d92c8133cce6a922"
+      ],
+      "seasons": [
+        2024
+      ],
+      "universeRule": "synthetic-prior-season@1"
+    },
+    {
+      "baseline": {
+        "lineupMean": 139.749,
+        "model": "trail"
+      },
+      "best": {
+        "alpha": 0.2,
+        "lineupMean": 150.272
+      },
+      "commonWeeks": 17,
+      "lookAhead": false,
+      "points": [
+        {
+          "alpha": 0.05,
+          "lineupMean": 144.694,
+          "mae": 6.651
+        },
+        {
+          "alpha": 0.1,
+          "lineupMean": 146.129,
+          "mae": 6.347
+        },
+        {
+          "alpha": 0.15,
+          "lineupMean": 147.282,
+          "mae": 6.234
+        },
+        {
+          "alpha": 0.2,
+          "lineupMean": 150.272,
+          "mae": 6.21
+        },
+        {
+          "alpha": 0.25,
+          "lineupMean": 149.255,
+          "mae": 6.223
+        },
+        {
+          "alpha": 0.3,
+          "lineupMean": 144.596,
+          "mae": 6.26
+        },
+        {
+          "alpha": 0.35,
+          "lineupMean": 148.885,
+          "mae": 6.311
+        },
+        {
+          "alpha": 0.4,
+          "lineupMean": 148.732,
+          "mae": 6.37
+        },
+        {
+          "alpha": 0.45,
+          "lineupMean": 146.831,
+          "mae": 6.44
+        },
+        {
+          "alpha": 0.5,
+          "lineupMean": 142.919,
+          "mae": 6.519
+        },
+        {
+          "alpha": 0.55,
+          "lineupMean": 138.772,
+          "mae": 6.604
+        },
+        {
+          "alpha": 0.6,
+          "lineupMean": 139.746,
+          "mae": 6.698
+        },
+        {
+          "alpha": 0.65,
+          "lineupMean": 139.473,
+          "mae": 6.801
+        },
+        {
+          "alpha": 0.7,
+          "lineupMean": 138.798,
+          "mae": 6.914
+        },
+        {
+          "alpha": 0.75,
+          "lineupMean": 137.464,
+          "mae": 7.036
+        },
+        {
+          "alpha": 0.8,
+          "lineupMean": 134.575,
+          "mae": 7.165
+        },
+        {
+          "alpha": 0.85,
+          "lineupMean": 136.969,
+          "mae": 7.306
+        },
+        {
+          "alpha": 0.9,
+          "lineupMean": 137.388,
+          "mae": 7.453
+        },
+        {
+          "alpha": 0.95,
+          "lineupMean": 134.712,
+          "mae": 7.612
+        },
+        {
+          "alpha": 1,
+          "lineupMean": 133.848,
+          "mae": 7.781
+        }
+      ],
+      "runIds": [
+        "run-01bbdb13651514c8"
+      ],
+      "seasons": [
+        2025
+      ],
+      "universeRule": "synthetic-prior-season@1"
+    },
+    {
+      "baseline": {
+        "lineupMean": 133.549,
+        "model": "trail"
+      },
+      "best": {
+        "alpha": 0.35,
+        "lineupMean": 144.026
+      },
+      "commonWeeks": 51,
+      "lookAhead": false,
+      "points": [
+        {
+          "alpha": 0.05,
+          "lineupMean": 125.284,
+          "mae": 6.832
+        },
+        {
+          "alpha": 0.1,
+          "lineupMean": 134.452,
+          "mae": 6.447
+        },
+        {
+          "alpha": 0.15,
+          "lineupMean": 135.331,
+          "mae": 6.287
+        },
+        {
+          "alpha": 0.2,
+          "lineupMean": 140.593,
+          "mae": 6.231
+        },
+        {
+          "alpha": 0.25,
+          "lineupMean": 142.433,
+          "mae": 6.226
+        },
+        {
+          "alpha": 0.3,
+          "lineupMean": 141.113,
+          "mae": 6.251
+        },
+        {
+          "alpha": 0.35,
+          "lineupMean": 144.026,
+          "mae": 6.296
+        },
+        {
+          "alpha": 0.4,
+          "lineupMean": 143.918,
+          "mae": 6.351
+        },
+        {
+          "alpha": 0.45,
+          "lineupMean": 143.513,
+          "mae": 6.417
+        },
+        {
+          "alpha": 0.5,
+          "lineupMean": 141.045,
+          "mae": 6.493
+        },
+        {
+          "alpha": 0.55,
+          "lineupMean": 137.507,
+          "mae": 6.579
+        },
+        {
+          "alpha": 0.6,
+          "lineupMean": 137.115,
+          "mae": 6.674
+        },
+        {
+          "alpha": 0.65,
+          "lineupMean": 134.526,
+          "mae": 6.78
+        },
+        {
+          "alpha": 0.7,
+          "lineupMean": 136.011,
+          "mae": 6.895
+        },
+        {
+          "alpha": 0.75,
+          "lineupMean": 135.61,
+          "mae": 7.019
+        },
+        {
+          "alpha": 0.8,
+          "lineupMean": 134.008,
+          "mae": 7.151
+        },
+        {
+          "alpha": 0.85,
+          "lineupMean": 133.508,
+          "mae": 7.293
+        },
+        {
+          "alpha": 0.9,
+          "lineupMean": 131.977,
+          "mae": 7.445
+        },
+        {
+          "alpha": 0.95,
+          "lineupMean": 131.828,
+          "mae": 7.607
+        },
+        {
+          "alpha": 1,
+          "lineupMean": 131.489,
+          "mae": 7.782
+        }
+      ],
+      "runIds": [
+        "run-8a32276580494753",
+        "run-d92c8133cce6a922",
+        "run-01bbdb13651514c8"
+      ],
+      "seasons": [
+        2023,
+        2024,
+        2025
+      ],
+      "universeRule": "synthetic-prior-season@1"
+    }
+  ],
+  "universeOverlap": {
+    "byPosition": {
+      "DST": 10,
+      "QB": 8,
+      "RB": 17,
+      "TE": 8,
+      "WR": 23
+    },
+    "clean": {
+      "id": "synthetic-prior-season@1:2025",
+      "lookAhead": false,
+      "players": 114,
+      "rule": "synthetic-prior-season@1",
+      "season": 2025,
+      "sha256": "90ff6c40780bd074b4eb16051034cbf41490236ffda62a38ce09896d6cdaeda4"
+    },
+    "season": 2025,
+    "shared": 66,
+    "shipped": {
+      "id": "legacy-fantasy-json",
+      "lookAhead": true,
+      "players": 114,
+      "rule": "legacy-fantasy-json",
+      "season": 2025,
+      "sha256": "666a3b3de6346af7edae36a0ddde28a44d5f103551de7aeae1d4d54317a868da"
+    }
+  }
+}
