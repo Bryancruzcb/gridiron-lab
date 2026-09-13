@@ -84,34 +84,32 @@
   letter-spacing: 0.02em;
 }
 
-/* Fixed wash the glass frosts. --light-* moves with scroll / pointer. */
+/* Fixed wash the glass frosts. The light and specular glows sit on their own oversized layers
+   (3x the viewport, so a shift never shows an edge) and GlassLight moves them with transforms:
+   following scroll or pointer only re-composites, it never repaints the gradients. Gradient
+   centres are the old viewport positions mapped into layer space: (viewport% + 100%) / 3. */
 .atmosphere {
   position: fixed;
   inset: 0;
   z-index: 0;
+  overflow: hidden;
   pointer-events: none;
+  background: radial-gradient(36vmax 30vmax at 86% 82%, rgb(197 204 214 / 0.12), transparent 50%);
+}
+.atmosphere-light,
+.atmosphere-spec {
+  position: absolute;
+  inset: -100%;
+  will-change: transform;
+}
+.atmosphere-light {
   background:
-    radial-gradient(
-      70vmax 50vmax at var(--light-x) var(--light-y),
-      rgb(30 78 140 / 0.38),
-      transparent 58%
-    ),
-    radial-gradient(
-      48vmax 38vmax at calc(var(--light-x) + 38%) calc(var(--light-y) + 22%),
-      rgb(122 154 122 / 0.18),
-      transparent 55%
-    ),
-    radial-gradient(
-      42vmax 34vmax at calc(var(--light-x) - 18%) calc(var(--light-y) + 48%),
-      rgb(196 80 72 / 0.16),
-      transparent 52%
-    ),
-    radial-gradient(
-      32vmax 26vmax at calc(var(--spec-x) + 8%) calc(var(--spec-y) + 6%),
-      rgb(241 240 234 / 0.22),
-      transparent 48%
-    ),
-    radial-gradient(36vmax 30vmax at 86% 82%, rgb(197 204 214 / 0.12), transparent 50%);
+    radial-gradient(70vmax 50vmax at 40.667% 38%, rgb(30 78 140 / 0.38), transparent 58%),
+    radial-gradient(48vmax 38vmax at 53.333% 45.333%, rgb(122 154 122 / 0.18), transparent 55%),
+    radial-gradient(42vmax 34vmax at 34.667% 54%, rgb(196 80 72 / 0.16), transparent 52%);
+}
+.atmosphere-spec {
+  background: radial-gradient(32vmax 26vmax at 52.667% 38%, rgb(241 240 234 / 0.22), transparent 48%);
 }
 .atmosphere::after {
   content: "";
