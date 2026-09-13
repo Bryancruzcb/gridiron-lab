@@ -7,6 +7,7 @@ import { FeedStatus } from "@/components/DataStatus";
 import { AppShell } from "@/components/layout/AppShell";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
+import { Pager } from "@/components/Pager";
 import { SavedAnalyses, type SavedEvent } from "@/components/SavedAnalyses";
 import { StatTip } from "@/components/StatTip";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ import type { WeekPpr, WeekSkill } from "@/lib/live/types";
 import { actualsByPlayer } from "@/lib/match";
 import { teamNick } from "@/lib/nfl";
 import { scoreLineup, type SolveFailure, type SolveResult, type SolverMethod } from "@/lib/optimizer";
+import { usePaged } from "@/lib/paging";
 import { useSeason } from "@/lib/season-provider";
 import { cn, formatNum } from "@/lib/utils";
 
@@ -164,7 +166,7 @@ type PlayerRowsProps = {
   onBench: (id: string) => void;
 };
 
-/** Memoized so solve status changes re-render the sidebar, not 114 rows of tooltips. */
+/** Memoized so solve status changes re-render the sidebar, not the page of player rows. */
 const PlayerRows = memo(function PlayerRows({ rows, lockedIds, excludedIds, actuals, notFinal, mode, onLock, onBench }: PlayerRowsProps) {
   return (
     <tbody>
@@ -179,7 +181,7 @@ const PlayerRows = memo(function PlayerRows({ rows, lockedIds, excludedIds, actu
             key={p.id}
             data-player-id={p.id}
             className={cn(
-              "border-b border-border/70 [content-visibility:auto] [contain-intrinsic-size:0_52px]",
+              "border-b border-border/70",
               isX && "opacity-40",
               isL && "bg-elevated",
             )}
@@ -325,6 +327,8 @@ function OptimizerLab() {
         return b.proj - a.proj;
       });
   }, [pos, q, mode, actuals]);
+  // One page of the pool at a time; a new position, search or scoring mode starts again at page 1.
+  const paged = usePaged(filtered, 25, `${pos}|${q}|${mode}`);
 
   const shown = lineupView.current ?? lineupView.outdated;
   const outcome = shown?.outcome ?? null;
@@ -428,40 +432,62 @@ function OptimizerLab() {
                 className="sm:max-w-[220px]"
               />
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[620px] text-left text-sm">
-                <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
-                  <tr className="border-y border-border">
-                    <th className="px-4 py-2 font-medium">Player</th>
-                    <th className="px-2 py-2 font-medium">Pos</th>
-                    <th className="px-2 py-2 text-right font-medium">
-                      <StatTip metric="proj" />
-                    </th>
-                    <th className="px-2 py-2 text-right font-medium">
-                      <StatTip metric="actual" />
-                    </th>
-                    <th className="px-2 py-2 text-right font-medium">
-                      <StatTip metric="salary" />
-                    </th>
-                    <th className="px-2 py-2 text-right font-medium">
-                      <StatTip metric="val" />
-                    </th>
-                    <th className="px-3 py-2 text-right font-medium">
-                      <span className="text-[10px] tracking-wide text-subtle uppercase">Lock / bench</span>
-                    </th>
-                  </tr>
-                </thead>
-                <PlayerRows
-                  rows={filtered}
-                  lockedIds={lockedIds}
-                  excludedIds={excludedIds}
-                  actuals={actuals}
-                  notFinal={notFinal}
-                  mode={mode}
-                  onLock={solver.toggleLock}
-                  onBench={solver.toggleExclude}
-                />
-              </table>
+            <div ref={paged.topRef} className="scroll-mt-24">
+              <Pager
+                where="top"
+                noun="players"
+                page={paged.page}
+                pages={paged.pages}
+                pageSize={paged.pageSize}
+                total={paged.total}
+                onPage={paged.goTo}
+                className="px-4 pb-3"
+              />
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[620px] text-left text-sm">
+                  <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+                    <tr className="border-y border-border">
+                      <th className="px-4 py-2 font-medium">Player</th>
+                      <th className="px-2 py-2 font-medium">Pos</th>
+                      <th className="px-2 py-2 text-right font-medium">
+                        <StatTip metric="proj" />
+                      </th>
+                      <th className="px-2 py-2 text-right font-medium">
+                        <StatTip metric="actual" />
+                      </th>
+                      <th className="px-2 py-2 text-right font-medium">
+                        <StatTip metric="salary" />
+                      </th>
+                      <th className="px-2 py-2 text-right font-medium">
+                        <StatTip metric="val" />
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium">
+                        <span className="text-[10px] tracking-wide text-subtle uppercase">Lock / bench</span>
+                      </th>
+                    </tr>
+                  </thead>
+                  <PlayerRows
+                    rows={paged.rows}
+                    lockedIds={lockedIds}
+                    excludedIds={excludedIds}
+                    actuals={actuals}
+                    notFinal={notFinal}
+                    mode={mode}
+                    onLock={solver.toggleLock}
+                    onBench={solver.toggleExclude}
+                  />
+                </table>
+              </div>
+              <Pager
+                where="bottom"
+                noun="players"
+                page={paged.page}
+                pages={paged.pages}
+                pageSize={paged.pageSize}
+                total={paged.total}
+                onPage={paged.goTo}
+                className="px-4 py-3"
+              />
             </div>
           </div>
 

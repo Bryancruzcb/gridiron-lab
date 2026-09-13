@@ -138,12 +138,35 @@ function assertMatches(card, want) {
   assert.ok(card.text.includes(`${want.lineup.proj.toFixed(1)} pts`), `card shows ${want.lineup.proj.toFixed(1)} pts`);
 }
 
+/**
+ * The player table shows one page at a time: go to page 1, then page forward until this player's row is on screen.
+ * @param {Page} page @param {string} id
+ */
+async function rowOnPage(page, id) {
+  const row = page.locator(`tr[data-player-id="${id}"]`);
+  if (await row.count()) return row;
+  const pager = page.getByTestId("pager-top");
+  const current = pager.locator('[aria-current="page"]');
+  await pager.getByRole("button", { name: "Page 1", exact: true }).click();
+  await current.filter({ hasText: /^1$/ }).waitFor({ timeout: TIMEOUT });
+  for (let n = 1; !(await row.count()); n++) {
+    const next = pager.getByRole("button", { name: "Next page" });
+    assert.equal(await next.isDisabled(), false, `player ${id} is on no page of the table`);
+    await next.click();
+    await current.filter({ hasText: new RegExp(`^${n + 1}$`) }).waitFor({ timeout: TIMEOUT });
+  }
+  return row;
+}
+/** @param {Page} page @param {string} id @param {number} n */
+const rowButton = (page, id, n) => ({
+  click: async () => (await rowOnPage(page, id)).locator("button").nth(n).click(),
+  /** @param {string} name */
+  getAttribute: async (name) => (await rowOnPage(page, id)).locator("button").nth(n).getAttribute(name),
+});
 /** @param {Page} page @param {string} id */
-const row = (page, id) => page.locator(`tr[data-player-id="${id}"]`);
+const lockBtn = (page, id) => rowButton(page, id, 0);
 /** @param {Page} page @param {string} id */
-const lockBtn = (page, id) => row(page, id).locator("button").nth(0);
-/** @param {Page} page @param {string} id */
-const benchBtn = (page, id) => row(page, id).locator("button").nth(1);
+const benchBtn = (page, id) => rowButton(page, id, 1);
 /** @param {Page} page */
 const stackBox = (page) => page.getByRole("checkbox").nth(0);
 /** @param {Page} page */
