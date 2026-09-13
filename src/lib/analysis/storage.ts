@@ -164,7 +164,12 @@ export function createAnalysisStore({ storage, now = () => new Date(), newId = d
     const analyses: SavedAnalysis[] = [];
     const unreadable: unknown[] = [];
     const ids = new Set<string>();
-    for (const item of doc.analyses.slice(0, MAX_STORED_ENTRIES)) {
+    for (const [index, item] of doc.analyses.entries()) {
+      // Records past the read cap are carried along unread, so the next write keeps them.
+      if (index >= MAX_STORED_ENTRIES) {
+        unreadable.push(item);
+        continue;
+      }
       const parsed = savedAnalysisSchema.safeParse(item);
       if (parsed.success && !ids.has(parsed.data.id)) {
         ids.add(parsed.data.id);

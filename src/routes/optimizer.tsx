@@ -301,6 +301,12 @@ function OptimizerLab() {
     () => (week && actuals ? idsFrom(week, actuals, (w) => w.score.status !== "complete") : new Set<string>()),
     [week, actuals],
   );
+  // Exports tell "game still in progress" apart from "final with an input unavailable"; the page's
+  // not-final marker above deliberately covers both, because either score can still change.
+  const inProgress = useMemo(
+    () => (week && actuals ? idsFrom(week, actuals, (w) => w.status !== "post") : new Set<string>()),
+    [week, actuals],
+  );
   const solver = useLineupSolver({ players, cap: data.cap, actuals, slate: SLATE, link, onSelectionChange: writeSelection });
   const { selection, lineup: lineupView, compare, lineupPlan, importReport } = solver;
   const { mode } = selection;
@@ -375,7 +381,7 @@ function OptimizerLab() {
       actuals,
       actualsVersion: actualsV,
       partialIds: partial,
-      notFinalIds: notFinal,
+      notFinalIds: inProgress,
       week: week ? { season: week.season, seasonType: week.seasonType, week: week.week } : null,
       weekFeed: feed.data ? { source: feed.sourceKind, fetchedAt: feed.dataAsOf, partial: feed.partial, error: feed.error?.message ?? null } : null,
       reopenPath: linkTo(selection),
@@ -696,7 +702,7 @@ function OptimizerLab() {
                 )}
                 <p className="mt-3 text-xs text-muted">
                   <Link to="/study" className="text-fg">
-                    2025 weeks 2–18
+                    Study: 2023–2025, weeks 2–18
                   </Link>
                 </p>
               </div>

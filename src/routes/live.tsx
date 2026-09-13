@@ -51,11 +51,18 @@ function useGameDetail(eventId: string | null, live: boolean) {
     feed: emptyFeed(),
   }));
   const inflight = useRef<{ id: string; promise: Promise<void> } | null>(null);
+  // The game on screen. A reply that lands after the user picked another game must not replace it.
+  const selected = useRef(eventId);
+  useEffect(() => {
+    selected.current = eventId;
+  }, [eventId]);
 
   const load = useCallback(() => {
     if (!eventId || inflight.current?.id === eventId) return;
     const apply = (fn: (s: FeedState<GameDetail>) => FeedState<GameDetail>) =>
-      setSlot((prev) => ({ id: eventId, feed: fn(prev.id === eventId ? prev.feed : emptyFeed()) }));
+      setSlot((prev) =>
+        selected.current !== eventId ? prev : { id: eventId, feed: fn(prev.id === eventId ? prev.feed : emptyFeed()) },
+      );
     const now = () => new Date().toISOString();
     apply((s) => startAttempt(s, now()));
     const promise: Promise<void> = getGameDetail({ data: { eventId } })

@@ -746,7 +746,8 @@ async function run(browser) {
     assert.equal(exp.totals.salary, exp.slots.reduce((sum, r) => sum + r.salary, 0));
     for (const row of exp.slots) {
       assert.equal(row.projection, byId.get(row.id)?.proj);
-      const want = !fixtureActuals.has(row.id) ? "missing" : partialRbs.includes(row.id) ? "partial" : "complete";
+      // The fixture's partial RBs play in live games (status "in"), so a still-running game wins: not-final.
+      const want = !fixtureActuals.has(row.id) ? "missing" : partialRbs.includes(row.id) ? "not-final" : "complete";
       assert.equal(row.actualStatus, want, row.id);
     }
 

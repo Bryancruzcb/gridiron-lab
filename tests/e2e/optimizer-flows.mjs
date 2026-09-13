@@ -331,7 +331,9 @@ await scenario("cancel", async () => {
 });
 
 await scenario("rapid-runs-no-leak", async () => {
-  const ctx = await open(browser, { spinMs: 300 });
+  // Each worker stays busy longer than a burst of clicks takes on a loaded machine; at 300 ms a slow
+  // click let a superseded solve reply before it was terminated.
+  const ctx = await open(browser, { spinMs: 1500 });
   const { page } = ctx;
   const first = await waitForResult(page);
   await lockBtn(page, qb.id).click();

@@ -46,8 +46,10 @@ function inputFor(result: SolveOk, patch: Partial<LineupExportInput> = {}): Line
     projections,
     actuals,
     actualsVersion: "av456",
-    partialIds: new Set([ids[1]!]),
-    notFinalIds: new Set([ids[1]!, ids[2]!]),
+    // ids[1]: final game with an input the source lacks. ids[2]: game in progress, which the real ESPN
+    // feed also marks partial (it has no per-player two-point data), so it sits in both sets.
+    partialIds: new Set([ids[1]!, ids[2]!]),
+    notFinalIds: new Set([ids[2]!]),
     week: { season: 2026, seasonType: "REG", week: 1 },
     weekFeed: { source: "live", fetchedAt: "2026-09-11T12:00:00.000Z", partial: ["box score for BUF@MIA"], error: null },
     reopenPath: `/optimizer?slate=${SLATE}&lock=${ids[0]}`,

@@ -111,8 +111,10 @@ export type LineupExport = z.infer<typeof lineupExportSchema>;
 
 export function actualStatusOf(id: string, input: Pick<LineupExportInput, "actuals" | "partialIds" | "notFinalIds">): ActualStatus {
   if (input.actuals?.get(id) == null) return "missing";
-  if (input.partialIds.has(id)) return "partial";
+  // A game still in progress outranks a missing input: ESPN lines are always partial, so checking
+  // partial first would label every live score partial and never not-final.
   if (input.notFinalIds.has(id)) return "not-final";
+  if (input.partialIds.has(id)) return "partial";
   return "complete";
 }
 

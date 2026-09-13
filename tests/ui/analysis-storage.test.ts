@@ -172,6 +172,20 @@ describe("saved analyses: damaged or unavailable storage", () => {
     assert.deepEqual(after.analyses.slice(1), [future, broken, "junk"]);
   });
 
+  it("keeps records past the read cap when it writes", () => {
+    const { store, storage } = fixture();
+    const good = ok(store.save({ kind: "qb", name: "good", state: qbState }));
+    const doc = JSON.parse(storage.data.get(SAVED_ANALYSES_KEY)!);
+    const foreign = Array.from({ length: 520 }, (_, i) => ({ ...good, id: `future-${i}`, schemaVersion: 2 }));
+    doc.analyses.push(...foreign);
+    storage.data.set(SAVED_ANALYSES_KEY, JSON.stringify(doc));
+    assert.equal(ok(store.list("qb")).skipped, 520);
+    ok(store.rename("qb", good.id, "renamed"));
+    const after = JSON.parse(storage.data.get(SAVED_ANALYSES_KEY)!);
+    assert.equal(after.analyses.length, 521);
+    assert.deepEqual(after.analyses.slice(1), foreign);
+  });
+
   it("reports storage that is missing, denied, or full without throwing", () => {
     const none = createAnalysisStore({ storage: null });
     for (const r of [none.list("qb"), none.save({ kind: "qb", name: "x", state: qbState }), none.clear()])
