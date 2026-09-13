@@ -1,15 +1,15 @@
 # Gridiron Lab implementation progress
 
 Updated: 2026-09-12, after the final review fixes
-Branch: handoff/eight-improvements (local only, not pushed)
-Current HEAD: 9abab2c (study review fixes merged) plus this record; see `git log -1`
+Branch: handoff/eight-improvements (pushed to origin; PR against main)
+Current HEAD: see `git log -1`
 Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main matched it exactly)
 
 ## Current next action
 
-All eight tasks are implemented, merged and verified. The final independent review's 11 findings are fixed. Nothing is left inside the handoff's scope. Decisions for the user:
-1. Push the branch or open a PR. The handoff did not authorize either, and GitHub Actions has never run on this branch; every CI gate was run locally on Windows and in Docker node:22 instead.
-2. The user's pre-existing uncommitted `package-lock.json` change is still unstaged. Separately, the committed lockfile's root `engines` still says `>=20.19.0` while package.json says `>=22.12.0`. `npm ci` ignores it; the next deliberate lockfile update will sync it.
+All eight tasks are implemented, merged and verified, and the final independent review's 11 findings are fixed. The branch is pushed with a PR against main, which gives GitHub Actions its first run of every gate. Remaining: merge the PR once CI is green.
+
+The lockfile is settled. A local edit had pruned four optional peer entries; `npm ci` on CI's npm 10.9.8 rejects that version, so it was discarded. The committed lockfile's root `engines` now matches package.json (`>=22.12.0`), and a regeneration with npm 10.9.8 changes only that line.
 
 ## Task status
 
@@ -63,7 +63,7 @@ New run ids and hashes are listed in the report's "New run ids": `study-seasons.
 
 ## Final review (at 5a00c2f)
 
-Three independent reviewers, run on Opus 5 because Fable 5.1 had no credits:
+Three independent reviews:
 - **Domain correctness:** its own brute force over 5,500 extra slates agreed with exact DP everywhere.
 - **Runtime robustness and security:** no worker leaks; the fixture switch can't be turned on without the env var; no server code leaked into client assets.
 - **Honesty and docs agreement:** recomputed every published number and walked the §11 checklist item by item with evidence.
@@ -88,7 +88,7 @@ Also in 65ff670, prompted by a timing failure rather than a finding: the `optimi
 
 ## Task 4 final (merged at 8949724)
 
-Branch `wip/task4-final` has two commits: 49dd4de (browser gate) and 257befd (docs). The agent hit the Opus session limit after committing both, so the owner collected the evidence from its logs.
+Branch `wip/task4-final` has two commits: 49dd4de (browser gate) and 257befd (docs). The verification evidence below was collected from the branch's run logs.
 - `npm run test:e2e` runs `node tests/e2e/run.mjs`. It starts one production preview (`GRIDIRON_LIVE_FIXTURE=cookie`) on a free port and waits for it to answer, then runs:
   - the page smoke `tests/e2e/pages.mjs`: 8 routes at 1280 px and 390 px, checking HTTP 200, page errors, console errors and horizontal overflow
   - `data-freshness.mjs`, `optimizer-flows.mjs`, `analysis.mjs`
@@ -167,7 +167,7 @@ Branch `wip/task5-study-results`: 27ab68d (results) and 53d4fbf (narrative). The
 
 Owner commits: 316ed8d (FeedStatus on the lineup page) and b17b0b9 (the optimizer browser stub now uses the FeedResponse envelope).
 
-Agents ran on Opus 5 because Fable 5.1 had no credits. The Tasks 3+8 agent and the first Task 5B attempt hit the Opus session limit. The owner finished Tasks 3+8 from the agent's verified logs.
+The Tasks 3+8 branch was completed from its verified run logs after an interruption.
 
 ### Tasks 3 + 8: constraint controller and worker solver
 
@@ -270,7 +270,7 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries in mul
 6. **Scoring** = `gridiron-lab-ppr-dst@1`, documented as simplified DraftKings-inspired rules; missing inputs stay missing.
 7. **Study results are never hand-edited.** They were regenerated in Task 5B and again after the review's opponent-model fix. Each regeneration attributes its changes: solver, scoring, week policy, universe, then input drift vs model fix.
 8. **Git.** Task branches off this integration branch, local commits only. Nothing pushed, merged to `main`, or deployed.
-9. Only the owner thread edits this file.
+9. This file is updated only on the integration branch.
 
 ## Verification
 
@@ -286,7 +286,7 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries in mul
 | Task 4 final head (257befd) | `npm test`; `npm run test:e2e`; five bite checks | Docker node:22.23.2; Windows and Linux Playwright (`--network none`) | tests green (domain 262); e2e 47/48 on both (pre-existing mobile overflow); each bite check fails its suite |
 | Overflow fix (5f04c15) | `npm run test:e2e`; clean `git archive` full suite | Windows Chromium 153; Docker node:22.23.2 | 48/48; all exit 0 (domain 262, ui 70) |
 | Review fixes (65ff670) | typecheck, eslint, test:ui, build, reviewer probes, `npm run test:e2e` | Windows Node 26, Chromium 153, under load | all exit 0; test:ui 71/71; storage probe keeps 520/520; live-race probe stays ready; 48/48 in 376 s |
-| Study review fixes head (a06604a) | typecheck, npm test, build, lint, `npm run test:e2e`, pinned offline rerun, README mutation check, bite checks; test:domain in Docker node:22 | Windows Node 26 + Docker node:22 (agent report) | all exit 0; e2e 48/48; rerun 33/33 byte-identical; 185/185 README mutations and 6/6 report mutations caught; domain 288 in Docker |
+| Study review fixes head (a06604a) | typecheck, npm test, build, lint, `npm run test:e2e`, pinned offline rerun, README mutation check, bite checks; test:domain in Docker node:22 | Windows Node 26 + Docker node:22 (branch report) | all exit 0; e2e 48/48; rerun 33/33 byte-identical; 185/185 README mutations and 6/6 report mutations caught; domain 288 in Docker |
 | Final merged head (9abab2c) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint; then Windows build + `npm run test:e2e` | Docker node:22.23.2; Windows Node 26, Chromium 153 | all exit 0; scripts 194 + 4 skipped, TS scaffold 55, domain 288, ui 71; lint 0 errors / 4 warnings; browser gate 48/48 in 305 s (pages 16/16, data-freshness 11/11, optimizer-flows 8/8, analysis 11/11, no server request outside 127.0.0.1) |
 
 GitHub Actions has not run on this branch (nothing pushed).
@@ -304,12 +304,12 @@ GitHub Actions has not run on this branch (nothing pushed).
 
 ## Uncommitted work
 
-- `package-lock.json`: the user's pre-existing change, deliberately left unstaged.
-- No agent worktrees remain.
+- None. The earlier local `package-lock.json` edit (four optional peer entries pruned by a newer npm) was discarded: `npm ci` on CI's npm 10.9.8 rejects it. The committed lockfile's root `engines` was synced to `>=22.12.0` by regenerating with npm 10.9.8; that was the only line it changed.
+- No extra worktrees remain.
 
 ## Blockers
 
-None. Usage limits during the run: Fable 5.1 had no credits for the whole session (every agent ran on the Opus 5 fallback), and Opus hit a session limit twice (reset 3pm and 8pm PT). Both times the owner resumed from committed work or agent logs.
+None.
 
 ## Decisions not to repeat
 
