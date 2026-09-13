@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, useRouter, useRouterState } from "@tansta
 import { useMemo, useState, type ReactNode } from "react";
 import {
   CartesianGrid,
-  Cell,
+  ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
   Scatter,
@@ -10,7 +10,6 @@ import {
   Tooltip,
   XAxis,
   YAxis,
-  ZAxis,
 } from "recharts";
 import qbsFile from "@/data/qbs.json";
 import { AppShell } from "@/components/layout/AppShell";
@@ -18,12 +17,11 @@ import { CopyLink } from "@/components/CopyLink";
 import { FeedStatus } from "@/components/DataStatus";
 import { Headshot } from "@/components/Headshot";
 import { FirstLook } from "@/components/FirstLook";
-import { SampleN } from "@/components/SampleN";
 import { SavedAnalyses } from "@/components/SavedAnalyses";
 import { StatTip } from "@/components/StatTip";
 import { Segmented } from "@/components/ui/segmented";
 import { Slider } from "@/components/ui/slider";
-import { axisProps, CHART } from "@/components/charts/theme";
+import { CHART } from "@/components/charts/theme";
 import type { QbFile, QbSeason, SplitStats } from "@/data/types";
 import {
   decodeQbSearch,
@@ -43,6 +41,14 @@ export const Route = createFileRoute("/qb")({ validateSearch: validateQbSearch, 
 
 const data = qbsFile as QbFile;
 
+/** Chart text and the good/bad colours (the --color-up / --color-down tokens), bright enough to read on the plot. */
+const INK = "#D3D5CF";
+const INK_QUIET = "#A5A7A1";
+const UP = "#9FCB9F";
+const DOWN = "#EE9784";
+/** Up to this many quarterbacks in the slice, every one is drawn as a photo with a name. */
+const LABEL_ALL = 12;
+
 /** Pins shown while the URL has none: the season's top three by dropbacks. */
 function defaultPins(all: readonly QbSeason[], season: number): string[] {
   const floor = season >= 2026 ? 10 : 250;
@@ -52,9 +58,65 @@ function defaultPins(all: readonly QbSeason[], season: number): string[] {
     .map((q) => q.id);
 }
 
+/** Evenly spaced ticks inside [min, max], using the first step that gives six or fewer. */
+function niceTicks(min: number, max: number, steps: readonly number[]) {
+  const step = steps.find((s) => (max - min) / s <= 6) ?? steps[steps.length - 1]!;
+  const out: number[] = [];
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-9; v += step) out.push(Math.round(v * 1000) / 1000);
+  return out;
+}
+
 type PinItem =
   | { kind: "row"; id: string; qb: QbSeason; stats: SplitStats }
   | { kind: "unresolved"; id: string; pending: boolean; name: string | null; note: string };
+type PinRow = Extract<PinItem, { kind: "row" }>;
+
+type ScatterPoint = {
+  id: string;
+  name: string;
+  last: string;
+  team: string;
+  headshot: string | null;
+  epa: number;
+  cpoe: number;
+  plays: number;
+  pinned: boolean;
+  photo: boolean;
+  label: boolean;
+  flip: boolean;
+  r: number;
+};
+
+type WeekPoint = NonNullable<QbSeason["weeks"]>[number];
+
+/** Rows of the pinned comparison; `best` marks which end of the pinned group wins. */
+const COMPARE: {
+  label: string;
+  note?: string;
+  value: (r: PinRow) => number | null;
+  text: (r: PinRow) => string;
+  best?: "max" | "min";
+}[] = [
+  { label: "EPA per dropback", value: (r) => r.stats.epa ?? null, text: (r) => formatEpa(r.stats.epa), best: "max" },
+  { label: "CPOE", value: (r) => r.stats.cpoe ?? null, text: (r) => formatCpoe(r.stats.cpoe), best: "max" },
+  { label: "Completion", value: (r) => r.stats.comp ?? null, text: (r) => formatPct(r.stats.comp), best: "max" },
+  { label: "Success rate", value: (r) => r.stats.success ?? null, text: (r) => formatPct(r.stats.success), best: "max" },
+  {
+    label: "Pressure rate",
+    note: "lower is better",
+    value: (r) => r.stats.press ?? null,
+    text: (r) => formatPct(r.stats.press),
+    best: "min",
+  },
+  {
+    label: "Passer rating",
+    value: (r) => passerRating(r.qb.box) ?? null,
+    text: (r) => formatPasser(passerRating(r.qb.box)),
+    best: "max",
+  },
+  { label: "Dropbacks", value: (r) => r.stats.plays, text: (r) => String(r.stats.plays) },
+  { label: "TD–INT", value: () => null, text: (r) => `${r.stats.td}–${r.stats.int}` },
+];
 
 function QbLab() {
   const { labs, labsSections, ready } = useSeason();
@@ -116,23 +178,43 @@ function QbLab() {
     return out;
   }, [season, key, minPlays, sort, allQbs]);
 
-  const scatter = rows.map((r, i) => ({
-    id: r.qb.id,
-    name: r.qb.name,
-    tag: pinned.includes(r.qb.id) ? (r.qb.name.split(" ").pop() ?? r.qb.name) : "",
-    team: r.qb.team,
-    epa: r.stats.epa ?? 0,
-    cpoe: r.stats.cpoe ?? 0,
-    press: r.stats.press ?? 0,
-    plays: r.stats.plays,
-    fill: pinned.includes(r.qb.id)
-      ? CHART.sage
-      : isThin(r.stats.plays)
-        ? CHART.muted
-        : i < 8
-          ? CHART.paper
-          : CHART.muted,
-  }));
+  // Both axes always include zero, so the four corners of the chart exist for any slice.
+  const cpoes = rows.map((r) => r.stats.cpoe ?? 0);
+  const epas = rows.map((r) => r.stats.epa ?? 0);
+  // Padding is 15% of the spread (at least 1.5 CPOE / 0.08 EPA), so photos and names clear the corner labels.
+  const xLo = Math.min(-1, ...cpoes);
+  const xHi = Math.max(1, ...cpoes);
+  const yLo = Math.min(-0.05, ...epas);
+  const yHi = Math.max(0.05, ...epas);
+  const xPad = Math.max(1.5, 0.15 * (xHi - xLo));
+  const yPad = Math.max(0.08, 0.15 * (yHi - yLo));
+  const xDomain: [number, number] = [Math.floor(xLo - xPad), Math.ceil(xHi + xPad)];
+  const yDomain: [number, number] = [Math.floor((yLo - yPad) * 20) / 20, Math.ceil((yHi + yPad) * 20) / 20];
+  const few = rows.length <= LABEL_ALL;
+  const maxPlays = Math.max(1, ...rows.map((r) => r.stats.plays));
+  const scatter: ScatterPoint[] = rows
+    .map((r) => {
+      const pin = pinned.includes(r.qb.id);
+      const photo = Boolean(r.qb.headshot) && (pin || few);
+      const cpoe = r.stats.cpoe ?? 0;
+      return {
+        id: r.qb.id,
+        name: r.qb.name,
+        last: r.qb.name.split(" ").pop() ?? r.qb.name,
+        team: r.qb.team,
+        headshot: r.qb.headshot,
+        epa: r.stats.epa ?? 0,
+        cpoe,
+        plays: r.stats.plays,
+        pinned: pin,
+        photo,
+        label: pin || few,
+        flip: cpoe > xDomain[0] + 0.6 * (xDomain[1] - xDomain[0]),
+        r: photo ? (pin ? 15 : 12) : 5 + 4 * (r.stats.plays / maxPlays),
+      };
+    })
+    // Pinned quarterbacks draw last, on top of the rest.
+    .sort((a, b) => Number(a.pinned) - Number(b.pinned));
 
   const togglePin = (id: string) => void update({ type: "toggle-pin", id, defaults: seasonDefaults });
 
@@ -143,6 +225,12 @@ function QbLab() {
       .slice()
       .sort((a, b) => (b.overall.plays ?? 0) - (a.overall.plays ?? 0));
   }, [allQbs, season]);
+  const weeks = useMemo(
+    () => [...new Set(weekRows.flatMap((q) => (q.weeks ?? []).map((w) => w.week)))].sort((a, b) => a - b),
+    [weekRows],
+  );
+  const [weekPick, setWeekPick] = useState<number | null>(null);
+  const shownWeek = weekPick !== null && weeks.includes(weekPick) ? weekPick : (weeks[weeks.length - 1] ?? null);
 
   const pinItems: PinItem[] = pinned.map((id) => {
     const row = rows.find((r) => r.qb.id === id);
@@ -169,7 +257,19 @@ function QbLab() {
       };
     return { kind: "unresolved", id, pending: false, name: null, note: `No quarterback with id ${id} in this data.` };
   });
-  const pinnedRows = pinItems.filter((p): p is Extract<PinItem, { kind: "row" }> => p.kind === "row");
+  const pinnedRows = pinItems.filter((p): p is PinRow => p.kind === "row");
+
+  const quad = (value: string, position: "insideTopRight" | "insideTopLeft" | "insideBottomRight" | "insideBottomLeft") => ({
+    value,
+    position,
+    offset: 10,
+    fill: INK_QUIET,
+    fontSize: 11,
+    fontWeight: 700,
+    letterSpacing: "0.08em",
+    // Corner names need room; phones get the key under the chart instead.
+    className: "hidden sm:inline",
+  });
 
   return (
     <AppShell>
@@ -179,8 +279,8 @@ function QbLab() {
         </header>
         <FirstLook id="qb" title="This page">
           <p>
-            Each dot is a quarterback. Tap a dot or a row to pin. Filters change the slice — 3rd
-            down is not the same player as 1st-and-10.
+            Each photo or dot on the chart is a quarterback. Tap one, or a Board row, to pin it. Filters
+            change the slice — 3rd down is not the same player as 1st-and-10.
           </p>
         </FirstLook>
 
@@ -191,7 +291,7 @@ function QbLab() {
               onChange={(v) => void update({ type: "season", season: Number(v) })}
               options={seasons.map((s) => ({ value: String(s), label: String(s) }))}
             />
-            <span className="self-center text-[11px] tracking-[0.14em] text-subtle uppercase">
+            <span className="self-center text-xs tracking-[0.12em] text-muted uppercase">
               {rows.length} QBs · {label}
             </span>
             <CopyLink getUrl={shareUrl} className="w-full sm:ml-auto sm:w-64" />
@@ -240,7 +340,7 @@ function QbLab() {
               </Field>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-              <span className="text-[11px] tracking-[0.14em] text-subtle uppercase" data-testid="min-plays">
+              <span className="text-xs tracking-[0.12em] text-muted uppercase" data-testid="min-plays">
                 Min dropbacks in this slice · {minPlays}
               </span>
               <Slider
@@ -292,62 +392,30 @@ function QbLab() {
           </p>
         )}
 
-        {weekRows.length > 0 && (
-          <div className="mt-4 overflow-hidden rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
-            <h2 className="font-display text-xl uppercase tracking-[0.06em]">By week</h2>
-            <div className="mt-3 overflow-x-auto">
-              <table className="w-full min-w-[320px] text-left text-sm">
-                <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
-                  <tr className="border-b border-border">
-                    <th className="py-2 pr-3 font-medium">QB</th>
-                    {Array.from(
-                      new Set(weekRows.flatMap((q) => (q.weeks ?? []).map((w) => w.week))),
-                    )
-                      .sort((a, b) => a - b)
-                      .map((w) => (
-                        <th key={w} className="px-2 py-2 text-right font-medium">
-                          W{w}
-                        </th>
-                      ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {weekRows.map((q) => (
-                    <tr key={q.id} className="border-b border-border/70">
-                      <td className="py-2 pr-3">{q.name.split(" ").pop()}</td>
-                      {Array.from(
-                        new Set(weekRows.flatMap((x) => (x.weeks ?? []).map((w) => w.week))),
-                      )
-                        .sort((a, b) => a - b)
-                        .map((w) => {
-                          const pt = q.weeks?.find((x) => x.week === w);
-                          return (
-                            <td key={w} className="px-2 py-2 text-right font-mono text-xs tabular-nums">
-                              {pt ? (
-                                <span className={isThin(pt.plays) ? "text-muted" : undefined}>
-                                  {formatEpa(pt.epa)}
-                                  <span className="ml-1 text-muted">
-                                    {pt.plays} dropback{pt.plays === 1 ? "" : "s"}
-                                  </span>
-                                </span>
-                              ) : (
-                                <span className="text-muted">—</span>
-                              )}
-                            </td>
-                          );
-                        })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        {weekRows.length > 0 && shownWeek !== null && (
+          <div className="mt-4 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
+            <div className="flex flex-wrap items-end justify-between gap-3">
+              <div>
+                <h2 className="font-display text-2xl uppercase tracking-[0.05em]">By week</h2>
+                <p className="text-sm text-muted">EPA per dropback · week {shownWeek}</p>
+              </div>
+              {weeks.length > 1 && (
+                <Segmented
+                  value={String(shownWeek)}
+                  onChange={(v) => setWeekPick(Number(v))}
+                  options={weeks.map((w) => ({ value: String(w), label: `W${w}` }))}
+                />
+              )}
             </div>
+            <WeekBars qbs={weekRows} week={shownWeek} />
           </div>
         )}
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-          <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
-            <div className="mb-3">
-              <h2 className="font-display text-xl uppercase tracking-[0.06em]">EPA vs CPOE</h2>
+        <div className="mt-4 grid items-start gap-4 lg:grid-cols-[1.4fr_1fr]">
+          <div className="min-w-0 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
+            <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+              <h2 className="font-display text-2xl uppercase tracking-[0.05em]">EPA vs CPOE</h2>
+              <p className="text-sm text-muted">{few ? "Faded = not pinned" : "Photos = pinned · bigger dot = more dropbacks"}</p>
             </div>
             {rows.length === 0 ? (
               <div className="flex h-[280px] flex-col items-center justify-center rounded-md bg-elevated px-6 text-center">
@@ -366,61 +434,122 @@ function QbLab() {
               </div>
             ) : (
               <div className="rounded-md bg-elevated p-2 sm:p-3">
-                <div className="h-[300px] sm:h-[360px]">
+                <div className="h-[340px] sm:h-[420px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 18, right: 12, bottom: 8, left: 4 }}>
-                      <CartesianGrid stroke="rgba(241,240,234,0.16)" />
-                      <ReferenceLine x={0} stroke="rgba(241,240,234,0.28)" />
-                      <ReferenceLine y={0} stroke="rgba(241,240,234,0.28)" />
+                    <ScatterChart margin={{ top: 12, right: 16, bottom: 22, left: 8 }}>
+                      <ReferenceArea
+                        x1={0}
+                        x2={xDomain[1]}
+                        y1={0}
+                        y2={yDomain[1]}
+                        fill={CHART.sage}
+                        fillOpacity={0.12}
+                        strokeOpacity={0}
+                        label={quad("ACCURATE + PRODUCTIVE", "insideTopRight")}
+                      />
+                      <ReferenceArea
+                        x1={xDomain[0]}
+                        x2={0}
+                        y1={0}
+                        y2={yDomain[1]}
+                        fillOpacity={0}
+                        strokeOpacity={0}
+                        label={quad("PRODUCTIVE, LESS ACCURATE", "insideTopLeft")}
+                      />
+                      <ReferenceArea
+                        x1={0}
+                        x2={xDomain[1]}
+                        y1={yDomain[0]}
+                        y2={0}
+                        fillOpacity={0}
+                        strokeOpacity={0}
+                        label={quad("ACCURATE, NOT PRODUCTIVE", "insideBottomRight")}
+                      />
+                      <ReferenceArea
+                        x1={xDomain[0]}
+                        x2={0}
+                        y1={yDomain[0]}
+                        y2={0}
+                        fill={CHART.rust}
+                        fillOpacity={0.1}
+                        strokeOpacity={0}
+                        label={quad("STRUGGLING", "insideBottomLeft")}
+                      />
+                      <CartesianGrid stroke="rgba(241,240,234,0.09)" />
+                      <ReferenceLine x={0} stroke="rgba(241,240,234,0.42)" strokeWidth={1.5} />
+                      <ReferenceLine y={0} stroke="rgba(241,240,234,0.42)" strokeWidth={1.5} />
                       <XAxis
                         type="number"
                         dataKey="cpoe"
-                        tickCount={5}
-                        domain={["dataMin - 1", "dataMax + 1"]}
+                        domain={xDomain}
+                        ticks={niceTicks(xDomain[0], xDomain[1], [1, 2, 3, 5, 10])}
                         name="CPOE"
-                        {...axisProps}
-                        tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                        stroke={CHART.axis}
+                        tickLine={false}
+                        tick={{ fill: INK_QUIET, fontSize: 12 }}
                         tickFormatter={(v: number) => (v > 0 ? `+${v.toFixed(0)}` : v.toFixed(0))}
+                        label={{
+                          value: "Completion % over expected (CPOE) →",
+                          position: "insideBottom",
+                          offset: -16,
+                          fill: INK,
+                          fontSize: 13,
+                          fontWeight: 600,
+                        }}
                       />
                       <YAxis
                         type="number"
                         dataKey="epa"
-                        tickCount={5}
-                        width={48}
-                        domain={["dataMin - 0.04", "dataMax + 0.04"]}
+                        width={62}
+                        domain={yDomain}
+                        ticks={niceTicks(yDomain[0], yDomain[1], [0.05, 0.1, 0.2, 0.25, 0.5])}
                         name="EPA"
-                        {...axisProps}
-                        tick={{ fill: "#C5CCD6", fontSize: 11 }}
+                        stroke={CHART.axis}
+                        tickLine={false}
+                        tick={{ fill: INK_QUIET, fontSize: 12 }}
                         tickFormatter={(v: number) => {
                           const n = Math.abs(v) < 0.005 ? 0 : v;
                           return n > 0 ? `+${n.toFixed(2)}` : n.toFixed(2);
                         }}
+                        label={{
+                          value: "EPA per dropback →",
+                          angle: -90,
+                          position: "insideLeft",
+                          offset: 0,
+                          fill: INK,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          style: { textAnchor: "middle" },
+                        }}
                       />
-                      <ZAxis type="number" dataKey="plays" range={[40, 140]} />
-                      <Tooltip
-                        cursor={{ stroke: CHART.paper, strokeDasharray: "3 3" }}
-                        content={<QbDotTip />}
+                      <Tooltip cursor={{ stroke: CHART.paper, strokeDasharray: "3 3" }} content={<QbDotTip />} />
+                      <Scatter
+                        data={scatter}
+                        shape={QbDot}
+                        isAnimationActive={false}
+                        onClick={(d: { id?: string }) => d?.id && togglePin(d.id)}
                       />
-                      <Scatter data={scatter} onClick={(d: { id?: string }) => d?.id && togglePin(d.id)}>
-                        {scatter.map((s) => (
-                          <Cell key={s.id} fill={s.fill} stroke="#0A0B0D" strokeWidth={1} />
-                        ))}
-                      </Scatter>
                     </ScatterChart>
                   </ResponsiveContainer>
                 </div>
-                <p className="mt-1 text-center font-mono text-[10px] tracking-wide text-muted uppercase">
-                  CPOE → &nbsp;&nbsp; EPA ↑
-                </p>
+                <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 px-1 text-[13px] text-muted sm:hidden" aria-label="Chart corners">
+                  <li>↖ Productive, less accurate</li>
+                  <li>↗ Accurate + productive</li>
+                  <li>↙ Struggling</li>
+                  <li>↘ Accurate, not productive</li>
+                </ul>
               </div>
             )}
           </div>
 
-          <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
-            <h2 className="font-display text-xl uppercase tracking-[0.06em]">Pinned</h2>
-            <ul data-testid="pinned-list" className="mt-4 space-y-2">
+          <div className="min-w-0 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="font-display text-2xl uppercase tracking-[0.05em]">Pinned</h2>
+              {pinnedRows.length > 0 && <p className="text-sm text-muted">{pinnedRows.length} pinned</p>}
+            </div>
+            <ul data-testid="pinned-list" className="mt-3 space-y-1">
               {pinItems.length === 0 && (
-                <li className="text-sm text-muted">Click a row or a scatter point to compare.</li>
+                <li className="p-2 text-[15px] text-muted">Tap a photo, a dot or a Board row to compare quarterbacks.</li>
               )}
               {pinItems.map((item) =>
                 item.kind === "row" ? (
@@ -428,30 +557,34 @@ function QbLab() {
                     <button
                       type="button"
                       onClick={() => togglePin(item.id)}
-                      className="flex w-full items-center gap-3 rounded-md p-2 text-left hover:bg-elevated"
+                      title={`Unpin ${item.qb.name}`}
+                      className="flex w-full items-center gap-3 rounded-lg p-2.5 text-left hover:bg-elevated"
                     >
-                      <Headshot src={item.qb.headshot} name={item.qb.name} team={item.qb.team} />
+                      <Headshot src={item.qb.headshot} name={item.qb.name} team={item.qb.team} className="size-12" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">{item.qb.name}</p>
-                        <p className="text-xs text-muted">{teamNick(item.qb.team)}</p>
-                        {season >= 2026 && item.qb.weeks && item.qb.weeks.length > 0 && (
-                          <p className="mt-1 font-mono text-[11px] tabular-nums text-muted">
-                            {item.qb.weeks.map((w) => `W${w.week} ${formatEpa(w.epa)} · ${w.plays} dropback${w.plays === 1 ? "" : "s"}`).join("  ")}
+                        <p data-pin-name className="truncate text-base font-semibold">
+                          {item.qb.name}
+                        </p>
+                        <p className="text-[13px] text-muted">
+                          {teamNick(item.qb.team)} · {item.stats.plays} dropback{item.stats.plays === 1 ? "" : "s"}
+                          {isThin(item.stats.plays) ? " · small sample" : ""}
+                        </p>
+                        {season >= 2026 && item.qb.weeks && item.qb.weeks.length > 1 && (
+                          <p className="mt-0.5 text-[13px] text-muted tabular-nums">
+                            {item.qb.weeks.map((w) => `W${w.week} ${formatEpa(w.epa)}`).join(" · ")}
                           </p>
                         )}
                       </div>
-                      <div className="text-right">
-                        <span
+                      <div className="shrink-0 text-right">
+                        <p
                           className={cn(
-                            "font-mono text-sm tabular-nums",
-                            isThin(item.stats.plays) ? "text-muted" : "text-sage",
+                            "font-display text-3xl leading-none font-bold tabular-nums",
+                            (item.stats.epa ?? 0) >= 0 ? "text-up" : "text-down",
                           )}
                         >
                           {formatEpa(item.stats.epa)}
-                        </span>
-                        <div>
-                          <SampleN n={item.stats.plays} unit="dropbacks" />
-                        </div>
+                        </p>
+                        <p className="mt-1 text-xs text-muted">EPA / dropback</p>
                       </div>
                     </button>
                   </li>
@@ -460,23 +593,23 @@ function QbLab() {
                     key={item.id}
                     data-pin-id={item.id}
                     data-unresolved={item.pending ? "pending" : "explained"}
-                    className="flex items-center gap-3 rounded-md p-2"
+                    className="flex items-center gap-3 rounded-lg p-2.5"
                   >
                     <span
                       aria-hidden
-                      className="grid size-10 shrink-0 place-items-center rounded-full bg-elevated font-mono text-xs text-subtle"
+                      className="grid size-12 shrink-0 place-items-center rounded-full bg-elevated text-sm font-semibold text-subtle"
                     >
                       {item.pending ? "…" : "?"}
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm text-muted">{item.name ?? item.id}</p>
-                      <p className="text-xs text-subtle">{item.note}</p>
+                      <p className="truncate text-base text-muted">{item.name ?? item.id}</p>
+                      <p className="text-[13px] text-subtle">{item.note}</p>
                     </div>
                     <button
                       type="button"
                       onClick={() => togglePin(item.id)}
                       aria-label={`Unpin ${item.name ?? item.id}`}
-                      className="h-8 rounded-sm px-2 text-[11px] font-medium tracking-wide text-muted uppercase hover:text-fg"
+                      className="h-9 rounded-sm px-2 text-xs font-semibold tracking-wide text-muted uppercase hover:text-fg"
                     >
                       Unpin
                     </button>
@@ -485,64 +618,66 @@ function QbLab() {
               )}
             </ul>
             {pinnedRows.length >= 2 && (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead className="text-[10px] tracking-[0.12em] text-subtle uppercase">
-                    <tr>
-                      <th className="py-1 font-medium"> </th>
-                      {pinnedRows.map((r) => (
-                        <th key={r.qb.id} className="px-2 py-1 font-medium">
-                          {r.qb.name.split(" ").pop()}
+              <>
+                <div className="mt-4 overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr>
+                        <th className="py-2 font-medium">
+                          <span className="sr-only">Stat</span>
                         </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="font-mono tabular-nums">
-                    {(
-                      [
-                        ["EPA", (s: SplitStats) => formatEpa(s.epa)],
-                        ["CPOE", (s: SplitStats) => formatCpoe(s.cpoe)],
-                        ["Dropbacks", (s: SplitStats) => String(s.plays)],
-                        ["Comp", (s: SplitStats) => formatPct(s.comp)],
-                        ["Press", (s: SplitStats) => formatPct(s.press)],
-                      ] as const
-                    ).map(([label, fmt]) => (
-                      <tr key={label} className="border-t border-border/70">
-                        <td className="py-1.5 text-subtle">{label}</td>
                         {pinnedRows.map((r) => (
-                          <td key={r.qb.id} className="px-2 py-1.5">
-                            {fmt(r.stats)}
-                          </td>
+                          <th key={r.qb.id} scope="col" className="px-2 py-2 text-right text-[15px] font-bold">
+                            {r.qb.name.split(" ").pop()}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                    <tr className="border-t border-border/70">
-                      <td className="py-1.5 text-subtle">Passer</td>
-                      {pinnedRows.map((r) => (
-                        <td key={r.qb.id} className="px-2 py-1.5">
-                          {formatPasser(passerRating(r.qb.box))}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {COMPARE.map((row) => {
+                        const vals = pinnedRows.map(row.value);
+                        const nums = vals.filter((v): v is number => v != null);
+                        const best =
+                          row.best && nums.length > 1 ? (row.best === "max" ? Math.max(...nums) : Math.min(...nums)) : null;
+                        return (
+                          <tr key={row.label} className="border-t border-border/70">
+                            <th scope="row" className="py-2 pr-2 text-sm font-medium text-muted">
+                              {row.label}
+                              {row.note && <span className="block text-xs font-normal text-subtle">{row.note}</span>}
+                            </th>
+                            {pinnedRows.map((r, i) => (
+                              <td key={r.qb.id} className="px-2 py-2 text-right text-base font-semibold whitespace-nowrap tabular-nums">
+                                {best !== null && vals[i] === best ? (
+                                  <span className="-mr-2 inline-block rounded-full bg-sage/20 px-2 text-up">{row.text(r)}</span>
+                                ) : (
+                                  row.text(r)
+                                )}
+                              </td>
+                            ))}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+                <p className="mt-3 text-[13px] text-subtle">Green marks the best of the pinned group.</p>
+              </>
             )}
           </div>
         </div>
 
         <div className="mt-6 overflow-hidden rounded-xl bg-surface shadow-[var(--shadow-border)]">
-          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-            <h2 className="font-display text-xl uppercase tracking-[0.06em]">Board</h2>
-            <div className="flex gap-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5">
+            <h2 className="font-display text-2xl uppercase tracking-[0.05em]">Board</h2>
+            <div className="flex flex-wrap gap-1">
               {(["epa", "cpoe", "comp", "press"] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => void update({ type: "sort", sort: s })}
                   className={cn(
-                    "h-8 rounded-sm px-2.5 text-[11px] font-medium tracking-wide uppercase",
-                    sort === s ? "bg-accent text-accent-fg" : "text-muted hover:text-fg",
+                    "h-9 rounded-md px-3 text-xs font-bold tracking-[0.06em] uppercase transition-colors",
+                    sort === s ? "bg-accent text-accent-fg" : "text-muted hover:bg-elevated hover:text-fg",
                   )}
                 >
                   {s === "epa" ? "EPA" : s === "cpoe" ? "CPOE" : s === "comp" ? "Comp" : "Press"}
@@ -551,91 +686,92 @@ function QbLab() {
             </div>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+            <table className="w-full min-w-[760px] text-left text-[15px]">
+              <thead className="text-xs tracking-[0.08em] text-muted uppercase">
                 <tr className="border-y border-border">
-                  <th className="px-4 py-2 font-medium">Quarterback</th>
-                  <th className="px-3 py-2 font-medium">Team</th>
-                  <th className="px-3 py-2 text-right font-medium">Plays</th>
-                  <th className="px-3 py-2 text-right font-medium">
+                  <th className="px-4 py-2.5 font-bold sm:px-5">Quarterback</th>
+                  <th className="px-3 py-2.5 text-right font-bold">Dropbacks</th>
+                  <th className="px-3 py-2.5 text-right font-bold">
                     <StatTip metric="epa" />
                   </th>
-                  <th className="px-3 py-2 text-right font-medium">
+                  <th className="px-3 py-2.5 text-right font-bold">
                     <StatTip metric="cpoe" />
                   </th>
-                  <th className="px-3 py-2 text-right font-medium">
+                  <th className="px-3 py-2.5 text-right font-bold">
                     <StatTip metric="passer" />
                   </th>
-                  <th className="px-3 py-2 text-right font-medium">Comp</th>
-                  <th className="px-3 py-2 text-right font-medium">
+                  <th className="px-3 py-2.5 text-right font-bold">Comp</th>
+                  <th className="px-3 py-2.5 text-right font-bold">
                     <StatTip metric="success" />
                   </th>
-                  <th className="px-3 py-2 text-right font-medium">
+                  <th className="px-3 py-2.5 text-right font-bold">
                     <StatTip metric="press" />
                   </th>
-                  <th className="px-3 py-2 text-right font-medium">TD/INT</th>
+                  <th className="px-4 py-2.5 text-right font-bold sm:px-5">TD–INT</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-10 text-center text-sm text-muted">
+                    <td colSpan={9} className="px-4 py-10 text-center text-[15px] text-muted">
                       No quarterbacks pass the min on {label.toLowerCase()}. Drop the slider.
                     </td>
                   </tr>
                 )}
                 {rows.map((r) => {
                   const active = pinned.includes(r.qb.id);
+                  const epaUp = (r.stats.epa ?? 0) >= 0;
                   return (
                     <tr
                       key={r.qb.id}
                       data-qb-id={r.qb.id}
                       onClick={() => togglePin(r.qb.id)}
                       className={cn(
-                        "cursor-pointer border-b border-border/70 transition-colors",
+                        "cursor-pointer border-b border-border/70 transition-colors last:border-0",
                         active ? "bg-elevated" : "hover:bg-elevated/60",
                       )}
                     >
-                      <td className="px-4 py-2.5">
-                        <div className="flex items-center gap-2.5">
-                          <Headshot src={r.qb.headshot} name={r.qb.name} team={r.qb.team} className="size-8" />
-                          <span className="font-medium">{r.qb.name}</span>
+                      <td className="px-4 py-2.5 sm:px-5">
+                        <div className="flex items-center gap-3">
+                          <Headshot src={r.qb.headshot} name={r.qb.name} team={r.qb.team} className="size-10" />
+                          <div className="min-w-0">
+                            <p className="font-semibold whitespace-nowrap">{r.qb.name}</p>
+                            <p className="text-[13px] text-muted">
+                              {r.qb.team} · {teamNick(r.qb.team)}
+                            </p>
+                          </div>
+                          {active && (
+                            <span className="rounded-full bg-fg/10 px-2 py-0.5 text-xs font-semibold text-fg">Pinned</span>
+                          )}
                         </div>
                       </td>
-                      <td className="px-3 py-2.5 text-muted">{r.qb.team}</td>
-                      <td
-                        className={cn(
-                          "px-3 py-2.5 text-right font-mono tabular-nums",
-                          isThin(r.stats.plays) && "text-muted",
-                        )}
-                      >
+                      <td className={cn("px-3 py-2.5 text-right tabular-nums", isThin(r.stats.plays) && "text-muted")}>
                         {r.stats.plays}
                       </td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">
+                        <span
+                          className={cn(
+                            "inline-block min-w-[5.5rem] rounded-full px-2.5 py-0.5 text-center font-bold",
+                            epaUp ? "bg-sage/20 text-up" : "bg-rust/20 text-down",
+                          )}
+                        >
+                          {formatEpa(r.stats.epa)}
+                        </span>
+                      </td>
                       <td
                         className={cn(
-                          "px-3 py-2.5 text-right font-mono tabular-nums",
-                          (r.stats.epa ?? 0) >= 0 ? "text-sage" : "text-rust",
+                          "px-3 py-2.5 text-right font-semibold tabular-nums",
+                          (r.stats.cpoe ?? 0) >= 0 ? "text-up" : "text-down",
                         )}
                       >
-                        {formatEpa(r.stats.epa)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums">
                         {formatCpoe(r.stats.cpoe)}
                       </td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-muted">
-                        {formatPasser(passerRating(r.qb.box))}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums">
-                        {formatPct(r.stats.comp)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums">
-                        {formatPct(r.stats.success)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums">
-                        {formatPct(r.stats.press)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono tabular-nums text-muted">
-                        {r.stats.td}/{r.stats.int}
+                      <td className="px-3 py-2.5 text-right tabular-nums">{formatPasser(passerRating(r.qb.box))}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{formatPct(r.stats.comp)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{formatPct(r.stats.success)}</td>
+                      <td className="px-3 py-2.5 text-right tabular-nums">{formatPct(r.stats.press)}</td>
+                      <td className="px-4 py-2.5 text-right text-muted tabular-nums sm:px-5">
+                        {r.stats.td}–{r.stats.int}
                       </td>
                     </tr>
                   );
@@ -652,9 +788,130 @@ function QbLab() {
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      <span className="text-[11px] font-medium tracking-[0.14em] text-subtle uppercase">{label}</span>
+      <span className="text-xs font-semibold tracking-[0.12em] text-muted uppercase">{label}</span>
       {children}
     </div>
+  );
+}
+
+/** One week's EPA per dropback as bars either side of zero, busiest quarterback first. */
+function WeekBars({ qbs, week }: { qbs: readonly QbSeason[]; week: number }) {
+  const lines = qbs
+    .map((qb) => ({ qb, pt: qb.weeks?.find((w) => w.week === week) }))
+    .filter((l): l is { qb: QbSeason; pt: WeekPoint } => l.pt !== undefined)
+    .sort((a, b) => b.pt.plays - a.pt.plays);
+  const scale = Math.max(0.5, Math.ceil(Math.max(0, ...lines.map((l) => Math.abs(l.pt.epa ?? 0))) * 10) / 10);
+  const grid = "sm:grid-cols-[minmax(160px,220px)_minmax(0,1fr)_128px] sm:[grid-template-areas:'who_bar_val']";
+  return (
+    <div className="mt-4">
+      <div aria-hidden className={cn("grid gap-x-5 pb-2", grid)}>
+        <div className="flex justify-between text-xs text-subtle tabular-nums sm:[grid-area:bar]">
+          <span>{formatEpa(-scale, 1)}</span>
+          <span>0</span>
+          <span>{formatEpa(scale, 1)}</span>
+        </div>
+      </div>
+      <ol>
+        {lines.map(({ qb, pt }) => {
+          const epa = pt.epa ?? 0;
+          const up = epa >= 0;
+          const thin = isThin(pt.plays);
+          return (
+            <li
+              key={qb.id}
+              className={cn(
+                "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-5 gap-y-2 border-t border-border/70 py-2.5 [grid-template-areas:'who_val'_'bar_bar']",
+                grid,
+              )}
+            >
+              <div className="flex min-w-0 items-center gap-3 [grid-area:who]">
+                <Headshot src={qb.headshot} name={qb.name} team={qb.team} className="size-10" />
+                <div className="min-w-0">
+                  <p className="truncate text-[15px] font-semibold">{qb.name}</p>
+                  <p className="text-[13px] text-muted">{teamNick(qb.team)}</p>
+                </div>
+              </div>
+              <div
+                role="img"
+                aria-label={`${qb.name}: ${formatEpa(pt.epa)} EPA per dropback in week ${week}`}
+                className="relative h-3.5 rounded-full bg-fg/[0.06] [grid-area:bar]"
+              >
+                <span aria-hidden className="absolute -top-1.5 -bottom-1.5 left-1/2 w-px bg-fg/40" />
+                <span
+                  aria-hidden
+                  className={cn("absolute inset-y-0", up ? "left-1/2 rounded-r-full bg-up" : "right-1/2 rounded-l-full bg-down")}
+                  style={{ width: `${Math.min(50, (Math.abs(epa) / scale) * 50)}%` }}
+                />
+              </div>
+              <div className="text-right leading-tight [grid-area:val]">
+                <p className={cn("text-xl font-bold tabular-nums", up ? "text-up" : "text-down")}>{formatEpa(pt.epa)}</p>
+                <p className="text-[13px] text-muted">
+                  {pt.plays} dropback{pt.plays === 1 ? "" : "s"}
+                </p>
+                {thin && <p className="text-xs text-subtle">small sample</p>}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
+
+/** A quarterback on the scatter: a photo (pinned, or when the slice is small) or a dot, with an optional name. */
+function QbDot(props: unknown) {
+  const { cx, cy, payload: d } = props as { cx?: number; cy?: number; payload?: ScatterPoint };
+  if (cx == null || cy == null || !d) return <g />;
+  const clip = `qb-dot-${d.id}`;
+  const labelX = d.flip ? cx - d.r - 8 : cx + d.r + 8;
+  return (
+    <g className="cursor-pointer" opacity={d.pinned || !d.photo ? 1 : 0.6}>
+      <circle cx={cx} cy={cy} r={d.r + 8} fill="transparent" />
+      {d.photo && d.headshot ? (
+        <>
+          <defs>
+            <clipPath id={clip}>
+              <circle cx={cx} cy={cy} r={d.r} />
+            </clipPath>
+          </defs>
+          <circle cx={cx} cy={cy} r={d.r + 2} fill={d.pinned ? CHART.fg : INK_QUIET} />
+          <circle cx={cx} cy={cy} r={d.r} fill="#1A1D24" />
+          <image
+            href={d.headshot}
+            x={cx - d.r}
+            y={cy - d.r}
+            width={d.r * 2}
+            height={d.r * 2}
+            clipPath={`url(#${clip})`}
+            preserveAspectRatio="xMidYMin slice"
+          />
+        </>
+      ) : (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={d.r}
+          fill={d.pinned ? CHART.fg : "#0A0B0D"}
+          stroke={d.pinned ? "#0A0B0D" : INK_QUIET}
+          strokeWidth={2}
+        />
+      )}
+      {d.label && (
+        <text
+          x={labelX}
+          y={cy + 5}
+          textAnchor={d.flip ? "end" : "start"}
+          fontSize={14}
+          fontWeight={700}
+          fill={d.pinned ? CHART.fg : INK_QUIET}
+        >
+          {d.last}{" "}
+          <tspan fontWeight={600} fill={d.epa >= 0 ? UP : DOWN}>
+            {formatEpa(d.epa)}
+          </tspan>
+        </text>
+      )}
+    </g>
   );
 }
 
@@ -670,18 +927,18 @@ function QbDotTip({
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
-      <p className="font-medium">{d.name}</p>
-      <p className="text-xs text-muted">{teamNick(d.team)}</p>
-      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
+    <div className="rounded-md bg-elevated px-3.5 py-3 text-fg shadow-[var(--shadow-border-hover)]">
+      <p className="text-base font-semibold">{d.name}</p>
+      <p className="text-[13px] text-muted">{teamNick(d.team)}</p>
+      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm tabular-nums">
+        <dt className="text-muted">EPA / dropback</dt>
+        <dd className={cn("text-right font-semibold", d.epa >= 0 ? "text-up" : "text-down")}>{formatEpa(d.epa)}</dd>
         <dt className="text-muted">CPOE</dt>
-        <dd>{formatCpoe(d.cpoe)}</dd>
-        <dt className="text-muted">EPA/play</dt>
-        <dd>{formatEpa(d.epa)}</dd>
+        <dd className="text-right font-semibold">{formatCpoe(d.cpoe)}</dd>
         <dt className="text-muted">Dropbacks</dt>
-        <dd className={isThin(d.plays) ? "text-muted" : undefined}>
+        <dd className="text-right font-semibold">
           {d.plays}
-          {isThin(d.plays) ? " · thin" : ""}
+          {isThin(d.plays) ? " · small sample" : ""}
         </dd>
       </dl>
     </div>

@@ -17,6 +17,10 @@
   --color-accent-fg: #0a0b0d;
   --color-navy: #1e4e8c;
   --color-rust: #c47868;
+  --color-sage: #7a9a7a;
+  /* Good and bad stat values: sage and rust lifted so numbers stay readable on dark glass. */
+  --color-up: #9fcb9f;
+  --color-down: #ee9784;
   --color-ring: #c5ccd6;
 
   --radius-xs: 4px;
