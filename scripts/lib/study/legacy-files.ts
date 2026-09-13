@@ -13,6 +13,20 @@ import type {
 import { StudyConfigError } from "./errors.ts";
 import { mean, median, round } from "./stats.ts";
 
+export type LegacyFileOptions = {
+  /** Only for files written outside src/data: lets an attribution-only run through, labelled as such. */
+  allowAttributionOnly?: boolean;
+};
+
+/** Refuses an attribution-only run unless allowed; the allowed case gets a leading warning note. */
+function attributionNotes(a: StudyRunArtifact, opts: LegacyFileOptions): string[] {
+  if (!a.run.scoring.legacyAttributionOnly) return [];
+  if (!opts.allowAttributionOnly) {
+    throw new StudyConfigError(`${a.runId} uses attribution-only scoring ${a.run.scoring.ref}; it cannot become a study page file`);
+  }
+  return [`Attribution only (${a.run.scoring.ref}): never publish these numbers.`];
+}
+
 function modelSummary(a: StudyRunArtifact, id: string): StudyModelSummary {
   const m = a.summary.models.find((x) => x.model === id);
   if (!m) throw new StudyConfigError(`${a.runId} has no model ${id}`);
@@ -37,7 +51,8 @@ function exclusionNote(a: StudyRunArtifact): string {
   return `Compared on ${a.summary.commonWeeks.length} common weeks; excluded for every method: ${parts.join("; ")}.`;
 }
 
-export function toBacktestFile(a: StudyRunArtifact): BacktestFile {
+export function toBacktestFile(a: StudyRunArtifact, opts: LegacyFileOptions = {}): BacktestFile {
+  const warning = attributionNotes(a, opts);
   const ids = { exact: "trail", greedyProj: "trail-greedy-proj", greedyValue: "trail-greedy-value" } as const;
   for (const id of Object.values(ids)) modelSummary(a, id);
   const pack = (w: StudyWeekRecord, id: string) => {
@@ -59,6 +74,7 @@ export function toBacktestFile(a: StudyRunArtifact): BacktestFile {
     season: a.run.season,
     cap: a.run.solver.cap,
     notes: [
+      ...warning,
       "Salaries are synthetic DraftKings-style prices, frozen all year, not live DK prices.",
       "Projection is the trailing mean over the weeks before each week's cutoff.",
       exclusionNote(a),
@@ -88,7 +104,8 @@ function point(m: StudyModelSummary): Omit<EwmaPoint, "alpha"> {
   };
 }
 
-export function toProjectionFile(a: StudyRunArtifact): ProjectionFile {
+export function toProjectionFile(a: StudyRunArtifact, opts: LegacyFileOptions = {}): ProjectionFile {
+  const warning = attributionNotes(a, opts);
   const models = a.run.models
     .filter((m) => m.solver === "exact-dp")
     .map((m) => ({ id: m.id, label: m.label, ...point(modelSummary(a, m.id)) }));
@@ -96,6 +113,7 @@ export function toProjectionFile(a: StudyRunArtifact): ProjectionFile {
     source: `nflverse ${a.run.season} REG, universe ${a.run.universe.id}`,
     season: a.run.season,
     notes: [
+      ...warning,
       "Each model only uses weeks before the cutoff. Opponent for week w is the scheduled opponent from the schedule.",
       "MAE is per slate player-week with a stat row, over the common weeks. Lineup mean is the strict exact-DP lineup's actual points.",
       exclusionNote(a),
@@ -105,7 +123,8 @@ export function toProjectionFile(a: StudyRunArtifact): ProjectionFile {
   };
 }
 
-export function toEwmaFile(a: StudyRunArtifact): EwmaFile {
+export function toEwmaFile(a: StudyRunArtifact, opts: LegacyFileOptions = {}): EwmaFile {
+  const warning = attributionNotes(a, opts);
   const points: EwmaPoint[] = a.run.models
     .filter((m) => m.method === "ewma" && m.solver === "exact-dp")
     .map((m) => ({ alpha: m.params.alpha!, ...point(modelSummary(a, m.id)) }))
@@ -117,6 +136,7 @@ export function toEwmaFile(a: StudyRunArtifact): EwmaFile {
     source: `nflverse ${a.run.season} REG, EWMA on trailing points, universe ${a.run.universe.id}`,
     season: a.run.season,
     note:
+      warning.map((w) => `${w} `).join("") +
       "α=1 is last week only. Trailing mean is not α=0: small α sticks to week 1. This sweep is exploratory on the season it " +
       `was run on; the best α is not a preselected result. ${exclusionNote(a)}`,
     trail: point(modelSummary(a, "trail")),
