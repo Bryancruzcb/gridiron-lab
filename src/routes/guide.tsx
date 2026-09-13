@@ -70,11 +70,21 @@ function GuidePage() {
             <Item term="Pts / $1k">Projected points per $1,000 of salary.</Item>
             <Item term="Lock">Force that player into the lineup.</Item>
             <Item term="Bench">Never pick that player.</Item>
+            <Item term="Optimal / Best found">
+              Optimal is proven: exact DP showed no legal lineup under the cap, with these locks and
+              benches, projects higher. Best found is a heuristic: a legal lineup with no such proof.
+              You only get one when you require a QB stack and the proven best has none.
+            </Item>
+            <Item term="Outdated">
+              You changed the setup after this lineup was built. It stays dimmed until you run again.
+            </Item>
             <Item term="Forecast">
               A guess made before kickoff from earlier games only.
             </Item>
             <Item term="Hindsight">
-              Rebuilds the lineup on this week’s actual PPR after games go final. Not a forecast.
+              The best lineup on this week’s actual PPR, built after the games. An upper bound for those
+              constraints, not a forecast: no one could have picked it before kickoff. Only players with a
+              score are in the pool, and scores that aren’t final yet are marked.
             </Item>
             <Item term="Backtest">
               This week on Lineup. On Study: 2023–2025, weeks 2–18. Each season has its own pool and
@@ -113,6 +123,55 @@ function GuidePage() {
             <Item term="Live / final">ESPN box: yards, TDs, PPR, 4th-down goes.</Item>
             <Item term="Advanced">
               EPA, CPOE, PROE from nflverse. That file posts the morning after, not during the game.
+            </Item>
+          </dl>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Data status</h2>
+          <p className="mt-3 text-sm leading-relaxed text-muted">
+            The line above live numbers on Home, QB, Lineup, Play-calling, Live and Players.
+          </p>
+          <dl className="mt-4 space-y-4 text-sm leading-relaxed">
+            <Item term="Live">Just retrieved from ESPN or nflverse.</Item>
+            <Item term="Cached">
+              The server’s copy from an earlier retrieval, served without asking again, or because
+              asking failed.
+            </Item>
+            <Item term="Stale">
+              Older than that feed should be: 3 minutes for scores, 10 for this week’s box scores, 45 for
+              the season file. The rows stay up. Retry asks again.
+            </Item>
+            <Item term="Snapshot">
+              The 2026 file checked into the app, shown when the live file can’t be reached. Its time is
+              when that file was made.
+            </Item>
+            <Item term="Unavailable">Nothing loaded and no copy to fall back on. Retry asks again.</Item>
+            <Item term="As of">
+              When the data was retrieved, not when you opened the page. A failed refresh never moves it.
+            </Item>
+            <Item term="Incomplete">Part of the source was missing. The note names the part.</Item>
+          </dl>
+        </section>
+
+        <section className="mt-10">
+          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Share and save</h2>
+          <dl className="mt-4 space-y-4 text-sm leading-relaxed">
+            <Item term="Copy link">
+              On QB the link keeps the season, down or situation, distance, min dropbacks, sort and pins,
+              so a link someone sends you opens the same view. On Lineup it keeps locks, benches, stack and
+              mode, then solves again on whatever scores are loaded when it opens. If copying is blocked,
+              the link is selected for you to copy by hand.
+            </Item>
+            <Item term="Saved views">
+              Named views on QB and Lineup, kept in this browser only. No account, no sync, up to 50.
+              Clearing site data deletes them. If the list can’t be read, Start over clears it.
+            </Item>
+            <Item term="Export">
+              JSON or CSV of the lineup on screen. It keeps that exact result: slots, projections, actual
+              scores marked complete, partial or missing, totals, the slate id, the week-score version, the
+              scoring ruleset and the solver method. The CSV is a metadata table, a blank line, then one row per
+              roster slot.
             </Item>
           </dl>
         </section>

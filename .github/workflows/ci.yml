@@ -8,7 +8,9 @@ on:
 jobs:
   typecheck:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # About 10 minutes in a clean Linux container: install, unit tests, build, lint, Chromium and
+    # ~4 minutes of browser checks. 20 leaves room for a cold npm or Chromium cache.
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,3 +34,14 @@ jobs:
       # This job has no DATABASE_URL, so the build's db:migrate step must skip cleanly.
       - run: npm run build
       - run: npm run lint
+      # Browser checks: Chromium for the playwright version the lockfile pins (cached per version;
+      # --with-deps still installs the system libraries), then every tests/e2e script against one
+      # production preview with fixture data and outbound calls blocked.
+      - id: playwright
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/playwright'].version")" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
