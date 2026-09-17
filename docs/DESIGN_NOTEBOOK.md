@@ -1,24 +1,28 @@
 # Design notebook (interview-facing)
 
-**Audience:** you, walking an interviewer through Gridiron Lab in 60 seconds or 5 minutes.  
+**Audience:** you, explaining Gridiron Lab as a **data-science** project in 60 seconds or 5 minutes (resume screen or hiring manager).  
 **Not this file:** the long build diary in [`IMPLEMENTATION_PROGRESS.md`](IMPLEMENTATION_PROGRESS.md), or the attribution archaeology in [`study/REGENERATION_REPORT.md`](study/REGENERATION_REPORT.md). Open those only if someone asks "how did you get here?"
 
-**Core claim:** `/study` is the product. The labs are instrumentation around a reproducible 2023–2025 lineup evaluation with strict causality, a proven salary-cap solver, and published numbers pinned by tests.
+**One-line resume angle:** Causal multi-season evaluation of salary-cap lineup policies on NFL player-week data — leakage-controlled inputs, versioned scoring, proven exact optimizer, bootstrap uncertainty, failures published.
+
+**Core claim:** `/study` is the scientific result. The React labs are instrumentation around a reproducible 2023–2025 lineup evaluation with strict causality, a proven salary-cap solver, and published numbers pinned by tests. Lead with methodology and eval design, not UI.
 
 ---
 
 ## 60-second talk track
 
-> I built an NFL fantasy stats lab where the main result is a multi-season lineup study, not a dashboard. For each of 2023–2025 I freeze a 114-player pool and synthetic DraftKings-style salaries from the *prior* season only, project with strictly pre-week history, then require an exact dynamic-programming solver to prove the best $50k lineup—or that week is dropped for every method. Scoring uses a versioned PPR+DST ruleset. Against greedy-by-projection the exact solver gains about **+1.4 points/week** pooled, but the bootstrap range includes zero; against points-per-dollar greedy it wins by ~22. I keep a look-ahead "shipped slate" only as a disclosed comparison, and the README's "What failed" section documents real bugs I found and fixed (broken DP, DST double-counting, opponent-adjust population mismatch). Everything that appears as a study number in the README is recomputed in CI from committed artifacts.
+> I ran a causal evaluation of salary-cap lineup selection on NFL data, not a fantasy tip app. For each of 2023–2025 I freeze a 114-player pool and synthetic salaries from the *prior* season only, project with strictly pre-week history, then require an exact DP to prove the best $50k lineup—or that week is dropped for every method. Scoring is a versioned PPR+DST ruleset. Exact vs greedy-by-projection is about **+1.4 points/week** pooled, but the bootstrap CI includes zero; vs points-per-dollar greedy it wins by ~22. A look-ahead "shipped slate" stays labelled comparison-only. README "What failed" documents leakage and solver bugs I found and fixed. Every study number in the README is regenerated in CI from pinned artifacts.
 
-**Open in the browser:** `/study`. **Open in the repo:** `README.md` Result + What failed, then this notebook.
+**Resume bullets to steal from:** leakage control · common-week policy · proven vs heuristic contract · content-addressed inputs · bootstrap over weeks · published failure modes.
+
+**Open in the repo first:** `README.md` Result + What failed, then this notebook. **Browser demo (optional):** `/study`.
 
 ---
 
 ## 5-minute talk track
 
-1. **Problem.** Cap-constrained lineup selection looks like "optimize projections," but most hobby projects leak future information, soft-fail the solver, or publish numbers that can't be regenerated. I wanted a study I could defend under interview scrutiny.
-2. **Design split.** Offline pipeline (`scripts/lib/study/*`) owns inputs → universe → causal projections → strict solves → sealed run artifacts → publish. Online app (`src/lib`, routes, worker) owns exploration: QB EPA/CPOE, interactive optimizer, live feeds. Same `solveLineup` in both paths.
+1. **Problem (DS).** Cap-constrained selection is an *evaluation* problem: can you compare policies without leakage, with a correct optimizer, and with regenerable numbers? Hobby projects often leak future info, soft-fail the solver, or hand-edit results. I built a study I can defend under scrutiny.
+2. **Design split.** Offline pipeline (`scripts/lib/study/*`) is the science path: inputs → universe → causal projections → strict solves → sealed artifacts → publish. The app (`src/lib`, routes, worker) is exploration/demo on the same `solveLineup`. In an interview, spend most of the time on the pipeline and README Result — not the UI.
 3. **Leakage control.** Projection cutoff is "rows strictly before week *w*." Opponents come from the *schedule*, never postgame rows. Universes are either `synthetic-prior-season@1` (clean) or the shipped `fantasy.json` (look-ahead, labelled). Roles are `development` / `retrospective` / `holdout`—2025 is retrospective, not a holdout.
 4. **Solver contract.** `solveLineup` runs exactly one method with no silent fallback. Study weeks require `exact-dp` + `optimality: "proven"`. The interactive page may fall back to hill-climb for QB stacks, but it labels heuristic and records why.
 5. **Honesty as a feature.** First DP sometimes returned nothing and hill-climb was mislabelled exact. Opponent-adjust v1 compared different populations (`opp@1` → `opp@2`). DST scoring double-counted XPs. Those are in README "What failed," not buried.
@@ -89,9 +93,9 @@ flowchart TB
 | **worker protocol** | Keeps DP off the main thread; pure `handleWorkerRequest` so Node tests = browser path. | Extra protocol validation; cancel = terminate worker. |
 | **routes / labs** | Teachability: interactive optimizer and QB lab make the study tangible. Study / optimizer / QB page sections live in `src/components/{study,optimizer,qb}/`; routes stay thin shells. | `qb.tsx` still owns URL/pin/scatter state (`QbLab`); some product surface (auth/db) is adjacent to the DS story. |
 
-### UI layers (after the mega-route split)
+### App surface map (optional demo)
 
-For a screen-share, open the component folders—not the old mega-route files:
+Only if they ask to click around. Prefer the study pipeline files below. Component folders (post-split):
 
 - `src/components/study/` — DidItHelp, TooOptimistic, BetterGuesses, HotQbs, WhatWentWrong, …
 - `src/components/optimizer/` — SolvePanel, LineupResult, PlayerRows, BacktestPanel, …
@@ -196,15 +200,15 @@ npm run test:e2e             # after build + playwright chromium
 2. **Lead with failures, not just wins** — already in README; practice the oral version (see below).
 3. **Don't claim holdout or DFS edge** — roles and synthetic salaries are correct in docs; keep language tight in interviews.
 
-### Should-improve (follow-up coding PR)
-1. **Split mega-routes** (`study.tsx` / `optimizer.tsx` / `qb.tsx`) into presentational sections + hooks so you can screen-share without scrolling a 30–40KB file.
-2. **Thin "resume path" in CONTRIBUTING or README** — one "interview walkthrough" section pointing here (partially done via README link).
-3. **Exact DP + stack** — either model stack in DP (harder) or keep heuristic but add a one-line UI callout on `/study` that study runs never use stack fallback (already true via strict runner).
+### Should-improve (follow-up — data science, not UI chrome)
+1. **Mega-route split is done.** Further `QbLab` extraction is optional demo hygiene — skip unless a live screen-share needs it.
+2. **If claiming market edge later:** real salaries and/or a sealed holdout season. Until then, keep calling 2025 retrospective and salaries synthetic.
+3. **Keep the diary demoted:** `IMPLEMENTATION_PROGRESS.md` is history; this notebook + README Result stay the resume path.
 
 ### Nice-to-have
-1. Collapse or archive older sections of `IMPLEMENTATION_PROGRESS.md` behind a "history" heading so reviewers don't mistake the diary for the architecture.
-2. Optional diagram in `/guide` linking study concepts to UI terms (proven, look-ahead, inactive).
-3. Record a 60s Loom of `/study` for applications that allow media.
+1. Collapse older `IMPLEMENTATION_PROGRESS` sections under History so reviewers don't mistake the diary for the architecture.
+2. A one-page PDF "study abstract" for applications that want a paper-like artifact (same claims as the 60s track).
+3. Optional short recording of `/study` only if an application asks for media — not required for the DS claim.
 
 ---
 
@@ -220,6 +224,19 @@ Use these almost verbatim—they signal senior judgment:
 - **Headline humility:** "Exact beats greedy by +1.4/week pooled, but the range includes zero. Cap-optimal on a weak projection is still a weak lineup. The interesting failure mode is selection: player-level bias ≈ 0 while lineup projection overshot every week."
 
 ---
+
+
+## Resume framing (copy-paste)
+
+**Title-ish:** Causal evaluation of salary-cap lineup policies on NFL player-week data (TypeScript).
+
+**Bullets:**
+- Designed a leakage-controlled multi-season backtest: prior-season universes, pre-week projection cutoffs, schedule-based opponents, common-week drops when the exact solver cannot prove.
+- Compared exact DP vs greedy baselines with week-level bootstrap intervals; reported null-friendly results (exact vs proj-greedy CI includes 0) alongside large gaps vs pts/$.
+- Shipped content-addressed inputs, versioned scoring (`gridiron-lab-ppr-dst@1`), and CI that regenerates README study numbers from sealed artifacts.
+- Documented and fixed evaluation bugs (broken DP mislabelled as exact, DST XP double-count, opponent-adjust population mismatch, look-ahead slate).
+
+**What not to claim:** Live DraftKings edge; that 2025 is a sealed holdout; that trailing mean is a strong forecast.
 
 ## Glossary (quick)
 

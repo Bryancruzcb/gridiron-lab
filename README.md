@@ -2,11 +2,13 @@
 
 [![CI](https://github.com/Bryancruzcb/gridiron-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Bryancruzcb/gridiron-lab/actions/workflows/ci.yml)
 
-NFL stats lab with a 2023–2025 lineup study. The labs are the app. **`/study` is the result.**
+**Data-science project first:** a causal, reproducible evaluation of salary-cap lineup selection on NFL player-week data (2023–2025). The web labs are instrumentation. **`/study` is the result.**
 
-TanStack Start (React 19), Tailwind, Recharts. nflverse + ESPN. Salaries are synthetic DraftKings-style, frozen — not live DK prices.
+What you are evaluating: fixed pools + synthetic DraftKings-style salaries (prior season only) → causal projections (no future rows) → a proven exact DP under a $50k cap (or the week is dropped for every method) → score on that week's actuals. Numbers in this README are recomputed in CI from committed study artifacts.
 
-**Interview walkthrough:** [`docs/DESIGN_NOTEBOOK.md`](docs/DESIGN_NOTEBOOK.md) — 60s/5min talk tracks, architecture diagrams, and a rubric mapped to this repo. Prefer that over the long build diary in `docs/IMPLEMENTATION_PROGRESS.md`.
+Stack (secondary): TanStack Start (React 19), TypeScript, nflverse + ESPN. Salaries are frozen synthetics — not live DK prices.
+
+**Interview / resume walkthrough:** [`docs/DESIGN_NOTEBOOK.md`](docs/DESIGN_NOTEBOOK.md) — DS framing, 60s/5min talk tracks, leakage controls, rubric. Prefer that over the long build diary in `docs/IMPLEMENTATION_PROGRESS.md`.
 
 ## Result (2023–2025, weeks 2–18)
 
@@ -58,6 +60,9 @@ MAE = average |projected − actual| per played slate player-week over the compa
 - Trailing mean is a weak forecast. Three seasons is still a small sample, and 2025 was examined before. Week 1 2026 is a thin sample.
 
 ## Labs
+
+Interactive views of the same study and live feeds. Useful for demos; the science claim lives in **Result** / **What failed** / the design notebook.
+
 
 | Route | What |
 |---|---|
