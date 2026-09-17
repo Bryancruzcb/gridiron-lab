@@ -6,6 +6,8 @@ NFL stats lab with a 2023–2025 lineup study. The labs are the app. **`/study` 
 
 TanStack Start (React 19), Tailwind, Recharts. nflverse + ESPN. Salaries are synthetic DraftKings-style, frozen — not live DK prices.
 
+**Interview walkthrough:** [`docs/DESIGN_NOTEBOOK.md`](docs/DESIGN_NOTEBOOK.md) — 60s/5min talk tracks, architecture diagrams, and a rubric mapped to this repo. Prefer that over the long build diary in `docs/IMPLEMENTATION_PROGRESS.md`.
+
 ## Result (2023–2025, weeks 2–18)
 
 Each season gets its own 114-player pool and synthetic salaries built only from the season before (`synthetic-prior-season@1`). Projection = trailing mean of that season's earlier weeks. The exact solver must prove the best $50k lineup for those projections, or the week is dropped for every method. Score it on that week's actual points (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-style ruleset). 2023 and 2024 ran first and nothing was tuned on them. 2025 is **retrospective**, not a holdout: it had been studied before. No week was dropped.
