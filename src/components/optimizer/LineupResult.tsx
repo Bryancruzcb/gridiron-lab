@@ -14,7 +14,7 @@ type Props = {
   isCurrent: boolean;
   hindsight: boolean;
   best: Best;
-  shown: { fingerprint: string; requestId: string; elapsedMs: number };
+  shown: { fingerprint: string; requestId: number; elapsedMs: number };
   outcome: { mode: LineupMode };
   lineup: { proj: number; salary: number; remaining: number; players: FantasyPlayer[]; slots: Slot[] };
   usedPct: number;
