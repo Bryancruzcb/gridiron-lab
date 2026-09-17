@@ -87,7 +87,17 @@ flowchart TB
 | **publish** | Page never hand-edits numbers; publish verifies artifact hashes and refuses mixed configs / attribution-only scoring. | Two-step workflow (run → publish) before README/CI agree. |
 | **optimizer + validation** | Exact DP for DK-like roster under salary; heuristics labelled; stack is a separate concern. | Exact DP does not encode QB stack; UI may hill-climb and must say so. |
 | **worker protocol** | Keeps DP off the main thread; pure `handleWorkerRequest` so Node tests = browser path. | Extra protocol validation; cancel = terminate worker. |
-| **routes / labs** | Teachability: interactive optimizer and QB lab make the study tangible. | Large route files; some product surface (auth/db) is adjacent to the DS story. |
+| **routes / labs** | Teachability: interactive optimizer and QB lab make the study tangible. Study / optimizer / QB page sections live in `src/components/{study,optimizer,qb}/`; routes stay thin shells. | `qb.tsx` still owns URL/pin/scatter state (`QbLab`); some product surface (auth/db) is adjacent to the DS story. |
+
+### UI layers (after the mega-route split)
+
+For a screen-share, open the component folders—not the old mega-route files:
+
+- `src/components/study/` — DidItHelp, TooOptimistic, BetterGuesses, HotQbs, WhatWentWrong, …
+- `src/components/optimizer/` — SolvePanel, LineupResult, PlayerRows, BacktestPanel, …
+- `src/components/qb/` — WeekBars, QbDot, QbDotTip, Field
+
+Routes (`src/routes/study.tsx`, `optimizer.tsx`, `qb.tsx`) compose those pieces. Solver contract (`useLineupSolver` / proven-vs-heuristic labelling) is unchanged.
 
 ---
 
