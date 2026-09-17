@@ -65,8 +65,8 @@ export function EwmaSweep() {
               dataKey="lineupMean"
               stroke={CHART.paper}
               strokeWidth={2}
-              dot{{ r: 3, fill: CHART.paper }}
-              activeDot{{ r: 5, fill: CHART.sage }}
+              dot={{ r: 3, fill: CHART.paper }}
+              activeDot={{ r: 5, fill: CHART.sage }}
             />
           </LineChart>
         </ResponsiveContainer>
