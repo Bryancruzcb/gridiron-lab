@@ -1,7 +1,7 @@
 import { CopyLink } from "@/components/CopyLink";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { ImportReport, LineupMode, LineupSelection, PlanIssue } from "@/lib/lineup/selection";
+import type { ImportReport, LineupMode, LineupPlan, LineupSelection } from "@/lib/lineup/selection";
 import type { SolveFailure } from "@/lib/optimizer";
 import { ImportNotice } from "./ImportNotice";
 import { ISSUE_LABEL, failureText, names } from "./helpers";
@@ -19,7 +19,7 @@ type Props = {
   week: { week: number } | null | undefined;
   scoredCount: number;
   lineupView: LineupView;
-  lineupPlan: { ok: boolean; issues: PlanIssue[] };
+  lineupPlan: LineupPlan;
   importReport: ImportReport | null;
   hasSetup: boolean;
   lineup: unknown;
@@ -119,7 +119,7 @@ export function SolvePanel({
             {failureText(bestFailure, mode)}
           </p>
         )}
-        {!lineupView.running && lineupPlan.ok && lineup && !isCurrent && !lineupView.cancelled && !lineupView.failure && (
+        {!lineupView.running && lineupPlan.ok && lineup != null && !isCurrent && !lineupView.cancelled && !lineupView.failure && (
           <p className="text-muted">
             Setup changed since this lineup was built. {mode === "actual" ? "Hindsight lineup" : "Build lineup"} to update it.
           </p>
