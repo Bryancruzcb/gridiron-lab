@@ -3,33 +3,33 @@
 **Audience:** you, explaining Gridiron Lab in 60 seconds or 5 minutes.  
 **Not this file:** the long build diary in [`IMPLEMENTATION_PROGRESS.md`](IMPLEMENTATION_PROGRESS.md), or the deep change log in [`study/REGENERATION_REPORT.md`](study/REGENERATION_REPORT.md).
 
-**Rule:** keep the story simple. Only use ideas you can explain out loud without buzzwords. If you can’t defend it in one sentence, don’t put it on a resume.
+**Rule:** keep the story simple. Only claim what is real. **Synthetic DraftKings salaries / a $50k cap are out of the pitch.**
 
-**One-line resume angle:** Fair multi-season backtest of $50k fantasy lineups on NFL data — no future-data cheating, exact best lineup or the week is dropped, scores regenerated in CI, failures written up honestly.
+**One-line resume angle:** Leakage-controlled multi-season evaluation of NFL fantasy point projections — prior-season player pools, no future-data cheating, player MAE published in CI, failures written up honestly.
 
-**Core claim:** `/study` is the result. The website helps you explore; the science is the study rules + the numbers + the failure notes. Lead with those, not UI.
+**Core claim:** Projection quality under a fair information cutoff. `/study` publishes the numbers; lead with README Result (MAE) + What failed — not the optimizer demo.
 
 ---
 
 ## 60-second talk track
 
-> I built a fair backtest for fantasy lineups, not a tip sheet. For 2023–2025 I lock a 114-player pool and fake salaries from the *prior* season only, project using only earlier weeks, then require an exact dynamic-programming optimizer to prove the true best $50k lineup under the cap—or I drop that week for every method. Exact vs “pick highest projections” is about **+1.4 points/week**, but the uncertainty range includes zero, so I don’t oversell it. Exact beats “points per dollar” by a lot (~22). One old “shipped” slate used future info on purpose — I keep it only as a labelled comparison. README “What failed” lists real bugs I fixed. CI rebuilds the README numbers from saved study files.
+> I evaluated fantasy point projections on NFL data with no look-ahead. For 2023–2025 I freeze a 114-player pool from the *prior* season only and project using only earlier weeks, then measure player MAE against real points. Shrinkage to position has the best MAE; trailing mean is second; last-week alone is worst. I do **not** claim DraftKings salaries or a $50k lineup edge — an older cap experiment used synthetic prices, so I dropped that from the pitch. README What failed covers look-ahead slates, opponent-adjust bugs, and scoring mistakes. CI rebuilds the README numbers from saved study files.
 
-**Ideas worth saying (plain English):** don’t peek at the future · same weeks for every method · exact best or drop the week · save inputs so anyone can rebuild · admit failures.
+**Ideas worth saying:** don’t peek at the future · same pools/weeks for every method · publish MAE · admit failures · no fake market prices.
 
-**Open first:** `README.md` Result + What failed, then this notebook. **Optional demo:** `/study`.
+**Open first:** `README.md` Result + What failed. **Optional demo:** `/study` for numbers; skip `/optimizer` in a DS interview.
 
 ---
 
 ## 5-minute talk track
 
-1. **Problem.** Can you compare lineup methods fairly? Many projects peek at future stats, replace a failed “exact” solve with a guess, or paste numbers by hand. I wanted a study I can defend.
-2. **Where the science lives.** The study scripts (`scripts/lib/study/*`) do the real work: pin data → build pools → project → solve → save results → publish into the README. The website reuses the same solver for demos. Spend interview time on the study, not the UI.
-3. **No future peeking.** For week *w*, projections only see weeks before *w*. Opponents come from the schedule, not the final box score. Clean pools use last season only. The old shipped slate used future info — labelled, not clean history. 2025 was looked at before, so I call it retrospective, not a secret holdout.
-4. **Exact means exact.** In the study, the optimizer must prove the best lineup or the week is dropped for everyone. The interactive page can use a faster guess for some constraints, but it must say so.
-5. **I publish my mistakes.** Broken first solver, DST scoring bug, opponent-adjust comparing the wrong groups — all in README “What failed.”
-6. **Rebuildable numbers.** Inputs are hashed and pinned; CI fails if README study numbers don’t match the saved runs.
-7. **What I don’t claim.** Trailing mean isn’t a great forecast. Fake salaries miss rookies. 51 weeks isn’t enough to crown exact over simple greedy. Best salary-cap lineup on a weak projection is still weak.
+1. **Problem.** Can you compare projection methods fairly? Many projects peek at future stats or paste numbers by hand.
+2. **Where the science lives.** Study scripts pin data → build pools → project → score player error → publish into the README. Spend interview time on that, not UI.
+3. **No future peeking.** For week *w*, projections only see weeks before *w*. Clean pools use last season only. The old shipped slate used future info — labelled, not clean history. 2025 is retrospective, not a secret holdout.
+4. **What I measure.** Player MAE on played slate player-weeks. Shrinkage wins MAE; I don’t oversell EWMA from an old lineup experiment.
+5. **What I don’t claim.** Live DraftKings salaries, a $50k salary-cap edge, or that trailing mean is a strong forecast.
+6. **I publish mistakes.** Bye-week slate bug, DST scoring bug, opponent-adjust using the wrong group, look-ahead shipped slate.
+7. **Rebuildable numbers.** Inputs hashed/pinned; CI fails if README study numbers don’t match the saved runs.
 
 ---
 
@@ -190,6 +190,8 @@ npm run test:e2e             # after build + playwright chromium
 ## Prioritized review (resume / interview readiness)
 
 ### Must-fix (for the pitch)
+
+0. **No fake DK prices in the pitch.** Salary-cap / Pts-per-dollar / exact-vs-greedy-under-synthetic-cap are retired from the claim.
 1. **Missing short design notebook** — addressed by this file; README should link it.
 2. **Lead with failures, not just wins** — already in README; practice the oral version (see below).
 3. **Don't claim holdout or DFS edge** — roles and synthetic salaries are correct in docs; keep language tight in interviews.
@@ -222,15 +224,15 @@ Use these almost verbatim—they signal senior judgment:
 
 ## Resume framing (copy-paste)
 
-**Title-ish:** Fair multi-season backtest of $50k fantasy lineups on NFL data (TypeScript).
+**Title-ish:** Leakage-controlled multi-season evaluation of NFL fantasy projections (TypeScript).
 
 **Bullets:**
-- Built a multi-season backtest with no future-data cheating: prior-season player pools/salaries, projections from earlier weeks only, same weeks kept for every method.
-- Compared an exact salary-cap optimizer to simple greedy baselines; reported when the gain was unclear (uncertainty range includes zero) instead of overselling.
+- Built a multi-season projection eval with no future-data cheating: prior-season player pools, projections from earlier weeks only, same weeks for every method.
+- Compared simple explainable projection methods on player MAE; shrinkage best, trailing mean second — without claiming market salaries or a salary-cap edge.
 - Pinned study inputs and made CI rebuild the README numbers from those runs.
-- Wrote up and fixed real evaluation bugs (broken “exact” solver, scoring mistake, opponent adjustment using the wrong group, a look-ahead slate kept only as a comparison).
+- Wrote up and fixed real evaluation bugs (scoring mistake, opponent adjustment using the wrong group, a look-ahead slate kept only as a comparison); dropped synthetic-price cap framing from the pitch.
 
-**What not to claim:** Live DraftKings edge; that 2025 is a sealed holdout; that a simple average is a strong forecast.
+**What not to claim:** Live DraftKings salaries or $50k edge; that 2025 is a sealed holdout; that a simple average is a strong forecast.
 
 ## Glossary (quick)
 

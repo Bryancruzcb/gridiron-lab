@@ -2,86 +2,75 @@
 
 [![CI](https://github.com/Bryancruzcb/gridiron-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Bryancruzcb/gridiron-lab/actions/workflows/ci.yml)
 
-**What this is:** a fair backtest of “build a $50k fantasy lineup” on NFL data (2023–2025). The website is just how you look at it. **`/study` is the result.**
+**What this is:** a leakage-controlled evaluation of **fantasy point projections** on NFL player-week data (2023–2025). No DraftKings salary prices in the claim — those were synthetic and are **not** part of the result. The website is secondary. **`/study` holds the published numbers; the pitch is projection quality + honesty about failures.**
 
 Simple rules of the study:
-1. Player pools and fake DraftKings-style salaries come from the **previous season only** (not the week you’re predicting).
+1. Each season uses a fixed 114-player pool built only from the **previous season** (not the week you’re predicting).
 2. Projections use **only games before that week** (no peeking at the future).
-3. An exact optimizer must find the true best $50k lineup for those projections, or that week is thrown out for every method.
-4. Score the lineups on that week’s **real** points.
-5. Every number in this README is rebuilt in CI from the same saved study files — not hand-edited.
+3. Score projections on that week’s **real** fantasy points (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-**style scoring** ruleset — scoring only, not market salaries).
+4. Every number in this README is rebuilt in CI from the same saved study files — not hand-edited.
 
-Stack (secondary): TanStack Start (React 19), TypeScript, nflverse + ESPN. Salaries are frozen fakes — not live DraftKings prices.
+Stack (secondary): TanStack Start (React 19), TypeScript, nflverse + ESPN.
 
-**How to explain it:** [`docs/DESIGN_NOTEBOOK.md`](docs/DESIGN_NOTEBOOK.md) — short talk tracks and what you should / shouldn’t claim. Prefer that over the long build diary in `docs/IMPLEMENTATION_PROGRESS.md`.
+**How to explain it:** [`docs/DESIGN_NOTEBOOK.md`](docs/DESIGN_NOTEBOOK.md). Prefer that over `docs/IMPLEMENTATION_PROGRESS.md`.
 
 ## Result (2023–2025, weeks 2–18)
 
-Each season gets its own 114-player pool and synthetic salaries built only from the season before (`synthetic-prior-season@1`). Projection = trailing mean of that season's earlier weeks. An exact dynamic-programming optimizer must prove the best $50k lineup under the cap for those projections, or the week is dropped for every method. Score it on that week's actual points (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-style ruleset). 2023 and 2024 ran first and nothing was tuned on them. 2025 is **retrospective**, not a holdout: it had been studied before. No week was dropped.
+Each season gets its own 114-player pool built only from the season before (`synthetic-prior-season@1`). That rule uses prior-season games/PPG to pick the pool; **salary bands from that rule are not used in this pitch**. Projection methods read only earlier weeks. Score with (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-style scoring ruleset — scoring only, not market salaries). Compare methods by **player MAE** (mean |projected − actual| on played slate player-weeks). 2023 and 2024 ran first and nothing was tuned on them. 2025 is **retrospective**, not a holdout: it had been studied before. No week was dropped.
 
-| Season | Weeks | Exact | Greedy by proj | Pts/$ greedy | Exact − greedy (95% range) | Exact W-L-T |
-|---|---|---|---|---|---|---|
-| 2023 (development) | 17 | 131.9 | 128.5 | 112.5 | +3.5 (−10.2 to +17.6) | 10-6-1 |
-| 2024 (development) | 17 | 129.0 | 128.4 | 102.7 | +0.6 (0.0 to +1.7) | 1-0-16 |
-| 2025 (retrospective) | 17 | 139.7 | 139.7 | 120.7 | 0.0 (−5.3 to +5.5) | 4-5-8 |
-| **Pooled 2023–2025** | **51** | **133.5** | **132.2** | **112.0** | **+1.4 (−3.4 to +6.6)** | **15-11-25** |
-| 2025 shipped slate (look-ahead) | 17 | 126.7 | 124.1 | 85.4 | +2.6 (−5.6 to +11.3) | 8-9-0 |
-
-The solver beats cheap points-per-dollar picks by 21.6 points a week pooled (range +14.1 to +28.7; 41 of 51 weeks). Against ordinary greedy it gains **+1.4 a week, and the range includes zero**: 51 weeks cannot tell them apart. A tie means both built the same lineup. Cap-optimal on a weak projection is still a weak lineup.
-
-The exact lineup's pregame projection averaged 188.1 and it scored 133.5. The projection was too high in 51 of 51 weeks (17 of 17 on the shipped slate). Player by player the trailing mean is unbiased (−0.02 points over 4,517 player-weeks), so the gap is selection: the solver picks the players whose averages ran hottest.
+Player by player the trailing mean is unbiased (−0.02 points over 4,517 player-weeks). That does **not** mean it is a strong forecast — see MAE below.
 
 QB, ≥15 attempts, consecutive weeks: last week’s EPA/attempt vs this week **r = 0.165** (2025, 409 pairs), 0.152 (2024, 425), 0.141 (2023, 433). CPOE **r = 0.143**, 0.121, 0.109. The QB lab describes the past.
 
 Eight projection methods (same pools, no future data), pooled 2023–2025 (51 weeks, 4,517 player-weeks):
 
-| Projection | Player MAE | Lineup mean | vs trailing mean (95% range) |
-|---|---|---|---|
-| EWMA α=0.35 | 6.30 | 144.0 | +10.5 (+4.2 to +16.8) |
-| Opponent-adjusted trail | 6.36 | 138.3 | +4.7 (−3.8 to +14.1) |
-| Usage × rate | 6.38 | 136.7 | +3.2 (−2.6 to +9.0) |
-| Shrink to position | **5.99** | 136.3 | +2.7 (−1.3 to +7.2) |
-| Last 3 | 6.51 | 136.0 | +2.5 (−4.4 to +9.3) |
-| 60/40 season + last 3 | 6.23 | 134.7 | +1.1 (−4.1 to +6.3) |
-| Trailing mean | 6.19 | 133.5 | — |
-| Last week | 7.78 | 131.5 | −2.1 (−10.3 to +6.6) |
+| Projection | Player MAE |
+|---|---|
+| Shrink to position | **5.99** |
+| Trailing mean | 6.19 |
+| 60/40 season + last 3 | 6.23 |
+| EWMA α=0.35 | 6.30 |
+| Opponent-adjusted trail | 6.36 |
+| Usage × rate | 6.38 |
+| Last 3 | 6.51 |
+| Last week | 7.78 |
 
-- **Shrinkage** to position has the best player MAE in every season and on the shipped slate (6.29 there). Trailing mean is second everywhere. Shrinkage lineups score about the same as trailing-mean lineups.
-- **EWMA α=0.35** beat the trailing mean in all three seasons (+13.4, +8.9, +9.1 a week). Its α is a default carried over from the first 2025 scripts, not tuned on 2023–2024. On the shipped 2025 slate it lost (121.2 vs 126.7). In the exploratory sweeps the best α was 0.40 in 2023, 0.30 in 2024, 0.20 in 2025 and 0.90 on the shipped slate. Do not fit α on 17 weeks.
-- **Opponent-adjust** scales the trailing mean by what the opponent allowed at the position over what every opponent allowed, from the same rows, clamped to 0.7–1.3. It gains +4.7 a week pooled (range −3.8 to +14.1) and scores 138.3; on the shipped slate it scores 122.7. The first version divided by the pool's own position mean instead, so most skill players sat at the 0.7 floor.
+- **Shrinkage** to position has the best player MAE in every season and on the shipped slate (6.29 there). Trailing mean is second everywhere.
+- **EWMA α=0.35** is **not** better than trailing mean on player MAE (6.30 vs 6.19 pooled). Its α is a default carried over from the first 2025 scripts, not tuned on 2023–2024. In the exploratory sweeps the best α was 0.40 in 2023, 0.30 in 2024, 0.20 in 2025 and 0.90 on the shipped slate. Do not fit α on 17 weeks.
+- **Opponent-adjust** scales the trailing mean by what the opponent allowed at the position over what every opponent allowed, from the same rows, clamped to 0.7–1.3. Player MAE is 6.36 pooled (worse than trailing mean 6.19). The first version divided by the pool's own position mean instead, so most skill players sat at the 0.7 floor — fixed as `opp@2`.
 
-MAE = average |projected − actual| per played slate player-week over the compared weeks. 95% range = percentile bootstrap of the mean weekly difference, resampling weeks (2,000 resamples, seed 20260912). It is descriptive, not a significance test.
+MAE = average |projected − actual| per played slate player-week over the compared weeks. Where a 95% range appears elsewhere it is a percentile bootstrap resampling weeks (2,000 resamples, seed 20260912) — descriptive, not a significance test.
 
-[`docs/study/REGENERATION_REPORT.md`](docs/study/REGENERATION_REPORT.md) compares these numbers with the first publication and with the previous regeneration. It attributes each change to the solver repair, the scoring repair, the slate and week policy, the per-season universes and the opponent-model fix, and it keeps the counts that come only from one-time replays of the old scripts.
+**Retired (not claimed):** an older salary-cap lineup experiment used synthetic DraftKings-like prices and an exact $50k optimizer. Those prices were not real market salaries, so that framing is out of the resume pitch. Committed study files may still contain those runs for archaeology; do not present them as the result.
+
+[`docs/study/REGENERATION_REPORT.md`](docs/study/REGENERATION_REPORT.md) attributes earlier number moves (solver, scoring, slate policy, opponent-model fix).
 
 ## What failed
 
-- **Synthetic salaries**, frozen per season. The pools miss rookies and offseason moves.
-- **The shipped 114-player 2025 slate is look-ahead.** Every offensive player's games, PPG and season points in `src/data/fantasy.json` match the full 2025 regular season. Its projection is 60% season PPG + 40% late-season PPG, and salary is a straight line of that projection within each position. Among players with enough games, the RB and WR pools are exactly the top players by that projection. Only 66 of its 114 players are in the clean 2025 pool. It stays as a comparison, never as a clean historical slate.
-- **The first exact DP was broken.** It sometimes returned no lineup, and hill-climb stood in while the results were still grouped as exact. The old study page said the overshoot was “not a bug in the picker”; the picker did have a bug, even though the repaired solver overshoots too. The repaired solver proves every study lineup or the week is dropped.
-- **The old study scripts** kept players on a bye on the slate (they scored nothing when picked), estimated DST points allowed from touchdowns, field goals and extra points (counting every extra point twice), and read opponents from postgame rows. All fixed.
-- **The first opponent adjustment compared different groups.** It divided what an opponent allowed to every player at the position, backups included, by the pool's own position mean, which covers only the top players. Most skill players got the maximum cut, so it mostly shrank their trailing means. Fixed as `opp@2`.
-- **Inactive means zero.** A player with no stat row in a final game counts 0. nflverse also omits active players who recorded nothing, so the two can't be told apart. Trailing-mean lineups used 49 such slots over the 51 weeks.
+- **Synthetic DraftKings salaries in the old cap experiment.** Not real market prices — removed from the claim. Do not put a $50k cap, cheap points-per-salary picks, or “exact vs greedy under fake prices” on a resume.
+- **The shipped 114-player 2025 slate is look-ahead.** Every offensive player's games, PPG and season points in `src/data/fantasy.json` match the full 2025 regular season. Its projection is 60% season PPG + 40% late-season PPG. Among players with enough games, the RB and WR pools are exactly the top players by that projection. Only 66 of its 114 players are in the clean 2025 pool. It stays as a comparison, never as a clean historical slate.
+- **The old study scripts** kept players on a bye on the slate, estimated DST points allowed from touchdowns, field goals and extra points (counting every extra point twice), and read opponents from postgame rows. All fixed.
+- **The first opponent adjustment compared different groups.** It divided what an opponent allowed to every player at the position, backups included, by the pool's own position mean, which covers only the top players. Most skill players got the maximum cut. Fixed as `opp@2`.
+- **Inactive means zero.** A player with no stat row in a final game counts 0. nflverse also omits active players who recorded nothing, so the two can't be told apart. Trailing-mean lineups used 49 such slots over the 51 weeks (from the retired cap runs — the scoring rule still matters).
 - Trailing mean is a weak forecast. Three seasons is still a small sample, and 2025 was examined before. Week 1 2026 is a thin sample.
 
 ## Labs
 
-Interactive views of the same study and live feeds. Useful for demos; the science claim lives in **Result** / **What failed** / the design notebook.
-
+Interactive views. Useful for demos; the science claim lives in **Result** / **What failed** / the design notebook. **`/optimizer` is not part of the DS pitch** (it still demos a salary cap with non-market prices).
 
 | Route | What |
 |---|---|
-| `/study` | Lineup study, 2023–2025. Read this first. |
+| `/study` | Published study numbers. Read Result in the README first. |
 | `/qb` | EPA / CPOE scatter, down filters, week strip, pins. Copy link, saved views |
-| `/optimizer` | $50k lineup: lock / bench / QB stack, exact DP in a web worker (proven or labelled heuristic), hindsight, this-week backtest. Copy link, saved views, JSON / CSV export |
 | `/play-calling` | 4th-down go, 2nd-and-short, heatmap |
 | `/players` | This week's box and PPR per player: provisional ESPN lines vs published nflverse rows |
 | `/live` | In-game box → final whistle → next morning |
 | `/guide` | Definitions |
+| `/optimizer` | Demo only — not the resume claim |
 
 Live numbers carry a status line: Live, Cached, Snapshot (the checked-in 2026 file) or unavailable, the time the data was retrieved, and Stale once it is older than that feed allows. A failed refresh keeps the last good rows and their original time; Retry asks again.
 
-Share and save analyses: the QB and Lineup pages keep their filters, pins and lineup constraints in the URL, so Copy link reopens the same view. Saved views live in this browser only (up to 50). Export JSON/CSV keeps the exact lineup shown, with its slate id, actuals version, ruleset and solver method; opening a link instead recomputes on whatever scores are loaded then.
+Share and save analyses: the QB page keeps filters and pins in the URL. Saved views live in this browser only (up to 50).
 
 ## Run it
 

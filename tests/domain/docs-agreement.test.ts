@@ -35,6 +35,8 @@ const MINUS = "−";
 /** Numbers in the study sections that are not study results. */
 const NOT_STUDY_NUMBERS: { phrase: string; reason: string }[] = [
   { phrase: "Week 1 2026 is a thin sample", reason: "the live labs' current season, not a study result" },
+  { phrase: "an exact $50k optimizer", reason: "retired synthetic-cap framing, not a claimed result" },
+  { phrase: "Do not put a $50k cap", reason: "negative claim language, not a study result" },
 ];
 
 const pool = study.pools.find((p) => p.seasons.length === study.seasons.length);
@@ -122,14 +124,13 @@ function table(after: string): Map<string, { values: string[]; span: [number, nu
 const seasonsOf = (role: string) => study.seasons.filter((s) => s.role === role).map((s) => String(s.season));
 
 describe("README study numbers match the committed study files", () => {
-  it("names the seasons, weeks, pools, cap, refs and roles", () => {
+  it("names the seasons, weeks, pools, refs and roles", () => {
     const [first, last, from, to] = sentence(/## Result \((\d{4})–(\d{4}), weeks (\d+)–(\d+)\)/);
     assert.deepEqual([first, last], [String(study.seasons[0]!.season), String(study.seasons.at(-1)!.season)]);
     for (const s of [...study.seasons, shipped!]) assert.deepEqual([String(s.weeks.from), String(s.weeks.to)], [from, to], String(s.season));
     const [players] = sentence(/own (\d+)-player pool/);
     assert.ok(study.seasons.every((s) => String(s.universe.players) === players), "every season pool has that many players");
-    const [capK] = sentence(/best \$(\d+)k lineup/);
-    assert.ok([...study.seasons, shipped!].every((s) => s.cap === Number(capK) * 1000), "every run has that cap");
+    assert.ok(/salary bands from that rule are not used in this pitch/i.test(section), "README disclaims synthetic salary bands");
     assert.ok(section.includes(`(\`${study.seasons[0]!.universe.rule}\`)`) && section.includes(`(\`${study.scoring}\`, a simplified`));
     assert.deepEqual(sentence(/(\d{4}) and (\d{4}) ran first and nothing was tuned on them/), seasonsOf("development"));
     assert.deepEqual(sentence(/(\d{4}) is \*\*retrospective\*\*, not a holdout/), seasonsOf("retrospective"));
@@ -141,61 +142,15 @@ describe("README study numbers match the committed study files", () => {
     for (const [level] of every(/(\d+)% range/)) assert.equal(Number(level), study.uncertainty.level * 100);
   });
 
-  it("publishes one row per season, the pool and the shipped slate", () => {
-    const rows = table("## Result");
-    const expected: [string, StudyRunSummary][] = [
-      ...study.seasons.map((s): [string, StudyRunSummary] => [`${s.season} (${s.role})`, s.summary]),
-      [`Pooled ${pool!.seasons[0]}–${pool!.seasons.at(-1)}`, pool!.summary],
-      [`${shipped!.season} shipped slate (${shipped!.universe.lookAhead ? "look-ahead" : "clean"})`, shipped!.summary],
-    ];
-    assert.deepEqual([...rows.keys()], expected.map(([label]) => label));
-    for (const [label, summary] of expected) {
-      const gap = exactOver(summary, GREEDY);
-      const row = rows.get(label)!;
-      assert.deepEqual(
-        row.values,
-        [
-          String(summary.commonWeeks.length),
-          fix(mean(model(summary, BASELINE))),
-          fix(mean(model(summary, GREEDY))),
-          fix(mean(model(summary, VALUE))),
-          `${signed(gap.mean)} (${signed(gap.low)} to ${signed(gap.high)})`,
-          `${gap.exactWins}-${gap.exactLosses}-${gap.ties}`,
-        ],
-        label,
-      );
-      covered.push(row.span);
-    }
+  it("does not publish a salary-cap Exact / greedy Result table", () => {
+    assert.ok(!/\| Exact \|/.test(section), "no Exact column in Result");
+    assert.ok(!/Pts\/\$ greedy/.test(section), "no Pts/$ column in Result");
   });
 
-  it("states the pooled gaps, the overshoot and the bias", () => {
-    const s = pool!.summary;
-    const cheap = exactOver(s, VALUE);
-    assert.deepEqual(
-      sentence(/beats cheap points-per-dollar picks by ([\d.]+) points a week pooled \(range ([+−][\d.]+) to ([+−][\d.]+); (\d+) of (\d+) weeks\)/),
-      [fix(cheap.mean), signed(cheap.low), signed(cheap.high), String(cheap.exactWins), String(s.commonWeeks.length)],
-    );
-    const greedy = exactOver(s, GREEDY);
-    assert.ok(greedy.low <= 0 && greedy.high >= 0, "the pooled exact-vs-greedy range includes zero");
-    assert.deepEqual(sentence(/gains \*\*([+−]?[\d.]+) a week, and the range includes zero\*\*: (\d+) weeks cannot tell them apart/), [
-      signed(greedy.mean),
-      String(s.commonWeeks.length),
-    ]);
-
-    const trail = model(s, BASELINE);
-    assert.deepEqual(sentence(/projection averaged (\d+\.\d) and it scored (\d+\.\d)/), [fix(trail.lineupProjMean!), fix(mean(trail))]);
-    const over = (weekly: { lineups: Record<string, { proj: number; actual: number | null } | undefined> }[]) =>
-      weekly.filter((w) => {
-        const l = w.lineups[BASELINE];
-        return l != null && l.actual != null && l.proj > l.actual;
-      }).length;
-    const allWeeks = study.seasons.flatMap((x) => x.weekly);
-    assert.deepEqual(sentence(/too high in (\d+) of (\d+) weeks \((\d+) of (\d+) on the shipped slate\)/), [
-      String(over(allWeeks)),
-      String(allWeeks.length),
-      String(over(shipped!.weekly)),
-      String(shipped!.weekly.length),
-    ]);
+  it("states the trailing-mean bias (no salary-cap gaps)", () => {
+    const trail = model(pool!.summary, BASELINE);
+    assert.ok(!/beats cheap points-per-dollar/.test(section), "README does not claim points-per-dollar results");
+    assert.ok(!/exact lineup's pregame projection/i.test(section), "README does not lead with cap-lineup overshoot");
     assert.deepEqual(sentence(/unbiased \(([+−][\d.]+) points over ([\d,]+) player-weeks\)/), [
       signed(trail.playerError.bias!, 2),
       thousands(trail.playerError.n),
@@ -225,16 +180,12 @@ describe("README study numbers match the committed study files", () => {
     assert.equal(playerWeeks, thousands(model(s, BASELINE).playerError.n));
 
     const rows = table("projection methods (same pools, no future data), pooled");
-    const expected = projections.map((spec) => ({ spec, m: model(s, spec.id) })).sort((a, b) => mean(b.m) - mean(a.m));
+    const expected = projections.map((spec) => ({ spec, m: model(s, spec.id) })).sort((a, b) => a.m.playerError.mae! - b.m.playerError.mae!);
     assert.deepEqual([...rows.keys()], expected.map((e) => e.spec.label));
-    const best = [...expected].sort((a, b) => a.m.playerError.mae! - b.m.playerError.mae!)[0]!;
+    const best = expected[0]!;
     for (const { spec, m } of expected) {
-      const vs = spec.id === BASELINE ? "—" : (() => {
-        const p = paired(s, spec.id);
-        return `${signed(p.meanDiff)} (${signed(p.interval.low)} to ${signed(p.interval.high)})`;
-      })();
       const row = rows.get(spec.label)!;
-      assert.deepEqual(row.values, [m.playerError.mae!.toFixed(2), fix(mean(m)), vs], spec.label);
+      assert.deepEqual(row.values, [m.playerError.mae!.toFixed(2)], spec.label);
       assert.equal(readme.slice(...row.span).includes(`**${m.playerError.mae!.toFixed(2)}**`), spec.id === best.spec.id, `${spec.label}: only the best MAE is bold`);
       covered.push(row.span);
     }
@@ -246,26 +197,24 @@ describe("README study numbers match the committed study files", () => {
       const byMae = summary.models.filter((m) => m.solver === "exact-dp").sort((a, b) => a.playerError.mae! - b.playerError.mae!);
       assert.deepEqual(byMae.slice(0, 2).map((m) => m.model), ["shrink", BASELINE], `${label}: shrink first and trailing mean second by player MAE`);
     }
-    assert.deepEqual(sentence(/on the shipped slate \((\d\.\d\d) there\)\. Trailing mean is second everywhere\. Shrinkage lineups score about the same/), [
+    assert.deepEqual(sentence(/on the shipped slate \((\d\.\d\d) there\)\. Trailing mean is second everywhere\./), [
       model(shipped!.summary, "shrink").playerError.mae!.toFixed(2),
     ]);
-    assert.ok(includesZero(paired(pool!.summary, "shrink")), "pooled shrink vs trailing mean includes zero");
 
+    const ewma = model(pool!.summary, "ewma");
+    const trail = model(pool!.summary, BASELINE);
+    assert.ok(ewma.playerError.mae! > trail.playerError.mae!, "EWMA is worse than trailing mean on pooled player MAE");
     const ewmaSpec = study.models.find((m) => m.id === "ewma")!;
-    const [label, seasons, ...gains] = sentence(/\*\*(EWMA α=[\d.]+)\*\* beat the trailing mean in all (\w+) seasons \(([+−][\d.]+), ([+−][\d.]+), ([+−][\d.]+) a week\)/);
-    assert.deepEqual([label, seasons], [ewmaSpec.label, word(study.seasons.length)]);
-    assert.deepEqual(gains, study.seasons.map((x) => signed(paired(x.summary, "ewma").meanDiff)));
-    assert.ok(study.seasons.every((x) => paired(x.summary, "ewma").meanDiff > 0), "EWMA beat the trailing mean in every season");
+    assert.deepEqual(
+      sentence(/\*\*EWMA α=([\d.]+)\*\* is \*\*not\*\* better than trailing mean on player MAE \(([\d.]+) vs ([\d.]+) pooled\)/),
+      [Number(ewmaSpec.params.alpha).toFixed(2), ewma.playerError.mae!.toFixed(2), trail.playerError.mae!.toFixed(2)],
+    );
     const development = seasonsOf("development");
-    assert.deepEqual(sentence(/default carried over from the first (\d{4}) scripts, not tuned on (\d{4})–(\d{4})\. On the shipped (\d{4}) slate it lost \(([\d.]+) vs ([\d.]+)\)/), [
+    assert.deepEqual(sentence(/default carried over from the first (\d{4}) scripts, not tuned on (\d{4})–(\d{4})\./), [
       ...seasonsOf("retrospective"),
       development[0]!,
       development.at(-1)!,
-      String(shipped!.season),
-      fix(mean(model(shipped!.summary, "ewma"))),
-      fix(mean(model(shipped!.summary, BASELINE))),
     ]);
-    assert.ok(mean(model(shipped!.summary, "ewma")) < mean(model(shipped!.summary, BASELINE)), "EWMA lost on the shipped slate");
 
     const sweeps = facts.sweeps.filter((x) => x.seasons.length === 1);
     assert.deepEqual(sweeps.map((x) => x.seasons[0]), study.seasons.map((x) => x.season));
@@ -273,17 +222,16 @@ describe("README study numbers match the committed study files", () => {
       sentence(/the best α was (\d\.\d\d) in (\d{4}), (\d\.\d\d) in (\d{4}), (\d\.\d\d) in (\d{4}) and (\d\.\d\d) on the shipped slate\. Do not fit α on (\d+) weeks/),
       [...sweeps.flatMap((x) => [x.best.alpha.toFixed(2), String(x.seasons[0])]), ewmaFile.bestLineup.alpha.toFixed(2), String(shipped!.summary.commonWeeks.length)],
     );
-    assert.ok(study.seasons.every((x) => x.summary.commonWeeks.length === shipped!.summary.commonWeeks.length), "every season has as many weeks as the shipped slate");
 
     const opp = study.models.find((m) => m.method === "opp")!;
     assert.equal(opp.definition, "opp@2");
-    const [low, high, gain, from, to, pooled, onShipped, floor] = sentence(
-      /\*\*Opponent-adjust\*\* scales the trailing mean by what the opponent allowed at the position over what every opponent allowed, from the same rows, clamped to (\d\.\d)–(\d\.\d)\. It gains ([+−][\d.]+) a week pooled \(range ([+−][\d.]+) to ([+−][\d.]+)\) and scores ([\d.]+); on the shipped slate it scores ([\d.]+)\. The first version divided by the pool's own position mean instead, so most skill players sat at the (\d\.\d) floor/,
+    const oppMae = model(pool!.summary, "opp").playerError.mae!;
+    const [low, high, oppMaeS, trailMaeS, floor] = sentence(
+      /\*\*Opponent-adjust\*\* scales the trailing mean by what the opponent allowed at the position over what every opponent allowed, from the same rows, clamped to (\d\.\d)–(\d\.\d)\. Player MAE is ([\d.]+) pooled \(worse than trailing mean ([\d.]+)\)\. The first version divided by the pool's own position mean instead, so most skill players sat at the (\d\.\d) floor/,
     );
-    const oppGap = paired(pool!.summary, "opp");
     assert.deepEqual(
-      [low, high, gain, from, to, pooled, onShipped, floor],
-      [opp.params.clampLow!.toFixed(1), opp.params.clampHigh!.toFixed(1), signed(oppGap.meanDiff), signed(oppGap.interval.low), signed(oppGap.interval.high), fix(mean(model(pool!.summary, "opp"))), fix(mean(model(shipped!.summary, "opp"))), opp.params.clampLow!.toFixed(1)],
+      [low, high, oppMaeS, trailMaeS, floor],
+      [opp.params.clampLow!.toFixed(1), opp.params.clampHigh!.toFixed(1), oppMae.toFixed(2), trail.playerError.mae!.toFixed(2), opp.params.clampLow!.toFixed(1)],
     );
     assert.deepEqual(sentence(/\((\d[\d,]*) resamples, seed (\d+)\)/), [thousands(study.uncertainty.resamples), String(study.uncertainty.seed)]);
   });
