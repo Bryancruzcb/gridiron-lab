@@ -218,13 +218,13 @@ describe("README study numbers match the committed study files", () => {
   it("publishes the projection table for the pool", () => {
     const s = pool!.summary;
     const projections = study.models.filter((m) => m.id !== GREEDY && m.id !== VALUE);
-    const [count, first, last, weeks, playerWeeks] = sentence(/(\w+) causal projections, same pools, pooled (\d{4})–(\d{4}) \((\d+) weeks, ([\d,]+) player-weeks\)/);
+    const [count, first, last, weeks, playerWeeks] = sentence(/(\w+) projection methods \(same pools, no future data\), pooled (\d{4})–(\d{4}) \((\d+) weeks, ([\d,]+) player-weeks\)/);
     assert.equal(count, capital(word(projections.length)));
     assert.deepEqual([first, last], [String(pool!.seasons[0]), String(pool!.seasons.at(-1))]);
     assert.equal(weeks, String(s.commonWeeks.length));
     assert.equal(playerWeeks, thousands(model(s, BASELINE).playerError.n));
 
-    const rows = table("causal projections, same pools");
+    const rows = table("projection methods (same pools, no future data), pooled");
     const expected = projections.map((spec) => ({ spec, m: model(s, spec.id) })).sort((a, b) => mean(b.m) - mean(a.m));
     assert.deepEqual([...rows.keys()], expected.map((e) => e.spec.label));
     const best = [...expected].sort((a, b) => a.m.playerError.mae! - b.m.playerError.mae!)[0]!;
