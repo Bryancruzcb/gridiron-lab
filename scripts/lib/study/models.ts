@@ -111,7 +111,6 @@ export const EWMA_SWEEP_ALPHAS: readonly number[] = Array.from({ length: 20 }, (
 const projections = () => PROJECTION_METHODS.map((m) => makeModel(m));
 const greedyBaselines = () => [
   makeModel("trail", { id: "trail-greedy-proj", label: "Trailing mean, greedy by projection", solver: "greedy-proj" }),
-  makeModel("trail", { id: "trail-greedy-value", label: "Trailing mean, greedy by value", solver: "greedy-value" }),
 ];
 
 export const MODEL_PRESETS: Record<string, () => ModelConfig> = {

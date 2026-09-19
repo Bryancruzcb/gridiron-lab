@@ -6,12 +6,12 @@
       2024,
       2025
     ],
-    "slots": 49
+    "slots": 42
   },
-  "resultSha256": "884fbd8bb391263c34a5bf35ee7bd9cb69754da0184b6935215c584acc9d2851",
+  "resultSha256": "19c8036145d113239095de75b5d50051cd5270878ee5246999de088ea3e7fd72",
   "runs": [
     {
-      "baselineInactiveSlots": 15,
+      "baselineInactiveSlots": 18,
       "baselineModel": "trail",
       "commonWeeks": 17,
       "excludedWeeks": 0,
@@ -20,9 +20,9 @@
         "no-history": 56,
         "unknown-identity": 17
       },
-      "resultSha256": "a9b7aed986ed1406b1331acd320f9a6a31686902edf6326b29244aa9f411735a",
+      "resultSha256": "0e3bf86643254e33ef0f633de7fd3468fc7aab37902682a4d42a17d718f6bdc4",
       "role": "development",
-      "runId": "run-85628408012ca98e",
+      "runId": "run-7d10819f40b21866",
       "season": 2023,
       "slateSize": {
         "max": 113,
@@ -34,20 +34,19 @@
       },
       "solverRecords": {
         "exact-dp/proven": 136,
-        "greedy-proj/heuristic": 17,
-        "greedy-value/heuristic": 17
+        "greedy-proj/heuristic": 17
       },
       "universe": {
-        "id": "synthetic-prior-season@1:2023",
+        "id": "synthetic-prior-season@2:2023",
         "lookAhead": false,
         "players": 114,
-        "rule": "synthetic-prior-season@1",
+        "rule": "synthetic-prior-season@2",
         "season": 2023,
-        "sha256": "efb986f3f509274b85c7028a9f1162db5859d8485d7e490ea701f60c474d449c"
+        "sha256": "d64d489bb2deea46ba7aa11d403a8461eb062e2ff1bf1304611b845a17f3ca33"
       }
     },
     {
-      "baselineInactiveSlots": 21,
+      "baselineInactiveSlots": 20,
       "baselineModel": "trail",
       "commonWeeks": 17,
       "excludedWeeks": 0,
@@ -56,9 +55,9 @@
         "no-history": 28,
         "unknown-identity": 17
       },
-      "resultSha256": "69d273903fb778eddf78537d0dec3b1cc9ba4f065daa497d3169a22b79f45b13",
+      "resultSha256": "c34c75e4c2076ed523dad1c20a879e0bd6342542bccbd8bfe441c10ce3712e65",
       "role": "development",
-      "runId": "run-9e1e548b6e174b76",
+      "runId": "run-715052c7ebb0f090",
       "season": 2024,
       "slateSize": {
         "max": 113,
@@ -70,20 +69,19 @@
       },
       "solverRecords": {
         "exact-dp/proven": 136,
-        "greedy-proj/heuristic": 17,
-        "greedy-value/heuristic": 17
+        "greedy-proj/heuristic": 17
       },
       "universe": {
-        "id": "synthetic-prior-season@1:2024",
+        "id": "synthetic-prior-season@2:2024",
         "lookAhead": false,
         "players": 114,
-        "rule": "synthetic-prior-season@1",
+        "rule": "synthetic-prior-season@2",
         "season": 2024,
-        "sha256": "4ee04f01f8fd8c307bfc6a37aebc256e5299ad6e5f005b200db959fe4b02df40"
+        "sha256": "eb399586c9d2b1b74daac630b0ee78d4d4dc8c7d18586db745f2c2b04d13327c"
       }
     },
     {
-      "baselineInactiveSlots": 13,
+      "baselineInactiveSlots": 4,
       "baselineModel": "trail",
       "commonWeeks": 17,
       "excludedWeeks": 0,
@@ -92,9 +90,9 @@
         "no-history": 16,
         "unknown-identity": 17
       },
-      "resultSha256": "4cccb2e9ab678d6f4e33a34c64ba2ec4dfe93c23c8d72671019be093ba80efdb",
+      "resultSha256": "e239320748075e6c792444c00e1ccb8193015a1b21dab552613b50df57b4b649",
       "role": "retrospective",
-      "runId": "run-00f774f034aafef8",
+      "runId": "run-6c94c248f660227d",
       "season": 2025,
       "slateSize": {
         "max": 113,
@@ -106,16 +104,15 @@
       },
       "solverRecords": {
         "exact-dp/proven": 136,
-        "greedy-proj/heuristic": 17,
-        "greedy-value/heuristic": 17
+        "greedy-proj/heuristic": 17
       },
       "universe": {
-        "id": "synthetic-prior-season@1:2025",
+        "id": "synthetic-prior-season@2:2025",
         "lookAhead": false,
         "players": 114,
-        "rule": "synthetic-prior-season@1",
+        "rule": "synthetic-prior-season@2",
         "season": 2025,
-        "sha256": "90ff6c40780bd074b4eb16051034cbf41490236ffda62a38ce09896d6cdaeda4"
+        "sha256": "3752fb27ae1280f23ed71919852321db1584f725835af101e273d486bb2e28a3"
       }
     }
   ],
@@ -130,9 +127,9 @@
       "no-history": 25,
       "unknown-identity": 0
     },
-    "resultSha256": "7c79dfca98f8b3716a4742dd1571a7dd2f7ac926a91b554881b88644c4bdb073",
+    "resultSha256": "ccf83cf11e8cec4378c98fc835d429f4084c25351a1f0c940c16b866a5f34bcd",
     "role": "retrospective",
-    "runId": "run-51125c0f6f553bcb",
+    "runId": "run-cc0cafb84e5a6615",
     "season": 2025,
     "slateSize": {
       "max": 114,
@@ -144,8 +141,7 @@
     },
     "solverRecords": {
       "exact-dp/proven": 136,
-      "greedy-proj/heuristic": 17,
-      "greedy-value/heuristic": 17
+      "greedy-proj/heuristic": 17
     },
     "universe": {
       "id": "legacy-fantasy-json",
@@ -159,491 +155,491 @@
   "sweeps": [
     {
       "baseline": {
-        "lineupMean": 131.933,
+        "lineupMean": 137.114,
         "model": "trail"
       },
       "best": {
         "alpha": 0.4,
-        "lineupMean": 145.555
+        "lineupMean": 143.671
       },
       "commonWeeks": 17,
       "lookAhead": false,
       "points": [
         {
           "alpha": 0.05,
-          "lineupMean": 117.889,
+          "lineupMean": 120.596,
           "mae": 7.081
         },
         {
           "alpha": 0.1,
-          "lineupMean": 130.625,
+          "lineupMean": 133.434,
           "mae": 6.575
         },
         {
           "alpha": 0.15,
-          "lineupMean": 131.066,
+          "lineupMean": 130.189,
           "mae": 6.373
         },
         {
           "alpha": 0.2,
-          "lineupMean": 136.62,
+          "lineupMean": 135.324,
           "mae": 6.291
         },
         {
           "alpha": 0.25,
-          "lineupMean": 139.416,
+          "lineupMean": 136.206,
           "mae": 6.266
         },
         {
           "alpha": 0.3,
-          "lineupMean": 139.349,
+          "lineupMean": 142.042,
           "mae": 6.279
         },
         {
           "alpha": 0.35,
-          "lineupMean": 145.369,
+          "lineupMean": 142.384,
           "mae": 6.313
         },
         {
           "alpha": 0.4,
-          "lineupMean": 145.555,
+          "lineupMean": 143.671,
           "mae": 6.358
         },
         {
           "alpha": 0.45,
-          "lineupMean": 144.804,
+          "lineupMean": 141.955,
           "mae": 6.415
         },
         {
           "alpha": 0.5,
-          "lineupMean": 141.798,
+          "lineupMean": 143.631,
           "mae": 6.486
         },
         {
           "alpha": 0.55,
-          "lineupMean": 139.241,
+          "lineupMean": 136.668,
           "mae": 6.57
         },
         {
           "alpha": 0.6,
-          "lineupMean": 135.511,
+          "lineupMean": 136.526,
           "mae": 6.664
         },
         {
           "alpha": 0.65,
-          "lineupMean": 131.573,
+          "lineupMean": 137.722,
           "mae": 6.765
         },
         {
           "alpha": 0.7,
-          "lineupMean": 132.085,
+          "lineupMean": 137.569,
           "mae": 6.873
         },
         {
           "alpha": 0.75,
-          "lineupMean": 131.328,
+          "lineupMean": 134.809,
           "mae": 6.99
         },
         {
           "alpha": 0.8,
-          "lineupMean": 130.681,
+          "lineupMean": 134.521,
           "mae": 7.119
         },
         {
           "alpha": 0.85,
-          "lineupMean": 128.352,
+          "lineupMean": 131.462,
           "mae": 7.259
         },
         {
           "alpha": 0.9,
-          "lineupMean": 125.192,
+          "lineupMean": 131.398,
           "mae": 7.412
         },
         {
           "alpha": 0.95,
-          "lineupMean": 127.982,
+          "lineupMean": 133.327,
           "mae": 7.579
         },
         {
           "alpha": 1,
-          "lineupMean": 130.239,
+          "lineupMean": 133.948,
           "mae": 7.759
         }
       ],
       "runIds": [
-        "run-8a32276580494753"
+        "run-99748c656c2e2e66"
       ],
       "seasons": [
         2023
       ],
-      "universeRule": "synthetic-prior-season@1"
+      "universeRule": "synthetic-prior-season@2"
     },
     {
       "baseline": {
-        "lineupMean": 128.966,
+        "lineupMean": 127.931,
         "model": "trail"
       },
       "best": {
-        "alpha": 0.3,
-        "lineupMean": 139.394
+        "alpha": 0.7,
+        "lineupMean": 141.378
       },
       "commonWeeks": 17,
       "lookAhead": false,
       "points": [
         {
           "alpha": 0.05,
-          "lineupMean": 113.267,
+          "lineupMean": 112.938,
           "mae": 6.766
         },
         {
           "alpha": 0.1,
-          "lineupMean": 126.602,
+          "lineupMean": 126.473,
           "mae": 6.422
         },
         {
           "alpha": 0.15,
-          "lineupMean": 127.646,
+          "lineupMean": 127.722,
           "mae": 6.256
         },
         {
           "alpha": 0.2,
-          "lineupMean": 134.886,
+          "lineupMean": 135.721,
           "mae": 6.191
         },
         {
           "alpha": 0.25,
-          "lineupMean": 138.626,
+          "lineupMean": 139.479,
           "mae": 6.188
         },
         {
           "alpha": 0.3,
-          "lineupMean": 139.394,
+          "lineupMean": 139.588,
           "mae": 6.214
         },
         {
           "alpha": 0.35,
-          "lineupMean": 137.824,
+          "lineupMean": 138.018,
           "mae": 6.263
         },
         {
           "alpha": 0.4,
-          "lineupMean": 137.468,
+          "lineupMean": 137.327,
           "mae": 6.325
         },
         {
           "alpha": 0.45,
-          "lineupMean": 138.906,
+          "lineupMean": 139.647,
           "mae": 6.395
         },
         {
           "alpha": 0.5,
-          "lineupMean": 138.42,
+          "lineupMean": 138.214,
           "mae": 6.475
         },
         {
           "alpha": 0.55,
-          "lineupMean": 134.508,
+          "lineupMean": 137.308,
           "mae": 6.564
         },
         {
           "alpha": 0.6,
-          "lineupMean": 136.088,
+          "lineupMean": 137.618,
           "mae": 6.659
         },
         {
           "alpha": 0.65,
-          "lineupMean": 132.532,
+          "lineupMean": 135.026,
           "mae": 6.773
         },
         {
           "alpha": 0.7,
-          "lineupMean": 137.149,
+          "lineupMean": 141.378,
           "mae": 6.899
         },
         {
           "alpha": 0.75,
-          "lineupMean": 138.038,
+          "lineupMean": 139.925,
           "mae": 7.031
         },
         {
           "alpha": 0.8,
-          "lineupMean": 136.767,
+          "lineupMean": 136.16,
           "mae": 7.169
         },
         {
           "alpha": 0.85,
-          "lineupMean": 135.204,
+          "lineupMean": 136.245,
           "mae": 7.315
         },
         {
           "alpha": 0.9,
-          "lineupMean": 133.351,
+          "lineupMean": 135.651,
           "mae": 7.47
         },
         {
           "alpha": 0.95,
-          "lineupMean": 132.791,
+          "lineupMean": 133.726,
           "mae": 7.632
         },
         {
           "alpha": 1,
-          "lineupMean": 130.38,
+          "lineupMean": 134.032,
           "mae": 7.807
         }
       ],
       "runIds": [
-        "run-d92c8133cce6a922"
+        "run-9838888f00430640"
       ],
       "seasons": [
         2024
       ],
-      "universeRule": "synthetic-prior-season@1"
+      "universeRule": "synthetic-prior-season@2"
     },
     {
       "baseline": {
-        "lineupMean": 139.749,
+        "lineupMean": 154.547,
         "model": "trail"
       },
       "best": {
-        "alpha": 0.2,
-        "lineupMean": 150.272
+        "alpha": 0.25,
+        "lineupMean": 162.52
       },
       "commonWeeks": 17,
       "lookAhead": false,
       "points": [
         {
           "alpha": 0.05,
-          "lineupMean": 144.694,
+          "lineupMean": 149.565,
           "mae": 6.651
         },
         {
           "alpha": 0.1,
-          "lineupMean": 146.129,
+          "lineupMean": 151.7,
           "mae": 6.347
         },
         {
           "alpha": 0.15,
-          "lineupMean": 147.282,
+          "lineupMean": 154.947,
           "mae": 6.234
         },
         {
           "alpha": 0.2,
-          "lineupMean": 150.272,
+          "lineupMean": 158.435,
           "mae": 6.21
         },
         {
           "alpha": 0.25,
-          "lineupMean": 149.255,
+          "lineupMean": 162.52,
           "mae": 6.223
         },
         {
           "alpha": 0.3,
-          "lineupMean": 144.596,
+          "lineupMean": 153.876,
           "mae": 6.26
         },
         {
           "alpha": 0.35,
-          "lineupMean": 148.885,
+          "lineupMean": 155.485,
           "mae": 6.311
         },
         {
           "alpha": 0.4,
-          "lineupMean": 148.732,
+          "lineupMean": 153.638,
           "mae": 6.37
         },
         {
           "alpha": 0.45,
-          "lineupMean": 146.831,
+          "lineupMean": 151.568,
           "mae": 6.44
         },
         {
           "alpha": 0.5,
-          "lineupMean": 142.919,
+          "lineupMean": 150.681,
           "mae": 6.519
         },
         {
           "alpha": 0.55,
-          "lineupMean": 138.772,
+          "lineupMean": 145.781,
           "mae": 6.604
         },
         {
           "alpha": 0.6,
-          "lineupMean": 139.746,
+          "lineupMean": 143.064,
           "mae": 6.698
         },
         {
           "alpha": 0.65,
-          "lineupMean": 139.473,
+          "lineupMean": 139.418,
           "mae": 6.801
         },
         {
           "alpha": 0.7,
-          "lineupMean": 138.798,
+          "lineupMean": 135.8,
           "mae": 6.914
         },
         {
           "alpha": 0.75,
-          "lineupMean": 137.464,
+          "lineupMean": 136.921,
           "mae": 7.036
         },
         {
           "alpha": 0.8,
-          "lineupMean": 134.575,
+          "lineupMean": 137.811,
           "mae": 7.165
         },
         {
           "alpha": 0.85,
-          "lineupMean": 136.969,
+          "lineupMean": 136.558,
           "mae": 7.306
         },
         {
           "alpha": 0.9,
-          "lineupMean": 137.388,
+          "lineupMean": 137.924,
           "mae": 7.453
         },
         {
           "alpha": 0.95,
-          "lineupMean": 134.712,
+          "lineupMean": 137.448,
           "mae": 7.612
         },
         {
           "alpha": 1,
-          "lineupMean": 133.848,
+          "lineupMean": 137.378,
           "mae": 7.781
         }
       ],
       "runIds": [
-        "run-01bbdb13651514c8"
+        "run-cd8f245405ae12dd"
       ],
       "seasons": [
         2025
       ],
-      "universeRule": "synthetic-prior-season@1"
+      "universeRule": "synthetic-prior-season@2"
     },
     {
       "baseline": {
-        "lineupMean": 133.549,
+        "lineupMean": 139.864,
         "model": "trail"
       },
       "best": {
-        "alpha": 0.35,
-        "lineupMean": 144.026
+        "alpha": 0.25,
+        "lineupMean": 146.068
       },
       "commonWeeks": 51,
       "lookAhead": false,
       "points": [
         {
           "alpha": 0.05,
-          "lineupMean": 125.284,
+          "lineupMean": 127.7,
           "mae": 6.832
         },
         {
           "alpha": 0.1,
-          "lineupMean": 134.452,
+          "lineupMean": 137.202,
           "mae": 6.447
         },
         {
           "alpha": 0.15,
-          "lineupMean": 135.331,
+          "lineupMean": 137.62,
           "mae": 6.287
         },
         {
           "alpha": 0.2,
-          "lineupMean": 140.593,
+          "lineupMean": 143.16,
           "mae": 6.231
         },
         {
           "alpha": 0.25,
-          "lineupMean": 142.433,
+          "lineupMean": 146.068,
           "mae": 6.226
         },
         {
           "alpha": 0.3,
-          "lineupMean": 141.113,
+          "lineupMean": 145.169,
           "mae": 6.251
         },
         {
           "alpha": 0.35,
-          "lineupMean": 144.026,
+          "lineupMean": 145.295,
           "mae": 6.296
         },
         {
           "alpha": 0.4,
-          "lineupMean": 143.918,
+          "lineupMean": 144.878,
           "mae": 6.351
         },
         {
           "alpha": 0.45,
-          "lineupMean": 143.513,
+          "lineupMean": 144.39,
           "mae": 6.417
         },
         {
           "alpha": 0.5,
-          "lineupMean": 141.045,
+          "lineupMean": 144.175,
           "mae": 6.493
         },
         {
           "alpha": 0.55,
-          "lineupMean": 137.507,
+          "lineupMean": 139.919,
           "mae": 6.579
         },
         {
           "alpha": 0.6,
-          "lineupMean": 137.115,
+          "lineupMean": 139.069,
           "mae": 6.674
         },
         {
           "alpha": 0.65,
-          "lineupMean": 134.526,
+          "lineupMean": 137.389,
           "mae": 6.78
         },
         {
           "alpha": 0.7,
-          "lineupMean": 136.011,
+          "lineupMean": 138.249,
           "mae": 6.895
         },
         {
           "alpha": 0.75,
-          "lineupMean": 135.61,
+          "lineupMean": 137.218,
           "mae": 7.019
         },
         {
           "alpha": 0.8,
-          "lineupMean": 134.008,
+          "lineupMean": 136.164,
           "mae": 7.151
         },
         {
           "alpha": 0.85,
-          "lineupMean": 133.508,
+          "lineupMean": 134.755,
           "mae": 7.293
         },
         {
           "alpha": 0.9,
-          "lineupMean": 131.977,
+          "lineupMean": 134.991,
           "mae": 7.445
         },
         {
           "alpha": 0.95,
-          "lineupMean": 131.828,
+          "lineupMean": 134.834,
           "mae": 7.607
         },
         {
           "alpha": 1,
-          "lineupMean": 131.489,
+          "lineupMean": 135.119,
           "mae": 7.782
         }
       ],
       "runIds": [
-        "run-8a32276580494753",
-        "run-d92c8133cce6a922",
-        "run-01bbdb13651514c8"
+        "run-99748c656c2e2e66",
+        "run-9838888f00430640",
+        "run-cd8f245405ae12dd"
       ],
       "seasons": [
         2023,
         2024,
         2025
       ],
-      "universeRule": "synthetic-prior-season@1"
+      "universeRule": "synthetic-prior-season@2"
     }
   ],
   "universeOverlap": {
@@ -655,12 +651,12 @@
       "WR": 23
     },
     "clean": {
-      "id": "synthetic-prior-season@1:2025",
+      "id": "synthetic-prior-season@2:2025",
       "lookAhead": false,
       "players": 114,
-      "rule": "synthetic-prior-season@1",
+      "rule": "synthetic-prior-season@2",
       "season": 2025,
-      "sha256": "90ff6c40780bd074b4eb16051034cbf41490236ffda62a38ce09896d6cdaeda4"
+      "sha256": "3752fb27ae1280f23ed71919852321db1584f725835af101e273d486bb2e28a3"
     },
     "season": 2025,
     "shared": 66,

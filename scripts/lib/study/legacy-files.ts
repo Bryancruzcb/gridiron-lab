@@ -53,7 +53,7 @@ function exclusionNote(a: StudyRunArtifact): string {
 
 export function toBacktestFile(a: StudyRunArtifact, opts: LegacyFileOptions = {}): BacktestFile {
   const warning = attributionNotes(a, opts);
-  const ids = { exact: "trail", greedyProj: "trail-greedy-proj", greedyValue: "trail-greedy-value" } as const;
+  const ids = { exact: "trail", greedyProj: "trail-greedy-proj" } as const;
   for (const id of Object.values(ids)) modelSummary(a, id);
   const pack = (w: StudyWeekRecord, id: string) => {
     const lineup = w.models.find((m) => m.model === id)!.lineup!;
@@ -66,17 +66,18 @@ export function toBacktestFile(a: StudyRunArtifact, opts: LegacyFileOptions = {}
       players: w.slate.length,
       exact: pack(w, ids.exact),
       greedyProj: pack(w, ids.greedyProj),
-      greedyValue: pack(w, ids.greedyValue),
     }));
-  const actual = (key: "exact" | "greedyProj" | "greedyValue") => weeks.map((w) => w[key].actual);
+  const actual = (key: "exact" | "greedyProj") => weeks.map((w) => w[key].actual);
   return {
     source: `nflverse player week + team week ${a.run.season} REG`,
     season: a.run.season,
     cap: a.run.solver.cap,
     notes: [
       ...warning,
-      "Salaries are synthetic DraftKings-style prices, frozen all year, not live DK prices.",
+      "On the legacy shipped slate, salaries are synthetic DraftKings-style prices frozen all year, not live DK prices. " +
+        "Synthetic prior-season pools use unit placeholder salaries (not market prices); lineup scores are not the Result.",
       "Projection is the trailing mean over the weeks before each week's cutoff.",
+      "Baselines: exact DP vs greedy-by-projection only (trail-greedy-value / pts-per-dollar was dropped from the study path).",
       exclusionNote(a),
       provenanceNote(a),
     ],
@@ -86,9 +87,7 @@ export function toBacktestFile(a: StudyRunArtifact, opts: LegacyFileOptions = {}
       exactMean: round(mean(actual("exact"))!, 1),
       exactMedian: round(median(actual("exact"))!, 1),
       greedyProjMean: round(mean(actual("greedyProj"))!, 1),
-      greedyValueMean: round(mean(actual("greedyValue"))!, 1),
       exactBeatsProj: weeks.filter((w) => w.exact.actual > w.greedyProj.actual).length,
-      exactBeatsValue: weeks.filter((w) => w.exact.actual > w.greedyValue.actual).length,
     },
   };
 }

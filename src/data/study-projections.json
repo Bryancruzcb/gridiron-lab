@@ -5,7 +5,7 @@
     "Each model only uses weeks before the cutoff. Opponent for week w is the scheduled opponent from the schedule.",
     "MAE is per slate player-week with a stat row, over the common weeks. Lineup mean is the strict exact-DP lineup's actual points.",
     "All 17 weeks in 2-18 are compared.",
-    "Run run-d715b1d9ebdf67c2 (gridiron-lab-study-pipeline@2, retrospective), scoring gridiron-lab-ppr-dst@1, universe legacy-fantasy-json (114 players, selected and priced with look-ahead), solver gridiron-lab-solveLineup@1 strict."
+    "Run run-00f490c528dec3e1 (gridiron-lab-study-pipeline@2, retrospective), scoring gridiron-lab-ppr-dst@1, universe legacy-fantasy-json (114 players, selected and priced with look-ahead), solver gridiron-lab-solveLineup@1 strict."
   ],
   "models": [
     {

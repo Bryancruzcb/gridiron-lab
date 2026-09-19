@@ -1,5 +1,5 @@
 /**
- * Trailing-mean backtest (exact DP vs the two greedy baselines) and the QB lag study, via the
+ * Trailing-mean backtest (exact DP vs greedy-by-projection) and the QB lag study, via the
  * shared study library. Defaults: 2025, the shipped slate, src/data/study-backtest.json and
  * src/data/study-qb-lag.json. Accepts the scripts/study.ts flags except --models (see --help).
  */
