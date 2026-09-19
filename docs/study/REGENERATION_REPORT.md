@@ -522,3 +522,89 @@ npm run study:build -- --seasons 2025 --role retrospective --universe legacy-fan
 ```
 
 Add `--offline --pin-inputs docs/study/input-manifest.json` to any study or wrapper command to require these exact bytes from the cache.
+
+## Projection-first models tables (post no-salary regen)
+
+#### 2023 development (`run-7d10819f40b21866`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 137.1 | 137.5 | 198.4 | 6.24 | 8.17 | −0.05 | 1500 | baseline |
+| Last week | exact-dp | 133.9 | 129.6 | 258.7 | 7.76 | 10.12 | −0.03 | 1500 | −3.2 [−17.2, +11.1], 6-10-1 |
+| Last 3 | exact-dp | 145.6 | 137.5 | 216.0 | 6.53 | 8.56 | −0.10 | 1500 | +8.5 [−1.5, +19.5], 8-6-3 |
+| 60/40 season + last 3 | exact-dp | 142.0 | 137.5 | 200.3 | 6.26 | 8.20 | −0.07 | 1500 | +4.9 [−3.0, +13.6], 7-5-5 |
+| EWMA α=0.35 | exact-dp | 142.4 | 140.2 | 206.7 | 6.31 | 8.32 | −0.14 | 1500 | +5.3 [−2.5, +13.6], 10-5-2 |
+| Shrink to position | exact-dp | 146.7 | 141.8 | 162.8 | 6.02 | 7.73 | −0.04 | 1500 | +9.6 [+2.2, +18.0], 8-2-7 |
+| Usage × rate | exact-dp | 135.4 | 131.6 | 205.8 | 6.40 | 8.39 | +0.04 | 1500 | −1.8 [−10.5, +7.4], 5-8-4 |
+| Opponent-adjusted trail | exact-dp | 146.2 | 145.5 | 204.8 | 6.34 | 8.27 | −0.18 | 1500 | +9.1 [−2.2, +21.5], 7-10-0 |
+| Trailing mean, greedy by projection | greedy-proj | 137.1 | 137.5 | 198.4 | 6.24 | 8.17 | −0.05 | 1500 | 0.0 [0.0, 0.0], 0-0-17 |
+
+#### 2024 development (`run-715052c7ebb0f090`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 127.9 | 130.2 | 186.4 | 6.18 | 8.04 | −0.12 | 1495 | baseline |
+| Last week | exact-dp | 134.0 | 135.1 | 249.1 | 7.81 | 10.04 | +0.12 | 1495 | +6.1 [−1.6, +14.3], 8-8-1 |
+| Last 3 | exact-dp | 135.6 | 134.4 | 207.6 | 6.44 | 8.37 | +0.07 | 1495 | +7.7 [−1.0, +17.1], 8-6-3 |
+| 60/40 season + last 3 | exact-dp | 131.2 | 135.3 | 190.8 | 6.18 | 8.04 | −0.04 | 1495 | +3.3 [−3.1, +10.6], 8-5-4 |
+| EWMA α=0.35 | exact-dp | 138.0 | 138.0 | 198.4 | 6.26 | 8.16 | −0.01 | 1495 | +10.1 [+0.5, +20.2], 11-4-2 |
+| Shrink to position | exact-dp | 131.9 | 129.0 | 157.2 | 5.96 | 7.64 | −0.12 | 1495 | +4.0 [−2.8, +11.3], 6-8-3 |
+| Usage × rate | exact-dp | 139.1 | 141.7 | 208.0 | 6.35 | 8.18 | +0.21 | 1495 | +11.1 [−1.4, +25.4], 10-5-2 |
+| Opponent-adjusted trail | exact-dp | 132.6 | 133.8 | 198.1 | 6.41 | 8.38 | −0.19 | 1495 | +4.7 [−9.2, +19.4], 9-8-0 |
+| Trailing mean, greedy by projection | greedy-proj | 127.9 | 130.2 | 186.4 | 6.18 | 8.04 | −0.12 | 1495 | 0.0 [0.0, 0.0], 0-0-17 |
+
+#### 2025 retrospective (`run-6c94c248f660227d`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 154.5 | 156.6 | 191.0 | 6.17 | 8.08 | +0.11 | 1522 | baseline |
+| Last week | exact-dp | 137.4 | 125.6 | 258.3 | 7.78 | 10.42 | +0.14 | 1522 | −17.2 [−31.0, −3.6], 4-12-1 |
+| Last 3 | exact-dp | 143.0 | 146.6 | 210.2 | 6.57 | 8.62 | +0.12 | 1522 | −11.5 [−23.2, −0.1], 4-10-3 |
+| 60/40 season + last 3 | exact-dp | 156.8 | 160.0 | 196.4 | 6.24 | 8.17 | +0.12 | 1522 | +2.2 [−5.8, +10.1], 6-6-5 |
+| EWMA α=0.35 | exact-dp | 155.5 | 156.3 | 200.9 | 6.31 | 8.30 | +0.04 | 1522 | +0.9 [−11.4, +11.9], 9-7-1 |
+| Shrink to position | exact-dp | 152.3 | 155.4 | 160.5 | 5.99 | 7.74 | +0.09 | 1522 | −2.2 [−7.6, +2.4], 4-4-9 |
+| Usage × rate | exact-dp | 149.0 | 142.7 | 201.3 | 6.38 | 8.36 | +0.29 | 1522 | −5.6 [−17.4, +5.7], 6-9-2 |
+| Opponent-adjusted trail | exact-dp | 150.8 | 144.3 | 200.3 | 6.32 | 8.28 | +0.04 | 1522 | −3.8 [−18.7, +14.1], 7-10-0 |
+| Trailing mean, greedy by projection | greedy-proj | 154.5 | 156.6 | 191.0 | 6.17 | 8.08 | +0.11 | 1522 | 0.0 [0.0, 0.0], 0-0-17 |
+
+#### pooled 2023+2024 (`cf0245970965…`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 132.5 | 132.4 | 192.4 | 6.21 | 8.11 | −0.08 | 2995 | baseline |
+| Last week | exact-dp | 134.0 | 135.1 | 253.9 | 7.78 | 10.08 | +0.05 | 2995 | +1.5 [−6.4, +9.0], 14-18-2 |
+| Last 3 | exact-dp | 140.6 | 134.5 | 211.8 | 6.48 | 8.47 | −0.01 | 2995 | +8.1 [+1.1, +15.2], 16-12-6 |
+| 60/40 season + last 3 | exact-dp | 136.6 | 137.0 | 195.6 | 6.22 | 8.12 | −0.06 | 2995 | +4.1 [−1.3, +9.7], 15-10-9 |
+| EWMA α=0.35 | exact-dp | 140.2 | 139.6 | 202.6 | 6.29 | 8.24 | −0.07 | 2995 | +7.7 [+1.3, +13.7], 21-9-4 |
+| Shrink to position | exact-dp | 139.3 | 133.8 | 160.0 | 5.99 | 7.69 | −0.08 | 2995 | +6.8 [+1.6, +12.5], 14-10-10 |
+| Usage × rate | exact-dp | 137.2 | 136.2 | 206.9 | 6.37 | 8.29 | +0.12 | 2995 | +4.7 [−3.1, +13.2], 15-13-6 |
+| Opponent-adjusted trail | exact-dp | 139.4 | 138.7 | 201.4 | 6.38 | 8.32 | −0.18 | 2995 | +6.9 [−1.8, +16.5], 16-18-0 |
+| Trailing mean, greedy by projection | greedy-proj | 132.5 | 132.4 | 192.4 | 6.21 | 8.11 | −0.08 | 2995 | 0.0 [0.0, 0.0], 0-0-34 |
+
+#### pooled 2023+2024+2025 (`cabea9fac08e…`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 139.9 | 141.7 | 191.9 | 6.19 | 8.10 | −0.02 | 4517 | baseline |
+| Last week | exact-dp | 135.1 | 131.1 | 255.4 | 7.78 | 10.20 | +0.08 | 4517 | −4.7 [−12.1, +2.8], 18-30-3 |
+| Last 3 | exact-dp | 141.4 | 137.5 | 211.3 | 6.51 | 8.52 | +0.03 | 4517 | +1.6 [−5.1, +8.3], 20-22-9 |
+| 60/40 season + last 3 | exact-dp | 143.3 | 144.6 | 195.8 | 6.23 | 8.14 | 0.00 | 4517 | +3.5 [−1.0, +8.0], 21-16-14 |
+| EWMA α=0.35 | exact-dp | 145.3 | 143.1 | 202.0 | 6.30 | 8.26 | −0.04 | 4517 | +5.4 [−0.8, +10.8], 30-16-5 |
+| Shrink to position | exact-dp | 143.7 | 144.3 | 160.1 | 5.99 | 7.71 | −0.02 | 4517 | +3.8 [0.0, +8.0], 18-14-19 |
+| Usage × rate | exact-dp | 141.1 | 139.2 | 205.0 | 6.38 | 8.31 | +0.18 | 4517 | +1.3 [−5.4, +8.5], 21-22-8 |
+| Opponent-adjusted trail | exact-dp | 143.2 | 140.4 | 201.1 | 6.36 | 8.31 | −0.11 | 4517 | +3.3 [−4.8, +12.2], 23-28-0 |
+| Trailing mean, greedy by projection | greedy-proj | 139.9 | 141.7 | 191.9 | 6.19 | 8.10 | −0.02 | 4517 | 0.0 [0.0, 0.0], 0-0-51 |
+
+#### 2025 shipped slate (`run-cc0cafb84e5a6615`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 126.7 | 135.9 | 179.6 | 6.63 | 8.62 | −0.81 | 1552 | baseline |
+| Last week | exact-dp | 129.6 | 129.5 | 264.5 | 8.43 | 10.98 | −0.09 | 1552 | +2.8 [−14.2, +20.5], 7-9-1 |
+| Last 3 | exact-dp | 119.6 | 124.6 | 207.0 | 7.07 | 9.13 | −0.31 | 1552 | −7.1 [−18.3, +3.4], 4-10-3 |
+| 60/40 season + last 3 | exact-dp | 114.4 | 114.6 | 186.3 | 6.71 | 8.69 | −0.61 | 1552 | −12.3 [−21.4, −4.2], 3-11-3 |
+| EWMA α=0.35 | exact-dp | 121.2 | 114.9 | 194.0 | 6.80 | 8.82 | −0.50 | 1552 | −5.5 [−14.0, +2.8], 7-9-1 |
+| Shrink to position | exact-dp | 125.8 | 129.7 | 154.2 | 6.29 | 8.14 | −0.75 | 1552 | −1.0 [−5.3, +2.8], 7-5-5 |
+| Usage × rate | exact-dp | 120.4 | 108.4 | 194.5 | 6.81 | 8.82 | −0.46 | 1552 | −6.4 [−20.4, +6.5], 6-8-3 |
+| Opponent-adjusted trail | exact-dp | 122.7 | 121.8 | 195.8 | 6.86 | 8.90 | −0.87 | 1552 | −4.1 [−16.8, +8.7], 8-9-0 |
+| Trailing mean, greedy by projection | greedy-proj | 124.1 | 125.9 | 169.3 | 6.63 | 8.62 | −0.81 | 1552 | −2.6 [−11.3, +5.6], 9-8-0 |
