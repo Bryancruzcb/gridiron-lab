@@ -1,13 +1,15 @@
 # Gridiron Lab implementation progress
 
-Updated: 2026-09-12, after the final review fixes
-Branch: handoff/eight-improvements (pushed to origin; PR against main)
-Current HEAD: see `git log -1`
-Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main matched it exactly)
+Updated: 2026-09-19 (CI honesty pass — Actions claims were stale)
+Branch: historical note — eight-task work landed on `main` via merged PRs; this file is a build diary, not the interview pitch
+Current HEAD: see `git log -1` / Actions on `main`
+Reviewed handoff baseline: ce5d6b1c0e2821305f47535b8cd6e4f1a98aabb5 (local main matched it at handoff time)
 
 ## Current next action
 
-All eight tasks are implemented, merged and verified, and the final independent review's 11 findings are fixed. The branch is pushed with a PR against main, which gives GitHub Actions its first run of every gate. Remaining: merge the PR once CI is green.
+All eight tasks are on `main` and verified. GitHub Actions runs [`.github/workflows/ci.yml`](../.github/workflows/ci.yml) on pushes and PRs to `main`: `routes:generate` → typecheck → `npm test` → build without `DATABASE_URL` → lint → Playwright e2e. **Actions history is the source of truth** for whether CI is green.
+
+Honesty note: CI checks README study numbers against **committed** study artifacts (`docs-agreement.test.ts`). It does **not** run offline `study:build` from the gitignored `.study-cache/`. Interview pitch lives in `README.md` and `docs/DESIGN_NOTEBOOK.md` — keep this diary for archaeology.
 
 The lockfile is settled. A local edit had pruned four optional peer entries; `npm ci` on CI's npm 10.9.8 rejects that version, so it was discarded. The committed lockfile's root `engines` now matches package.json (`>=22.12.0`), and a regeneration with npm 10.9.8 changes only that line.
 
@@ -18,7 +20,7 @@ The lockfile is settled. A local edit had pruned four optional peer entries; `np
 | 1 Optimizer | Verified | Both handoff fixtures; a 400-slate exhaustive oracle, plus 5,500 extra brute-force slates from the reviewer; validation codes; bite tests |
 | 2 Scoring | Verified | Ruleset `gridiron-lab-ppr-dst@1` and live adapters (ESPN DST orientation fixed). All study consumers use it |
 | 3 Constraints | Verified | Reducer + fingerprints, ui tests, optimizer browser flows 8/8 on the production preview. URL and saved persistence come from Task 6 |
-| 4 CI/testing | Verified | CI gates: routes:generate, typecheck, `npm test` (scripts, TS scaffold, domain, ui), build without DATABASE_URL, lint, `npm run test:e2e` (production preview, fixture data, offline guard). Five deliberate-regression bite checks each fail the suite. `docs-agreement.test.ts` recomputes every README study number. GitHub Actions itself has not run (nothing pushed) |
+| 4 CI/testing | Verified | CI gates (local + Actions): routes:generate, typecheck, `npm test` (scripts, TS scaffold, domain, ui), build without DATABASE_URL, lint, `npm run test:e2e` (production preview, fixture data, offline guard). Five deliberate-regression bite checks each fail the suite. `docs-agreement.test.ts` recomputes every README study number against **committed** artifacts (not a live `.study-cache` rebuild). GitHub Actions runs `ci.yml` on main/PRs — see Actions history |
 | 5 Reproducibility | Verified | 2022–2025 inputs pinned in `docs/study/input-manifest.json`; strict exact runs for 2023–2025 plus the shipped slate; pinned offline rerun byte-identical (33/33 files); `docs/study/REGENERATION_REPORT.md`; opponent model corrected to `opp@2` after review |
 | 6 Sharing/saves | Verified | URL state, saved views, JSON/CSV exports; analysis browser checks 11/11; README and guide document the features |
 | 7 Data freshness | Verified | Pure feed-state and loader tests; data-freshness browser checks 11/11; `/live` late-reply race fixed after review |
@@ -269,8 +271,8 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries in mul
 5. **Solver contract** = the Task 1 API.
 6. **Scoring** = `gridiron-lab-ppr-dst@1`, documented as simplified DraftKings-inspired rules; missing inputs stay missing.
 7. **Study results are never hand-edited.** They were regenerated in Task 5B and again after the review's opponent-model fix. Each regeneration attributes its changes: solver, scoring, week policy, universe, then input drift vs model fix.
-8. **Git.** Task branches off this integration branch, local commits only. Nothing pushed, merged to `main`, or deployed.
-9. This file is updated only on the integration branch.
+8. **Git (historical, during the eight-task integration).** Task branches were local-only until the handoff PR. **Superseded:** work now lands on `main` via PRs; Actions is green on `main`.
+9. This file is a build diary. Prefer updating `README.md` / `docs/DESIGN_NOTEBOOK.md` for interview-facing claims; bump this diary when CI/process facts change.
 
 ## Verification
 
@@ -289,7 +291,7 @@ Fantasy slate: 114 players (QB 18, RB 28, WR 36, TE 16, DST 16), salaries in mul
 | Study review fixes head (a06604a) | typecheck, npm test, build, lint, `npm run test:e2e`, pinned offline rerun, README mutation check, bite checks; test:domain in Docker node:22 | Windows Node 26 + Docker node:22 (branch report) | all exit 0; e2e 48/48; rerun 33/33 byte-identical; 185/185 README mutations and 6/6 report mutations caught; domain 288 in Docker |
 | Final merged head (9abab2c) | clean `git archive`: npm ci, routes:generate, typecheck, npm test, build, lint; then Windows build + `npm run test:e2e` | Docker node:22.23.2; Windows Node 26, Chromium 153 | all exit 0; scripts 194 + 4 skipped, TS scaffold 55, domain 288, ui 71; lint 0 errors / 4 warnings; browser gate 48/48 in 305 s (pages 16/16, data-freshness 11/11, optimizer-flows 8/8, analysis 11/11, no server request outside 127.0.0.1) |
 
-GitHub Actions has not run on this branch (nothing pushed).
+GitHub Actions runs on `main` and PRs via `ci.yml` (routes:generate → typecheck → npm test → build without DATABASE_URL → lint → Playwright e2e). Actions history is SoT. CI validates README study numbers against committed study files; it does not run offline `study:build` from `.study-cache`.
 
 ## Data artifacts
 
