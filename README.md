@@ -16,7 +16,7 @@ Stack (secondary): TanStack Start (React 19), TypeScript, nflverse + ESPN.
 
 ## Result (2023–2025, weeks 2–18)
 
-Each season gets its own 114-player pool built only from the season before (`synthetic-prior-season@1`). That rule uses prior-season games/PPG to pick the pool; **salary bands from that rule are not used in this pitch**. Projection methods read only earlier weeks. Score with (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-style scoring ruleset — scoring only, not market salaries). Compare methods by **player MAE** (mean |projected − actual| on played slate player-weeks). 2023 and 2024 ran first and nothing was tuned on them. 2025 is **retrospective**, not a holdout: it had been studied before. No week was dropped.
+Each season gets its own 114-player pool built only from the season before (`synthetic-prior-season@2`). That rule uses prior-season games/PPG to pick the pool; **unit placeholder salaries from that rule are not DraftKings prices and are not part of this pitch**. Projection methods read only earlier weeks. Score with (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-style scoring ruleset — scoring only, not market salaries). Compare methods by **player MAE** (mean |projected − actual| on played slate player-weeks). 2023 and 2024 ran first and nothing was tuned on them. 2025 is **retrospective**, not a holdout: it had been studied before. No week was dropped.
 
 Player by player the trailing mean is unbiased (−0.02 points over 4,517 player-weeks). That does **not** mean it is a strong forecast — see MAE below.
 

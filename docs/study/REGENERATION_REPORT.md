@@ -1,5 +1,7 @@
 # Study regeneration report
 
+**Update (2026-09-18 PT):** no-salary artifact regen on `study/no-salary-cap-regen` — `synthetic-prior-season@2`, unit placeholder salaries (not DraftKings prices), `trail-greedy-value` removed. Per-season **projection MAE** tables below are the primary result; computer-vs-greedy / cheap-picks framing is retired from the claim.
+
 Date: 2026-09-12 (Pacific). Branch `wip/study-review-fixes`. Pipeline `gridiron-lab-study-pipeline@2`, solver `gridiron-lab-solveLineup@1` (strict), scoring `gridiron-lab-ppr-dst@1`, opponent model `opp@2`. Runs made on Windows 11 with Node 26.3.0.
 
 This report compares three versions of the study numbers: the first publication at baseline `ce5d6b1`, the previous regeneration at `5a00c2f`, and this revision. It attributes each change to one cause at a time: (a) the solver repair and strict exact metadata, (b) the scoring repair, (c) the slate, week and exclusion policy, (d) the per-season universes and the multi-season extension, and, in this revision, (e) the opponent-model fix and (f) upstream input drift.
@@ -107,7 +109,7 @@ The drift rerun's own ids (old code, new inputs) were `run-9f27d7cde29c130d`, `r
 ### README and tests
 
 - **Wording.** The README called the points-per-dollar greedy baseline "stars and scrubs". That baseline leaves cap unspent, which is the opposite build. It now uses the study page's term, cheap points-per-dollar picks.
-- **What the docs test checks.** `tests/domain/docs-agreement.test.ts` recomputes every number in the README's Result and What failed sections from `src/data/study-seasons.json`, `src/data/study-ewma.json`, `src/data/fantasy.json` and the new `docs/study/study-facts.json`. A final check fails on any number in those sections that no assertion read; code spans and one listed phrase about the live labs are exempt. Changing any one of the README's 185 study numbers makes the test fail. The same test renders this report's computer-vs-greedy, models-by-run, slates and EWMA sweep tables and its list of ranges that exclude zero from those files, and requires them verbatim.
+- **What the docs test checks.** `tests/domain/docs-agreement.test.ts` recomputes every number in the README's Result and What failed sections from `src/data/study-seasons.json`, `src/data/study-ewma.json`, `src/data/fantasy.json` and the new `docs/study/study-facts.json`. A final check fails on any number in those sections that no assertion read; code spans and one listed phrase about the live labs are exempt. Changing any one of the README's 185 study numbers makes the test fail. The same test renders this report's projection-first MAE-by-run, models-by-run, slates and EWMA sweep tables and its list of ranges that exclude zero from those files, and requires them verbatim.
 - **The facts file.** `study-facts.json` is written by `npm run study:build -- facts` from the published runs, their universe files and the synthetic EWMA sweeps. It holds the per-season best α, inactive lineup slots, the overlap of the shipped slate with the clean 2025 pool, and the slate and solver counts in the tables below. It refuses edited or attribution-only runs and universe files that do not hash to the run's universe.
 - **Replay-only counts.** Numbers that exist only in a one-time replay of the old scripts are no longer in the README. They stay in this report: 178 of 510 empty exact solves, the old DST estimate missing the final score in 487 of 544 2025 team-games, the first publication's 116.5 / 115.8 / 80.1 and EWMA peak 121.5 at α=0.30, and the old opponent-adjust 67.8.
 - **Legacy wrappers.** `build-study.ts`, `compare-proj.ts` and `compare-ewma.ts` used to write attribution-only numbers into `src/data` with only a log warning. They now refuse `--scoring legacy-study-dst@ce5d6b1` unless `--legacy-out` points outside `src/data`, and the page-file adapters refuse attribution-only runs unless the caller opts in. A file written that way leads with an attribution-only note.
@@ -270,101 +272,96 @@ Offense did not change: wave 1 showed that the ruleset equals `fantasy_points_pp
 
 ## Per-season results
 
-### Lineups: computer (trailing mean, exact DP) vs the greedy baselines
+### Projection quality: player MAE by run (primary)
 
-"Computer projected" is the exact lineup's mean pregame projection. The ranges are 95% week-bootstrap ranges. W-L-T counts weeks from the computer's side; a tie means both methods picked the same lineup.
+After the no-salary regen (`synthetic-prior-season@2`, unit placeholder salaries, `trail-greedy-value` removed), the **primary** result table is projection error — not exact-vs-greedy under a salary cap. MAE is mean |projected − actual| on played slate player-weeks. Shrinkage is best in every run; trailing mean is second. Lineup means remain in the models tables below for archaeology; they are not the resume claim.
 
-| Run | Weeks | Computer mean (median) | Computer projected | Top names | Cheap picks | Computer − top names: mean, median [95%], W-L-T | Computer − cheap: mean [95%], W-L-T |
-|---|---|---|---|---|---|---|---|
-| 2023 development | 17 | 131.9 (143.4) | 189.1 | 128.5 | 112.5 | +3.5, +1.1 [−10.2, +17.6], 10-6-1 | +19.4 [+5.1, +33.0], 13-4-0 |
-| 2024 development | 17 | 129.0 (130.2) | 186.4 | 128.4 | 102.7 | +0.6, 0.0 [0.0, +1.7], 1-0-16 | +26.3 [+11.1, +40.0], 14-3-0 |
-| 2025 retrospective | 17 | 139.7 (142.7) | 188.9 | 139.7 | 120.7 | 0.0, 0.0 [−5.3, +5.5], 4-5-8 | +19.1 [+10.3, +27.0], 14-3-0 |
-| pooled 2023+2024 | 34 | 130.4 (135.1) | 187.7 | 128.4 | 107.6 | +2.0, 0.0 [−4.9, +9.4], 11-6-17 | +22.9 [+12.9, +33.2], 27-7-0 |
-| pooled 2023+2024+2025 | 51 | 133.5 (140.9) | 188.1 | 132.2 | 112.0 | +1.4, 0.0 [−3.4, +6.6], 15-11-25 | +21.6 [+14.1, +28.7], 41-10-0 |
-| 2025 shipped slate | 17 | 126.7 (135.9) | 179.6 | 124.1 | 85.4 | +2.6, −1.9 [−5.6, +11.3], 8-9-0 | +41.3 [+30.4, +52.4], 17-0-0 |
+| Run | Weeks | Player-weeks | Shrink MAE | Trail MAE | Best method | Opp MAE |
+|---|---|---|---|---|---|---|
+| 2023 development | 17 | 1,500 | 6.02 | 6.24 | Shrink to position (6.02) | 6.34 |
+| 2024 development | 17 | 1,495 | 5.96 | 6.18 | Shrink to position (5.96) | 6.41 |
+| 2025 retrospective | 17 | 1,522 | 5.99 | 6.17 | Shrink to position (5.99) | 6.32 |
+| pooled 2023+2024 | 34 | 2,995 | 5.99 | 6.21 | Shrink to position (5.99) | 6.38 |
+| pooled 2023+2024+2025 | 51 | 4,517 | 5.99 | 6.19 | Shrink to position (5.99) | 6.36 |
+| 2025 shipped slate | 17 | 1,552 | 6.29 | 6.63 | Shrink to position (6.29) | 6.86 |
 
-The projection was higher than the actual lineup score in 17 of 17 weeks in each of 2023, 2024, 2025 and the shipped slate. Player-level bias of the trailing mean is −0.02 points pooled (n = 4,517), so the lineup overshoot is selection: the solver picks the players whose earlier averages ran highest. It is not a biased projection, and it is not the solver bug, because proven-optimal lineups overshoot too.
+Player-level bias of the trailing mean is −0.02 points pooled (n = 4,517). With unit placeholder salaries the trailing-mean exact DP and greedy-by-projection lineups often match on synthetic pools; that is not a DFS edge claim.
 
 ### Models by run
 
-MAE, RMSE and bias are per played slate player-week over the common weeks; bias is projection minus actual. The last column compares each model's weekly lineup with the trailing mean's.
+MAE, RMSE and bias are per played slate player-week over the common weeks; bias is projection minus actual. The last column compares each model's weekly lineup with the trailing mean's. `trail-greedy-value` is gone from the preset.
 
-#### 2023 development (`run-85628408012ca98e`)
-
-| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
-|---|---|---|---|---|---|---|---|---|---|
-| Trailing mean | exact-dp | 131.9 | 143.4 | 189.1 | 6.24 | 8.17 | −0.05 | 1500 | baseline |
-| Last week | exact-dp | 130.2 | 124.9 | 256.9 | 7.76 | 10.12 | −0.03 | 1500 | −1.7 [−16.5, +13.6], 9-7-1 |
-| Last 3 | exact-dp | 136.6 | 130.7 | 211.1 | 6.53 | 8.56 | −0.10 | 1500 | +4.7 [−8.6, +18.4], 8-6-3 |
-| 60/40 season + last 3 | exact-dp | 132.8 | 139.9 | 193.6 | 6.26 | 8.20 | −0.07 | 1500 | +0.9 [−9.5, +12.8], 7-7-3 |
-| EWMA α=0.35 | exact-dp | 145.4 | 154.4 | 201.2 | 6.31 | 8.32 | −0.14 | 1500 | +13.4 [−0.2, +28.3], 11-5-1 |
-| Shrink to position | exact-dp | 137.1 | 147.0 | 157.3 | 6.02 | 7.73 | −0.04 | 1500 | +5.2 [−4.7, +16.1], 3-1-13 |
-| Usage × rate | exact-dp | 128.1 | 126.9 | 200.2 | 6.40 | 8.39 | +0.04 | 1500 | −3.8 [−15.4, +7.2], 6-9-2 |
-| Opponent-adjusted trail | exact-dp | 138.2 | 139.5 | 198.2 | 6.34 | 8.27 | −0.18 | 1500 | +6.2 [−10.2, +22.1], 11-6-0 |
-| Trailing mean, greedy by projection | greedy-proj | 128.5 | 117.6 | 176.8 | 6.24 | 8.17 | −0.05 | 1500 | −3.5 [−17.6, +10.2], 6-10-1 |
-| Trailing mean, greedy by value | greedy-value | 112.5 | 109.6 | 162.6 | 6.24 | 8.17 | −0.05 | 1500 | −19.4 [−33.0, −5.1], 4-13-0 |
-
-#### 2024 development (`run-9e1e548b6e174b76`)
+#### 2023 development (`run-7d10819f40b21866`)
 
 | Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
 |---|---|---|---|---|---|---|---|---|---|
-| Trailing mean | exact-dp | 129.0 | 130.2 | 186.4 | 6.18 | 8.04 | −0.12 | 1495 | baseline |
-| Last week | exact-dp | 130.4 | 128.9 | 248.8 | 7.81 | 10.04 | +0.12 | 1495 | +1.4 [−9.7, +12.8], 7-9-1 |
-| Last 3 | exact-dp | 134.9 | 134.4 | 207.5 | 6.44 | 8.37 | +0.07 | 1495 | +5.9 [−3.7, +16.4], 8-6-3 |
-| 60/40 season + last 3 | exact-dp | 128.6 | 127.9 | 190.6 | 6.18 | 8.04 | −0.04 | 1495 | −0.3 [−8.6, +8.3], 6-7-4 |
-| EWMA α=0.35 | exact-dp | 137.8 | 138.0 | 198.4 | 6.26 | 8.16 | −0.01 | 1495 | +8.9 [−0.6, +18.9], 10-5-2 |
-| Shrink to position | exact-dp | 131.0 | 126.7 | 157.1 | 5.96 | 7.64 | −0.12 | 1495 | +2.0 [−3.3, +7.7], 6-7-4 |
-| Usage × rate | exact-dp | 135.3 | 138.2 | 207.3 | 6.35 | 8.18 | +0.21 | 1495 | +6.3 [−3.8, +17.2], 9-6-2 |
-| Opponent-adjusted trail | exact-dp | 133.2 | 133.8 | 197.9 | 6.41 | 8.38 | −0.19 | 1495 | +4.3 [−8.9, +18.6], 9-8-0 |
-| Trailing mean, greedy by projection | greedy-proj | 128.4 | 130.2 | 186.0 | 6.18 | 8.04 | −0.12 | 1495 | −0.6 [−1.7, 0.0], 0-1-16 |
-| Trailing mean, greedy by value | greedy-value | 102.7 | 97.4 | 169.9 | 6.18 | 8.04 | −0.12 | 1495 | −26.3 [−40.0, −11.1], 3-14-0 |
+| Trailing mean | exact-dp | 137.1 | 137.5 | 198.4 | 6.24 | 8.17 | −0.05 | 1500 | baseline |
+| Last week | exact-dp | 133.9 | 129.6 | 258.7 | 7.76 | 10.12 | −0.03 | 1500 | −3.2 [−17.2, +11.1], 6-10-1 |
+| Last 3 | exact-dp | 145.6 | 137.5 | 216.0 | 6.53 | 8.56 | −0.10 | 1500 | +8.5 [−1.5, +19.5], 8-6-3 |
+| 60/40 season + last 3 | exact-dp | 142.0 | 137.5 | 200.3 | 6.26 | 8.20 | −0.07 | 1500 | +4.9 [−3.0, +13.6], 7-5-5 |
+| EWMA α=0.35 | exact-dp | 142.4 | 140.2 | 206.7 | 6.31 | 8.32 | −0.14 | 1500 | +5.3 [−2.5, +13.6], 10-5-2 |
+| Shrink to position | exact-dp | 146.7 | 141.8 | 162.8 | 6.02 | 7.73 | −0.04 | 1500 | +9.6 [+2.2, +18.0], 8-2-7 |
+| Usage × rate | exact-dp | 135.4 | 131.6 | 205.8 | 6.40 | 8.39 | +0.04 | 1500 | −1.8 [−10.5, +7.4], 5-8-4 |
+| Opponent-adjusted trail | exact-dp | 146.2 | 145.5 | 204.8 | 6.34 | 8.27 | −0.18 | 1500 | +9.1 [−2.2, +21.5], 7-10-0 |
+| Trailing mean, greedy by projection | greedy-proj | 137.1 | 137.5 | 198.4 | 6.24 | 8.17 | −0.05 | 1500 | 0.0 [0.0, 0.0], 0-0-17 |
 
-#### 2025 retrospective (`run-00f774f034aafef8`)
-
-| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
-|---|---|---|---|---|---|---|---|---|---|
-| Trailing mean | exact-dp | 139.7 | 142.7 | 188.9 | 6.17 | 8.08 | +0.11 | 1522 | baseline |
-| Last week | exact-dp | 133.8 | 119.3 | 255.4 | 7.78 | 10.42 | +0.14 | 1522 | −5.9 [−22.5, +11.7], 7-9-1 |
-| Last 3 | exact-dp | 136.6 | 143.8 | 208.2 | 6.57 | 8.62 | +0.12 | 1522 | −3.1 [−14.3, +8.5], 5-9-3 |
-| 60/40 season + last 3 | exact-dp | 142.6 | 145.0 | 194.4 | 6.24 | 8.17 | +0.12 | 1522 | +2.8 [−3.9, +10.4], 6-6-5 |
-| EWMA α=0.35 | exact-dp | 148.9 | 153.3 | 198.7 | 6.31 | 8.30 | +0.04 | 1522 | +9.1 [−0.5, +18.9], 11-5-1 |
-| Shrink to position | exact-dp | 140.8 | 142.9 | 158.6 | 5.99 | 7.74 | +0.09 | 1522 | +1.0 [−3.0, +5.0], 6-3-8 |
-| Usage × rate | exact-dp | 146.7 | 143.9 | 200.6 | 6.38 | 8.36 | +0.29 | 1522 | +7.0 [+1.2, +13.6], 8-6-3 |
-| Opponent-adjusted trail | exact-dp | 143.4 | 144.6 | 197.5 | 6.32 | 8.28 | +0.04 | 1522 | +3.7 [−10.6, +19.3], 8-9-0 |
-| Trailing mean, greedy by projection | greedy-proj | 139.7 | 134.2 | 186.8 | 6.17 | 8.08 | +0.11 | 1522 | 0.0 [−5.5, +5.3], 5-4-8 |
-| Trailing mean, greedy by value | greedy-value | 120.7 | 114.3 | 164.0 | 6.17 | 8.08 | +0.11 | 1522 | −19.1 [−27.0, −10.3], 3-14-0 |
-
-#### pooled 2023+2024 (`61c897405c53…`)
+#### 2024 development (`run-715052c7ebb0f090`)
 
 | Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
 |---|---|---|---|---|---|---|---|---|---|
-| Trailing mean | exact-dp | 130.4 | 135.1 | 187.7 | 6.21 | 8.11 | −0.08 | 2995 | baseline |
-| Last week | exact-dp | 130.3 | 126.9 | 252.9 | 7.78 | 10.08 | +0.05 | 2995 | −0.1 [−8.4, +8.7], 16-16-2 |
-| Last 3 | exact-dp | 135.7 | 134.2 | 209.3 | 6.48 | 8.47 | −0.01 | 2995 | +5.3 [−3.1, +13.6], 16-12-6 |
-| 60/40 season + last 3 | exact-dp | 130.7 | 132.4 | 192.1 | 6.22 | 8.13 | −0.06 | 2995 | +0.3 [−6.2, +7.4], 13-14-7 |
-| EWMA α=0.35 | exact-dp | 141.6 | 141.2 | 199.8 | 6.29 | 8.24 | −0.07 | 2995 | +11.1 [+3.0, +19.8], 21-10-3 |
-| Shrink to position | exact-dp | 134.0 | 138.5 | 157.2 | 5.99 | 7.69 | −0.08 | 2995 | +3.6 [−2.2, +9.9], 9-8-17 |
-| Usage × rate | exact-dp | 131.7 | 130.8 | 203.7 | 6.37 | 8.29 | +0.12 | 2995 | +1.2 [−6.5, +9.0], 15-15-4 |
-| Opponent-adjusted trail | exact-dp | 135.7 | 136.7 | 198.0 | 6.38 | 8.32 | −0.18 | 2995 | +5.3 [−5.0, +15.4], 20-14-0 |
-| Trailing mean, greedy by projection | greedy-proj | 128.4 | 120.5 | 181.4 | 6.21 | 8.11 | −0.08 | 2995 | −2.0 [−9.4, +4.9], 6-11-17 |
-| Trailing mean, greedy by value | greedy-value | 107.6 | 107.0 | 166.2 | 6.21 | 8.11 | −0.08 | 2995 | −22.9 [−33.2, −12.9], 7-27-0 |
+| Trailing mean | exact-dp | 127.9 | 130.2 | 186.4 | 6.18 | 8.04 | −0.12 | 1495 | baseline |
+| Last week | exact-dp | 134.0 | 135.1 | 249.1 | 7.81 | 10.04 | +0.12 | 1495 | +6.1 [−1.6, +14.3], 8-8-1 |
+| Last 3 | exact-dp | 135.6 | 134.4 | 207.6 | 6.44 | 8.37 | +0.07 | 1495 | +7.7 [−1.0, +17.1], 8-6-3 |
+| 60/40 season + last 3 | exact-dp | 131.2 | 135.3 | 190.8 | 6.18 | 8.04 | −0.04 | 1495 | +3.3 [−3.1, +10.6], 8-5-4 |
+| EWMA α=0.35 | exact-dp | 138.0 | 138.0 | 198.4 | 6.26 | 8.16 | −0.01 | 1495 | +10.1 [+0.5, +20.2], 11-4-2 |
+| Shrink to position | exact-dp | 131.9 | 129.0 | 157.2 | 5.96 | 7.64 | −0.12 | 1495 | +4.0 [−2.8, +11.3], 6-8-3 |
+| Usage × rate | exact-dp | 139.1 | 141.7 | 208.0 | 6.35 | 8.18 | +0.21 | 1495 | +11.1 [−1.4, +25.4], 10-5-2 |
+| Opponent-adjusted trail | exact-dp | 132.6 | 133.8 | 198.1 | 6.41 | 8.38 | −0.19 | 1495 | +4.7 [−9.2, +19.4], 9-8-0 |
+| Trailing mean, greedy by projection | greedy-proj | 127.9 | 130.2 | 186.4 | 6.18 | 8.04 | −0.12 | 1495 | 0.0 [0.0, 0.0], 0-0-17 |
 
-#### pooled 2023+2024+2025 (`71179fb604fa…`)
+#### 2025 retrospective (`run-6c94c248f660227d`)
 
 | Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
 |---|---|---|---|---|---|---|---|---|---|
-| Trailing mean | exact-dp | 133.5 | 140.9 | 188.1 | 6.19 | 8.10 | −0.02 | 4517 | baseline |
-| Last week | exact-dp | 131.5 | 122.6 | 253.7 | 7.78 | 10.20 | +0.08 | 4517 | −2.1 [−10.3, +6.6], 23-25-3 |
-| Last 3 | exact-dp | 136.0 | 134.7 | 208.9 | 6.51 | 8.52 | +0.03 | 4517 | +2.5 [−4.4, +9.3], 21-21-9 |
-| 60/40 season + last 3 | exact-dp | 134.7 | 138.0 | 192.9 | 6.23 | 8.14 | 0.00 | 4517 | +1.1 [−4.1, +6.3], 19-20-12 |
-| EWMA α=0.35 | exact-dp | 144.0 | 143.1 | 199.5 | 6.30 | 8.26 | −0.04 | 4517 | +10.5 [+4.2, +16.8], 32-15-4 |
-| Shrink to position | exact-dp | 136.3 | 142.9 | 157.7 | 5.99 | 7.71 | −0.02 | 4517 | +2.7 [−1.3, +7.2], 15-11-25 |
-| Usage × rate | exact-dp | 136.7 | 140.9 | 202.7 | 6.38 | 8.31 | +0.18 | 4517 | +3.2 [−2.6, +9.0], 23-21-7 |
-| Opponent-adjusted trail | exact-dp | 138.3 | 142.0 | 197.9 | 6.36 | 8.31 | −0.11 | 4517 | +4.7 [−3.8, +14.1], 28-23-0 |
-| Trailing mean, greedy by projection | greedy-proj | 132.2 | 127.1 | 183.2 | 6.19 | 8.10 | −0.02 | 4517 | −1.4 [−6.6, +3.4], 11-15-25 |
-| Trailing mean, greedy by value | greedy-value | 112.0 | 108.5 | 165.5 | 6.19 | 8.10 | −0.02 | 4517 | −21.6 [−28.7, −14.1], 10-41-0 |
+| Trailing mean | exact-dp | 154.5 | 156.6 | 191.0 | 6.17 | 8.08 | +0.11 | 1522 | baseline |
+| Last week | exact-dp | 137.4 | 125.6 | 258.3 | 7.78 | 10.42 | +0.14 | 1522 | −17.2 [−31.0, −3.6], 4-12-1 |
+| Last 3 | exact-dp | 143.0 | 146.6 | 210.2 | 6.57 | 8.62 | +0.12 | 1522 | −11.5 [−23.2, −0.1], 4-10-3 |
+| 60/40 season + last 3 | exact-dp | 156.8 | 160.0 | 196.4 | 6.24 | 8.17 | +0.12 | 1522 | +2.2 [−5.8, +10.1], 6-6-5 |
+| EWMA α=0.35 | exact-dp | 155.5 | 156.3 | 200.9 | 6.31 | 8.30 | +0.04 | 1522 | +0.9 [−11.4, +11.9], 9-7-1 |
+| Shrink to position | exact-dp | 152.3 | 155.4 | 160.5 | 5.99 | 7.74 | +0.09 | 1522 | −2.2 [−7.6, +2.4], 4-4-9 |
+| Usage × rate | exact-dp | 149.0 | 142.7 | 201.3 | 6.38 | 8.36 | +0.29 | 1522 | −5.6 [−17.4, +5.7], 6-9-2 |
+| Opponent-adjusted trail | exact-dp | 150.8 | 144.3 | 200.3 | 6.32 | 8.28 | +0.04 | 1522 | −3.8 [−18.7, +14.1], 7-10-0 |
+| Trailing mean, greedy by projection | greedy-proj | 154.5 | 156.6 | 191.0 | 6.17 | 8.08 | +0.11 | 1522 | 0.0 [0.0, 0.0], 0-0-17 |
 
-#### 2025 shipped slate (`run-51125c0f6f553bcb`)
+#### pooled 2023+2024 (`cf0245970965…`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 132.5 | 132.4 | 192.4 | 6.21 | 8.11 | −0.08 | 2995 | baseline |
+| Last week | exact-dp | 134.0 | 135.1 | 253.9 | 7.78 | 10.08 | +0.05 | 2995 | +1.5 [−6.4, +9.0], 14-18-2 |
+| Last 3 | exact-dp | 140.6 | 134.5 | 211.8 | 6.48 | 8.47 | −0.01 | 2995 | +8.1 [+1.1, +15.2], 16-12-6 |
+| 60/40 season + last 3 | exact-dp | 136.6 | 137.0 | 195.6 | 6.22 | 8.12 | −0.06 | 2995 | +4.1 [−1.3, +9.7], 15-10-9 |
+| EWMA α=0.35 | exact-dp | 140.2 | 139.6 | 202.6 | 6.29 | 8.24 | −0.07 | 2995 | +7.7 [+1.3, +13.7], 21-9-4 |
+| Shrink to position | exact-dp | 139.3 | 133.8 | 160.0 | 5.99 | 7.69 | −0.08 | 2995 | +6.8 [+1.6, +12.5], 14-10-10 |
+| Usage × rate | exact-dp | 137.2 | 136.2 | 206.9 | 6.37 | 8.29 | +0.12 | 2995 | +4.7 [−3.1, +13.2], 15-13-6 |
+| Opponent-adjusted trail | exact-dp | 139.4 | 138.7 | 201.4 | 6.38 | 8.32 | −0.18 | 2995 | +6.9 [−1.8, +16.5], 16-18-0 |
+| Trailing mean, greedy by projection | greedy-proj | 132.5 | 132.4 | 192.4 | 6.21 | 8.11 | −0.08 | 2995 | 0.0 [0.0, 0.0], 0-0-34 |
+
+#### pooled 2023+2024+2025 (`cabea9fac08e…`)
+
+| Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
+|---|---|---|---|---|---|---|---|---|---|
+| Trailing mean | exact-dp | 139.9 | 141.7 | 191.9 | 6.19 | 8.10 | −0.02 | 4517 | baseline |
+| Last week | exact-dp | 135.1 | 131.1 | 255.4 | 7.78 | 10.20 | +0.08 | 4517 | −4.7 [−12.1, +2.8], 18-30-3 |
+| Last 3 | exact-dp | 141.4 | 137.5 | 211.3 | 6.51 | 8.52 | +0.03 | 4517 | +1.6 [−5.1, +8.3], 20-22-9 |
+| 60/40 season + last 3 | exact-dp | 143.3 | 144.6 | 195.8 | 6.23 | 8.14 | 0.00 | 4517 | +3.5 [−1.0, +8.0], 21-16-14 |
+| EWMA α=0.35 | exact-dp | 145.3 | 143.1 | 202.0 | 6.30 | 8.26 | −0.04 | 4517 | +5.4 [−0.8, +10.8], 30-16-5 |
+| Shrink to position | exact-dp | 143.7 | 144.3 | 160.1 | 5.99 | 7.71 | −0.02 | 4517 | +3.8 [0.0, +8.0], 18-14-19 |
+| Usage × rate | exact-dp | 141.1 | 139.2 | 205.0 | 6.38 | 8.31 | +0.18 | 4517 | +1.3 [−5.4, +8.5], 21-22-8 |
+| Opponent-adjusted trail | exact-dp | 143.2 | 140.4 | 201.1 | 6.36 | 8.31 | −0.11 | 4517 | +3.3 [−4.8, +12.2], 23-28-0 |
+| Trailing mean, greedy by projection | greedy-proj | 139.9 | 141.7 | 191.9 | 6.19 | 8.10 | −0.02 | 4517 | 0.0 [0.0, 0.0], 0-0-51 |
+
+#### 2025 shipped slate (`run-cc0cafb84e5a6615`)
 
 | Model | Solver | Lineup mean | Median | Projected | MAE | RMSE | Bias | n | Model − trail: mean [95%], W-L-T |
 |---|---|---|---|---|---|---|---|---|---|
@@ -377,7 +374,6 @@ MAE, RMSE and bias are per played slate player-week over the common weeks; bias 
 | Usage × rate | exact-dp | 120.4 | 108.4 | 194.5 | 6.81 | 8.82 | −0.46 | 1552 | −6.4 [−20.4, +6.5], 6-8-3 |
 | Opponent-adjusted trail | exact-dp | 122.7 | 121.8 | 195.8 | 6.86 | 8.90 | −0.87 | 1552 | −4.1 [−16.8, +8.7], 8-9-0 |
 | Trailing mean, greedy by projection | greedy-proj | 124.1 | 125.9 | 169.3 | 6.63 | 8.62 | −0.81 | 1552 | −2.6 [−11.3, +5.6], 9-8-0 |
-| Trailing mean, greedy by value | greedy-value | 85.4 | 79.3 | 151.7 | 6.63 | 8.62 | −0.81 | 1552 | −41.3 [−52.4, −30.4], 0-17-0 |
 
 ### Slates, availability and excluded weeks
 
@@ -385,10 +381,10 @@ From `study-facts.json`, over the common weeks (solver records over every week i
 
 | Run | Universe (sha256) | Slate size | Off slate: bye / no history / unknown id | Slate statuses | Inactive slots in trailing-mean lineups | Solver records | Excluded weeks |
 |---|---|---|---|---|---|---|---|
-| 2023 development | synthetic-prior-season@1:2023 (`efb986f3f509`) | 88–113 | 114 / 56 / 17 | inactive 251, played 1500 | 15 | exact-dp/proven 136, greedy-proj/heuristic 17, greedy-value/heuristic 17 | none |
-| 2024 development | synthetic-prior-season@1:2024 (`4ee04f01f8fd`) | 91–113 | 113 / 28 / 17 | inactive 285, played 1495 | 21 | exact-dp/proven 136, greedy-proj/heuristic 17, greedy-value/heuristic 17 | none |
-| 2025 retrospective | synthetic-prior-season@1:2025 (`90ff6c40780b`) | 89–113 | 112 / 16 / 17 | inactive 271, played 1522 | 13 | exact-dp/proven 136, greedy-proj/heuristic 17, greedy-value/heuristic 17 | none |
-| 2025 shipped slate | legacy-fantasy-json (`666a3b3de634`) | 87–114 | 114 / 25 / 0 | inactive 247, played 1552 | 11 | exact-dp/proven 136, greedy-proj/heuristic 17, greedy-value/heuristic 17 | none |
+| 2023 development | synthetic-prior-season@2:2023 (`d64d489bb2de`) | 88–113 | 114 / 56 / 17 | inactive 251, played 1500 | 18 | exact-dp/proven 136, greedy-proj/heuristic 17 | none |
+| 2024 development | synthetic-prior-season@2:2024 (`eb399586c9d2`) | 91–113 | 113 / 28 / 17 | inactive 285, played 1495 | 20 | exact-dp/proven 136, greedy-proj/heuristic 17 | none |
+| 2025 retrospective | synthetic-prior-season@2:2025 (`3752fb27ae12`) | 89–113 | 112 / 16 / 17 | inactive 271, played 1522 | 4 | exact-dp/proven 136, greedy-proj/heuristic 17 | none |
+| 2025 shipped slate | legacy-fantasy-json (`666a3b3de634`) | 87–114 | 114 / 25 / 0 | inactive 247, played 1552 | 11 | exact-dp/proven 136, greedy-proj/heuristic 17 | none |
 
 - **Unknown identity.** In the synthetic pools these are prior-season players whose id never appears in the evaluated season's sources. They are labelled and never forecast; the report does not guess why they are missing.
 - **Inactive.** Each inactive slot counts 0 in the lineup total. nflverse also omits active players who recorded no stats, so `inactive` cannot separate a scratch from a quiet game.
@@ -422,16 +418,17 @@ Those values were written while looking at 2025. They were not tuned on 2023–2
 - **Player MAE.** Shrinkage has the lowest player MAE in every run: 6.02, 5.96, 5.99, pooled 5.99, shipped 6.29. Trailing mean is second in every run. The old README said the trailing mean "still wins player MAE"; that was already contradicted by its own shrink figure and is wrong on the regenerated data.
 - **EWMA lineups.** EWMA α=0.35 has the highest lineup mean in each synthetic season. It beats the trailing mean by +13.4, +8.9 and +9.1 a week, and each per-season range just includes zero. The development pool gives +11.1 [+3.0, +19.8] and the full pool +10.5 [+4.2, +16.8]. On the shipped slate it loses (−5.5 [−14.0, +2.8]).
 - **Opponent adjustment.** With `opp@2` its projections are about as unbiased as the trailing mean's (bias −0.11 pooled, against −3.13 with `opp@1`). Its lineups average 138.3 pooled (+4.7 [−3.8, +14.1]) and 122.7 on the shipped slate (−4.1 [−16.8, +8.7]). Every one of its ranges against the trailing mean includes zero.
-- **Ranges that exclude zero.** Against the trailing mean, by run. Points-per-dollar greedy is below zero in every run and is left out:
+- **Ranges that exclude zero.** Against the trailing mean, by run.
 
-  - 2023 development: none
-  - 2024 development: none
-  - 2025 retrospective: Usage × rate +7.0 [+1.2, +13.6]
-  - pooled 2023+2024: EWMA α=0.35 +11.1 [+3.0, +19.8]
-  - pooled 2023+2024+2025: EWMA α=0.35 +10.5 [+4.2, +16.8]
+Lineup ranges against the trailing mean that exclude zero (descriptive bootstrap; greedy-by-projection kept when it excludes zero):
+
+  - 2023 development: Shrink to position +9.6 [+2.2, +18.0]
+  - 2024 development: EWMA α=0.35 +10.1 [+0.5, +20.2]
+  - 2025 retrospective: Last week −17.2 [−31.0, −3.6]; Last 3 −11.5 [−23.2, −0.1]
+  - pooled 2023+2024: Last 3 +8.1 [+1.1, +15.2]; EWMA α=0.35 +7.7 [+1.3, +13.7]; Shrink to position +6.8 [+1.6, +12.5]
+  - pooled 2023+2024+2025: Shrink to position +3.8 [0.0, +8.0]
   - 2025 shipped slate: 60/40 season + last 3 −12.3 [−21.4, −4.2]
 
-  The previous revision of this report said usage and opponent adjustment were the only models whose ranges exclude zero in 2025. That was wrong twice: the 60/40 blend's shipped-slate range excluded zero in the same tables, and with `opp@2` the opponent range includes zero.
 
 ### EWMA sweep (exploratory)
 
@@ -439,27 +436,27 @@ The sweep was run after 2025 had been studied. It includes the 2025 retrospectiv
 
 | Model | 2023 | 2024 | 2025 | Pooled 2023–2025 | 2025 shipped slate |
 |---|---|---|---|---|---|
-| trail | 131.9 | 129.0 | 139.7 | 133.5 | 126.7 |
-| ewma-0.05 | 117.9 | 113.3 | 144.7 | 125.3 | 117.0 |
-| ewma-0.10 | 130.6 | 126.6 | 146.1 | 134.5 | 112.8 |
-| ewma-0.15 | 131.1 | 127.6 | 147.3 | 135.3 | 111.2 |
-| ewma-0.20 | 136.6 | 134.9 | 150.3 | 140.6 | 115.1 |
-| ewma-0.25 | 139.4 | 138.6 | 149.3 | 142.4 | 118.9 |
-| ewma-0.30 | 139.3 | 139.4 | 144.6 | 141.1 | 121.5 |
-| ewma-0.35 | 145.4 | 137.8 | 148.9 | 144.0 | 121.2 |
-| ewma-0.40 | 145.6 | 137.5 | 148.7 | 143.9 | 119.5 |
-| ewma-0.45 | 144.8 | 138.9 | 146.8 | 143.5 | 121.3 |
-| ewma-0.50 | 141.8 | 138.4 | 142.9 | 141.0 | 121.7 |
-| ewma-0.55 | 139.2 | 134.5 | 138.8 | 137.5 | 123.2 |
-| ewma-0.60 | 135.5 | 136.1 | 139.7 | 137.1 | 120.2 |
-| ewma-0.65 | 131.6 | 132.5 | 139.5 | 134.5 | 121.1 |
-| ewma-0.70 | 132.1 | 137.1 | 138.8 | 136.0 | 122.4 |
-| ewma-0.75 | 131.3 | 138.0 | 137.5 | 135.6 | 125.8 |
-| ewma-0.80 | 130.7 | 136.8 | 134.6 | 134.0 | 126.3 |
-| ewma-0.85 | 128.4 | 135.2 | 137.0 | 133.5 | 126.5 |
-| ewma-0.90 | 125.2 | 133.4 | 137.4 | 132.0 | 132.5 |
-| ewma-0.95 | 128.0 | 132.8 | 134.7 | 131.8 | 132.4 |
-| ewma-1.00 | 130.2 | 130.4 | 133.8 | 131.5 | 129.6 |
+| trail | 137.1 | 127.9 | 154.5 | 139.9 | 126.7 |
+| ewma-0.05 | 120.6 | 112.9 | 149.6 | 127.7 | 117.0 |
+| ewma-0.10 | 133.4 | 126.5 | 151.7 | 137.2 | 112.8 |
+| ewma-0.15 | 130.2 | 127.7 | 154.9 | 137.6 | 111.2 |
+| ewma-0.20 | 135.3 | 135.7 | 158.4 | 143.2 | 115.1 |
+| ewma-0.25 | 136.2 | 139.5 | 162.5 | 146.1 | 118.9 |
+| ewma-0.30 | 142.0 | 139.6 | 153.9 | 145.2 | 121.5 |
+| ewma-0.35 | 142.4 | 138.0 | 155.5 | 145.3 | 121.2 |
+| ewma-0.40 | 143.7 | 137.3 | 153.6 | 144.9 | 119.5 |
+| ewma-0.45 | 142.0 | 139.6 | 151.6 | 144.4 | 121.3 |
+| ewma-0.50 | 143.6 | 138.2 | 150.7 | 144.2 | 121.7 |
+| ewma-0.55 | 136.7 | 137.3 | 145.8 | 139.9 | 123.2 |
+| ewma-0.60 | 136.5 | 137.6 | 143.1 | 139.1 | 120.2 |
+| ewma-0.65 | 137.7 | 135.0 | 139.4 | 137.4 | 121.1 |
+| ewma-0.70 | 137.6 | 141.4 | 135.8 | 138.2 | 122.4 |
+| ewma-0.75 | 134.8 | 139.9 | 136.9 | 137.2 | 125.8 |
+| ewma-0.80 | 134.5 | 136.2 | 137.8 | 136.2 | 126.3 |
+| ewma-0.85 | 131.5 | 136.2 | 136.6 | 134.8 | 126.5 |
+| ewma-0.90 | 131.4 | 135.7 | 137.9 | 135.0 | 132.5 |
+| ewma-0.95 | 133.3 | 133.7 | 137.4 | 134.8 | 132.4 |
+| ewma-1.00 | 133.9 | 134.0 | 137.4 | 135.1 | 129.6 |
 
 - **The best α moves.** It is 0.40 in 2023, 0.30 in 2024 and 0.20 in 2025. The pool peaks at 0.35 with 0.40 and 0.45 within 0.5, and the shipped slate peaks at 0.90.
 - **Two pools disagree.** The shipped slate rewards heavy weight on last week; the synthetic pools reward moderate weight.
