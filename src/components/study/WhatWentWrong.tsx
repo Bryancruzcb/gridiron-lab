@@ -16,15 +16,16 @@ export function WhatWentWrong() {
       <h2 className="font-display text-2xl uppercase tracking-[0.04em]">What went wrong</h2>
       <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
         <li>
-          Prices are fake DraftKings-style numbers, frozen all season, not the real weekly salary
-          board. The pools miss rookies and offseason moves.
+          Synthetic demo salaries (not real DraftKings) were used in older salary-cap lineup
+          comparisons. Those prices are frozen all season, miss rookies and offseason moves, and are
+          not part of the study claim — the pitch is projection MAE, not a $50k result.
         </li>
         <li>
           The 114-player {shipped?.season ?? backtest.season} slate that ships with the Lineup page was
           picked and priced from that whole season, including weeks 14–18. That is look-ahead, so it
-          is shown here only for comparison. On it the computer averaged {s.exactMean}, top names{" "}
-          {s.greedyProjMean} and cheap picks {s.greedyValueMean}; the computer beat top names in{" "}
-          {s.exactBeatsProj} of {s.weeks} weeks.
+          is shown here only for comparison — not as clean history. On that slate, exact DP averaged{" "}
+          {s.exactMean} vs greedy-by-projection {s.greedyProjMean} (beat greedy in {s.exactBeatsProj} of{" "}
+          {s.weeks} weeks). Pts-per-dollar / cheap-picks baselines were dropped from the study path.
         </li>
         <li>
           Earlier versions of this page ruled out a bug in the picker. There was one: the old exact
