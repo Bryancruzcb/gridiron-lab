@@ -34,11 +34,11 @@ export function BetterGuesses({ summary, label }: { summary: StudyRunSummary; la
     <section className="mt-10">
       <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Better guesses?</h2>
       <p className="mt-3 text-sm leading-relaxed">
-        Same budget, same {trail.weeks} weeks, same pools. We only changed how we guess next week’s
-        points. “Miss” is how far off each player’s guess was, on average, over{" "}
-        {trail.playerError.n.toLocaleString("en-US")} player-weeks. “Team score” is what the computer’s
-        9-man roster actually scored with that guess. The last column is the weekly team-score gap to
-        the trailing mean, with its 95% range.
+        Same {trail.weeks} weeks, same pools. We only changed how we guess next week’s points. “Miss”
+        (player MAE) is the study claim: how far off each player’s guess was, on average, over{" "}
+        {trail.playerError.n.toLocaleString("en-US")} player-weeks. “Team score” is an older
+        salary-cap demo metric under synthetic prices — not the pitch. The last column is the weekly
+        team-score gap to the trailing mean, with its 95% range.
       </p>
       <div className="mt-6 overflow-x-auto rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
         <table className="w-full min-w-[32rem] text-left text-sm">

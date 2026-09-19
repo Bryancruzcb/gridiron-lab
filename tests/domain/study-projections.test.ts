@@ -4,7 +4,8 @@ import type { StudyModelSpec } from "../../src/data/types.ts";
 import { RULESET_REF } from "../../src/lib/football/scoring.ts";
 import { makeModel, PROJECTION_METHODS } from "../../scripts/lib/study/models.ts";
 import { prepareSeason, type SeasonTexts } from "../../scripts/lib/study/prepare.ts";
-import { buildFeatures, ewma, historyGames, opponentFactor, project, snapshotBefore } from "../../scripts/lib/study/projections.ts";
+import { hashJson } from "../../scripts/lib/study/hash.ts";
+import { buildFeatures, ewma, historyGames, opponentFactor, project, snapshotBefore, type HistorySnapshot } from "../../scripts/lib/study/projections.ts";
 import { dropRows, fixtureUniverse, mapRows, reverseRows, runFixture, seasonTexts } from "../fixtures/football/study-fixture.ts";
 
 // Every method, plus non-default parameters so each branch reads its own settings.
@@ -93,6 +94,110 @@ describe("forecast causality", () => {
   it("orders history by week and game, not by file order", () => {
     const reversed = { playerWeek: reverseRows(texts.playerWeek), teamWeek: reverseRows(texts.teamWeek), schedule: reverseRows(texts.schedule) };
     assert.deepEqual(forecasts(reversed, 4).projections, forecasts(texts, 4).projections);
+  });
+});
+
+
+describe("leakage: lineup causality", () => {
+  const texts = seasonTexts(2041);
+
+  /** Pregame + solver outputs; do not compare lineup.actual / slot points. */
+  function weekSolve(textsIn: SeasonTexts, week: number) {
+    const run = runFixture({ texts: textsIn, config: { models: ALL_MODELS, weeks: { from: week, to: week } } });
+    const w = run.weeks[0]!;
+    assert.ok(w.slate.length > 0);
+    return {
+      slateSha256: w.slateSha256,
+      projections: Object.fromEntries(w.models.map((m) => [m.model, m.projections])),
+      lineups: Object.fromEntries(
+        w.models.map((m) => {
+          assert.equal(m.solver.status, "ok", m.model);
+          assert.ok(m.lineup, m.model);
+          return [m.model, m.lineup!.slots.map((s) => s.id)];
+        }),
+      ),
+    };
+  }
+
+  for (const week of [2, 3, 4, 5]) {
+    it(`week ${week} lineups ignore truncate/perturb from week ${week} on, for every method`, () => {
+      const base = weekSolve(texts, week);
+      for (const changed of [perturb(texts, week), truncate(texts, week)]) {
+        const other = weekSolve(changed, week);
+        assert.equal(other.slateSha256, base.slateSha256);
+        assert.deepEqual(other.projections, base.projections);
+        assert.deepEqual(other.lineups, base.lineups);
+      }
+    });
+  }
+
+  it("an earlier-row change can move at least one method's lineup ids", () => {
+    const base = weekSolve(texts, 3);
+    const past = weekSolve(perturb(texts, 1), 3);
+    assert.notDeepEqual(past.projections, base.projections);
+    const lineupMoved = Object.keys(base.lineups).some(
+      (id) => JSON.stringify(past.lineups[id]) !== JSON.stringify(base.lineups[id]),
+    );
+    assert.ok(lineupMoved, "expected at least one model lineup id list to change after past-week perturb");
+  });
+});
+
+/** Canonical hashable view of HistorySnapshot for leakage audits. */
+function snapshotAuditView(s: HistorySnapshot) {
+  const players = [...s.players.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([playerId, rows]) => ({
+      playerId,
+      weeks: rows.map((r) => r.week),
+      points: rows.map((r) => r.points),
+      gameIds: rows.map((r) => r.gameId),
+    }));
+  const defenses = [...s.defenses.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([team, rows]) => ({
+      team,
+      weeks: rows.map((r) => r.week),
+      points: rows.map((r) => r.points),
+      gameIds: rows.map((r) => r.gameId),
+    }));
+  const latestTeam = [...s.latestTeam.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([playerId, team]) => ({ playerId, team }));
+  const games = s.games.map((g) => ({
+    gameId: g.gameId,
+    week: g.week,
+    away: g.away,
+    home: g.home,
+    awayScore: g.awayScore,
+    homeScore: g.homeScore,
+    final: g.final,
+  }));
+  const opponents = [...s.opponents.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([key, opponent]) => ({ key, opponent }));
+  return { cutoff: s.cutoff, players, defenses, latestTeam, games, opponents };
+}
+
+describe("leakage: snapshot freeze", () => {
+  const cutoff = { season: 2041, seasonType: "REG" as const, beforeWeek: 4 };
+  const texts = seasonTexts(2041);
+
+  it("snapshotBefore week 4 is unchanged if week≥4 stats/scores are destroyed", () => {
+    const base = snapshotAuditView(snapshotBefore(prepareSeason(2041, texts, { scoring: RULESET_REF }), cutoff));
+    for (const changed of [perturb(texts, 4), truncate(texts, 4)]) {
+      const other = snapshotAuditView(snapshotBefore(prepareSeason(2041, changed, { scoring: RULESET_REF }), cutoff));
+      assert.deepEqual(other, base);
+      assert.equal(hashJson(other), hashJson(base));
+    }
+  });
+
+  it("a past-week row change moves the week-4 snapshot audit view", () => {
+    const base = snapshotAuditView(snapshotBefore(prepareSeason(2041, texts, { scoring: RULESET_REF }), cutoff));
+    const past = snapshotAuditView(
+      snapshotBefore(prepareSeason(2041, perturb(texts, 1), { scoring: RULESET_REF }), cutoff),
+    );
+    assert.notDeepEqual(past, base);
+    assert.notEqual(hashJson(past), hashJson(base));
   });
 });
 
