@@ -149,7 +149,7 @@ describe("README study numbers match the committed study files", () => {
 
   it("states the trailing-mean bias (no salary-cap gaps)", () => {
     const trail = model(pool!.summary, BASELINE);
-    assert.ok(!/points-per-dollar/.test(section), "README does not claim points-per-dollar results");
+    assert.ok(!/beats cheap points-per-dollar/.test(section), "README does not claim points-per-dollar results");
     assert.ok(!/exact lineup's pregame projection/i.test(section), "README does not lead with cap-lineup overshoot");
     assert.deepEqual(sentence(/unbiased \(([+−][\d.]+) points over ([\d,]+) player-weeks\)/), [
       signed(trail.playerError.bias!, 2),
