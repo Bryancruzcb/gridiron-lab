@@ -36,8 +36,9 @@ function StudyPage() {
         </p>
         <h1 className="mt-3 font-display text-5xl uppercase tracking-[0.03em]">Study</h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-          A check on past seasons. Did the Lineup computer actually help, and does last week’s QB
-          number predict this week?
+          A leakage-controlled check on past seasons: how well do pregame point projections miss
+          player by player, and does last week’s QB number predict this week? Salary-cap lineups are
+          not the study claim.
         </p>
 
         {!ready || !main || !view ? (
@@ -47,11 +48,12 @@ function StudyPage() {
             <section className="mt-10">
               <h2 className="font-display text-2xl uppercase tracking-[0.04em]">What this is</h2>
               <p className="mt-3 text-sm leading-relaxed">
-                Fantasy lineups here have a <strong className="font-medium text-fg">$50,000 budget</strong>,
-                like DraftKings. You pick 9 players. Stars cost more. The Lineup page has a computer
-                that builds a team under that budget. This page is not a live tool. It replays the{" "}
-                {seasonList} seasons: before each week we guessed every player’s points, let the
-                computer pick, then scored the team on the points the players actually got that week.
+                This page publishes a leakage-controlled evaluation of{" "}
+                <strong className="font-medium text-fg">fantasy point projections</strong> on NFL
+                player-week data ({seasonList}). The science claim is projection quality — player MAE
+                and honesty about failures — not a salary cap or DraftKings result. The Lineup page is
+                a separate demo that uses illustrative synthetic salaries; those prices are{" "}
+                <strong className="font-medium text-fg">not</strong> part of this study claim.
               </p>
             </section>
 
@@ -59,8 +61,8 @@ function StudyPage() {
               <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Two questions</h2>
               <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm leading-relaxed">
                 <li>
-                  After the games, did the computer’s $50k team score more points than just taking
-                  the highest-projected names that still fit the budget?
+                  Which projection methods miss less player by player (MAE), and do “smarter” guesses
+                  actually help on the same weeks and pools?
                 </li>
                 <li>
                   If a quarterback looked good last week (EPA or CPOE), did he look good this week
@@ -77,10 +79,11 @@ function StudyPage() {
                   nobody has a game to average yet.
                 </li>
                 <li>
-                  Each season gets its own pool of players and fake prices, built only from the
-                  season before: the top players by points per game, priced on a straight line of
-                  that average. Frozen before week 1. Rookies and offseason trades are missing.
-                  These are not real DraftKings salaries.
+                  Each season gets its own pool of players built only from the season before (top
+                  players by points per game, frozen before week 1). Rookies and offseason trades are
+                  missing. Older committed runs may still carry synthetic salary bands for
+                  archaeology; those prices are not real DraftKings salaries and are not part of the
+                  study claim.
                 </li>
                 <li>
                   A player’s guess uses only games before that week. His opponent comes from the
@@ -105,9 +108,9 @@ function StudyPage() {
               </ul>
               <p className="mt-3 text-sm leading-relaxed text-muted">
                 Three kinds of numbers show up in this app. A <em>forecast</em> is the guess before
-                kickoff. A <em>look back</em> (this page) scores those guesses after the fact. <em>Hindsight</em>{" "}
-                on the Lineup page rebuilds a team from points already scored, so it is not a forecast
-                at all.
+                kickoff. A <em>look back</em> (this page) scores those guesses after the fact.{" "}
+                <em>Hindsight</em> on the Lineup demo rebuilds a team from points already scored, so
+                it is not a forecast at all — and that demo’s salaries are not the study claim.
               </p>
             </section>
 
