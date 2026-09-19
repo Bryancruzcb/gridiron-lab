@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, it } from "node:test";
@@ -13,6 +13,7 @@ import { hashJson } from "../../scripts/lib/study/hash.ts";
 import { storeSnapshot } from "../../scripts/lib/study/inputs.ts";
 import { MODEL_PRESETS } from "../../scripts/lib/study/models.ts";
 import { prepareSeason } from "../../scripts/lib/study/prepare.ts";
+import { defaultSyntheticParams, syntheticUniverse } from "../../scripts/lib/study/universe.ts";
 import { buildInputManifest, buildSeasonsFile } from "../../scripts/lib/study/publish.ts";
 import { qbLag } from "../../scripts/lib/study/qb-lag.ts";
 import { buildMultiSeason } from "../../scripts/lib/study/report.ts";
@@ -32,8 +33,15 @@ after(() => {
   for (const dir of temp) rmSync(dir, { recursive: true, force: true });
 });
 
-const y2040 = runFixture({ config: { season: 2040, weeks: { from: 1, to: 3 }, allowUniverseSeasonMismatch: true } });
-const y2041 = runFixture({ config: { role: "retrospective" } });
+const prior2040 = prepareSeason(2040, seasonTexts(2040), { scoring: RULESET_REF });
+const syntheticParams = { ...defaultSyntheticParams(2040), minGames: 2, counts: { QB: 3, RB: 6, WR: 6, TE: 3, DST: 3 } };
+const synthetic = syntheticUniverse(prior2040, syntheticParams, { cap: 40000, sourceInputs: [] });
+const y2040 = runFixture({
+  config: { season: 2040, weeks: { from: 1, to: 3 }, allowUniverseSeasonMismatch: true },
+  universe: synthetic,
+});
+const y2041 = runFixture({ config: { role: "retrospective" }, universe: synthetic });
+const leak = runFixture(); // legacy look-ahead slate — comparison only
 
 function lagArtifact(season: number, playerWeekSha256?: string): StudyQbLagArtifact {
   const identity = inputsFor(season)[0]!;
@@ -88,6 +96,30 @@ describe("published seasons file", () => {
     assert.equal(file.shippedSlate, null);
   });
 
+  
+  it("refuses look-ahead season runs and keeps them only as shippedSlate", () => {
+    assert.equal(y2040.run.universe.lookAhead, false);
+    assert.equal(y2041.run.universe.lookAhead, false);
+    assert.equal(leak.run.universe.lookAhead, true);
+
+    assert.throws(
+      () => buildSeasonsFile({ runs: [y2041, leak] }),
+      (e: unknown) =>
+        e instanceof StudyConfigError && /look-ahead/.test(e.message) && /--shipped-slate/.test(e.message),
+    );
+    assert.throws(() => buildSeasonsFile({ runs: [leak] }), /look-ahead.*--shipped-slate/);
+
+    const file = buildSeasonsFile({ runs: [y2041], shippedSlate: leak });
+    assert.deepEqual(
+      file.seasons.map((s) => [s.runId, s.universe.lookAhead]),
+      [[y2041.runId, false]],
+    );
+    assert.deepEqual(
+      [file.shippedSlate!.runId, file.shippedSlate!.universe.lookAhead],
+      [leak.runId, true],
+    );
+  });
+
   it("refuses edited runs, mixed configurations and QB lag files that do not match", () => {
     const edited = structuredClone(y2041);
     edited.summary.models[0]!.lineupActualMean! += 1;
@@ -136,26 +168,19 @@ describe("input manifest", () => {
 });
 
 describe("publish command", () => {
-  it("writes the seasons file and manifest from written runs and their meta files", async () => {
-    const cache = tempDir();
-    for (const season of [2040, 2041]) {
-      storeSnapshot(cache, playerWeekSpec(season), encode(fixtureText(playersFile(season))), "2026-09-12T00:00:00.000Z", null);
-      storeSnapshot(cache, teamWeekSpec(season), encode(fixtureText(teamsFile(season))), "2026-09-12T00:00:00.000Z", null);
-    }
-    storeSnapshot(cache, SCHEDULE_SPEC, encode(fixtureText(GAMES)), "2026-09-12T00:00:00.000Z", null);
+  it("writes the seasons file and manifest from written runs and their meta files", () => {
     const out = tempDir();
-    const argv = [
-      "--seasons", "2040,2041", "--weeks", "2-4", "--role", "development", "--offline", "--input-dir", cache, "--out-dir", out,
-      "--universe", `legacy-fantasy-json:${fantasyPath}`, "--models", "projections", "--resamples", "200", "--qb-lag",
+    const pairs: [StudyRunArtifact, number][] = [
+      [y2040, 2040],
+      [y2041, 2041],
     ];
-    await runStudyCommand(parseStudyArgs(argv, { repoRoot }), {
-      repoRoot,
-      command: argv,
-      log: () => {},
-      now: () => new Date("2026-09-12T01:00:00.000Z"),
-      sourceState: () => ({ commit: null, dirty: null }),
+    const runs = pairs.map(([artifact, season]) => {
+      const runPath = join(out, `study-run-${season}-projections.json`);
+      writeFileSync(runPath, sortedJson(artifact));
+      writeFileSync(metaPathOf(runPath), sortedJson(meta(artifact, "2026-09-12T00:00:00.000Z")));
+      return runPath;
     });
-    const runs = [2040, 2041].map((s) => join(out, `study-run-${s}-projections.json`));
+    writeFileSync(join(out, "study-qb-lag-2041.json"), sortedJson(lagArtifact(2041)));
     const logs: string[] = [];
     const opts = parsePublishArgs([
       "--runs", runs.join(","), "--qb-lag", join(out, "study-qb-lag-2041.json"),
@@ -168,13 +193,11 @@ describe("publish command", () => {
     assert.equal(Object.keys(JSON.parse(written))[0], "baselineModel");
     const onDisk = JSON.parse(readFileSync(join(out, "manifest.json"), "utf8")) as StudyInputManifestFile;
     assert.deepEqual(onDisk, manifest);
-    assert.deepEqual(
-      onDisk.inputs.map((i) => i.id),
-      ["nfldata_games", "stats_player_week_2040", "stats_player_week_2041", "stats_team_week_2040", "stats_team_week_2041", "study-fantasy.json"],
-    );
-    assert.equal(onDisk.inputs[0]!.retrievedAt, "2026-09-12T00:00:00.000Z");
+    const expectedIds = [...new Set([...y2040.run.inputs, ...y2041.run.inputs].map((i) => i.id))].sort();
+    assert.deepEqual(onDisk.inputs.map((i) => i.id).slice().sort(), expectedIds);
     assert.ok(logs.some((l) => l.includes(file.resultSha256)));
     assert.equal(metaPathOf(runs[0]!), join(out, "study-run-2040-projections.meta.json"));
+    assert.equal(file.seasons.every((s) => s.universe.lookAhead === false), true);
   });
 
   it("fails clearly on missing arguments and files", () => {

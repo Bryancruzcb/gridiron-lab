@@ -92,6 +92,13 @@ export function buildSeasonsFile(input: {
       throw new StudyConfigError(`${a.runId} (${a.run.season}) differs from ${runs[0]!.runId} in models, baseline, scoring, pipeline, solver or uncertainty`);
     }
   }
+  for (const a of runs) {
+    if (a.run.universe.lookAhead) {
+      throw new StudyConfigError(
+        `${a.runId} uses a look-ahead universe; pass look-ahead runs as --shipped-slate`,
+      );
+    }
+  }
   if (new Set(runs.map((a) => a.run.universe.rule)).size > 1) {
     throw new StudyConfigError("season runs use different universe rules; publish one rule per file and pass the other as --shipped-slate");
   }
