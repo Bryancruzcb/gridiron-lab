@@ -4,7 +4,7 @@
 // check fails on any number in those sections, outside code spans, that no assertion read, apart from
 // the phrases in NOT_STUDY_NUMBERS. Counts that come only from one-time replays of the old scripts
 // belong in docs/study/REGENERATION_REPORT.md instead.
-// Regeneration report: the computer-vs-greedy, models-by-run, slates and EWMA sweep tables and the list
+// Regeneration report: the projection-first MAE-by-run, models-by-run, slates and EWMA sweep tables and the list
 // of ranges that exclude zero are rendered from those files and must appear verbatim.
 // When a sentence or table is reworded on purpose, update the matching pattern or renderer here.
 
@@ -29,7 +29,6 @@ const fantasy = read<{ season: number; players: { id: string; ppg: number; recen
 
 const BASELINE = "trail";
 const GREEDY = "trail-greedy-proj";
-const VALUE = "trail-greedy-value";
 const MINUS = "−";
 
 /** Numbers in the study sections that are not study results. */
@@ -78,11 +77,6 @@ const mean = (m: StudyModelSummary) => {
   return m.lineupActualMean;
 };
 const includesZero = (p: { interval: { low: number; high: number } }) => p.interval.low <= 0 && p.interval.high >= 0;
-/** The exact solver's gain over a method: the negated paired difference, range flipped. */
-function exactOver(summary: StudyRunSummary, id: string) {
-  const p = paired(summary, id);
-  return { mean: -p.meanDiff, low: -p.interval.high, high: -p.interval.low, exactWins: p.losses, exactLosses: p.wins, ties: p.ties };
-}
 
 /** Captures of the first match of `pattern` in the study sections; their spans count as checked. */
 function sentence(pattern: RegExp): string[] {
@@ -130,7 +124,7 @@ describe("README study numbers match the committed study files", () => {
     for (const s of [...study.seasons, shipped!]) assert.deepEqual([String(s.weeks.from), String(s.weeks.to)], [from, to], String(s.season));
     const [players] = sentence(/own (\d+)-player pool/);
     assert.ok(study.seasons.every((s) => String(s.universe.players) === players), "every season pool has that many players");
-    assert.ok(/salary bands from that rule are not used in this pitch/i.test(section), "README disclaims synthetic salary bands");
+    assert.ok(/unit placeholder salaries from that rule are not DraftKings prices and are not part of this pitch/i.test(section), "README disclaims placeholder salaries");
     assert.ok(section.includes(`(\`${study.seasons[0]!.universe.rule}\`)`) && section.includes(`(\`${study.scoring}\`, a simplified`));
     assert.deepEqual(sentence(/(\d{4}) and (\d{4}) ran first and nothing was tuned on them/), seasonsOf("development"));
     assert.deepEqual(sentence(/(\d{4}) is \*\*retrospective\*\*, not a holdout/), seasonsOf("retrospective"));
@@ -172,7 +166,7 @@ describe("README study numbers match the committed study files", () => {
 
   it("publishes the projection table for the pool", () => {
     const s = pool!.summary;
-    const projections = study.models.filter((m) => m.id !== GREEDY && m.id !== VALUE);
+    const projections = study.models.filter((m) => m.id !== GREEDY);
     const [count, first, last, weeks, playerWeeks] = sentence(/(\w+) projection methods \(same pools, no future data\), pooled (\d{4})–(\d{4}) \((\d+) weeks, ([\d,]+) player-weeks\)/);
     assert.equal(count, capital(word(projections.length)));
     assert.deepEqual([first, last], [String(pool!.seasons[0]), String(pool!.seasons.at(-1))]);
@@ -300,19 +294,22 @@ describe("docs/study/REGENERATION_REPORT.md tables match the committed study fil
   const block = (lines: string[]) => lines.join("\n");
   const has = (text: string, what: string) => assert.ok(report.includes(text), `the report's ${what} no longer matches the study files:\n${text}`);
 
-  it("has the computer-vs-greedy table", () => {
+  it("has the projection-first MAE-by-run table", () => {
     const rows = runs.map(({ label, summary }) => {
-      const t = model(summary, BASELINE);
-      const greedy = paired(summary, GREEDY);
-      const cheap = exactOver(summary, VALUE);
-      const g = exactOver(summary, GREEDY);
-      return `| ${label} | ${summary.commonWeeks.length} | ${fix(mean(t))} (${fix(t.lineupActualMedian!)}) | ${fix(t.lineupProjMean!)} | ${fix(mean(model(summary, GREEDY)))} | ${fix(mean(model(summary, VALUE)))} | ${signed(g.mean)}, ${signed(-greedy.medianDiff!)} [${signed(g.low)}, ${signed(g.high)}], ${g.exactWins}-${g.exactLosses}-${g.ties} | ${signed(cheap.mean)} [${signed(cheap.low)}, ${signed(cheap.high)}], ${cheap.exactWins}-${cheap.exactLosses}-${cheap.ties} |`;
+      const projections = summary.models.filter((m) => m.model !== GREEDY);
+      const byMae = [...projections].sort((a, b) => a.playerError.mae! - b.playerError.mae!);
+      const best = byMae[0]!;
+      const shrink = model(summary, "shrink").playerError.mae!;
+      const trail = model(summary, BASELINE).playerError.mae!;
+      const opp = model(summary, "opp").playerError.mae!;
+      const n = model(summary, BASELINE).playerError.n;
+      return `| ${label} | ${summary.commonWeeks.length} | ${thousands(n)} | ${shrink.toFixed(2)} | ${trail.toFixed(2)} | ${best.label} (${best.playerError.mae!.toFixed(2)}) | ${opp.toFixed(2)} |`;
     });
     has(block([
-      "| Run | Weeks | Computer mean (median) | Computer projected | Top names | Cheap picks | Computer − top names: mean, median [95%], W-L-T | Computer − cheap: mean [95%], W-L-T |",
-      "|---|---|---|---|---|---|---|---|",
+      "| Run | Weeks | Player-weeks | Shrink MAE | Trail MAE | Best method | Opp MAE |",
+      "|---|---|---|---|---|---|---|",
       ...rows,
-    ]), "computer-vs-greedy table");
+    ]), "projection-first MAE-by-run table");
   });
 
   it("has one models table per run", () => {
@@ -336,16 +333,18 @@ describe("docs/study/REGENERATION_REPORT.md tables match the committed study fil
   });
 
   it("lists the ranges against the trailing mean that exclude zero", () => {
-    for (const { label, summary } of runs) assert.ok(paired(summary, VALUE).interval.high < 0, `${label}: points-per-dollar greedy is below zero`);
     const lines = runs.map(({ label, summary }) => {
       const excluded = summary.models
-        .filter((m) => m.model !== BASELINE && m.model !== VALUE)
+        .filter((m) => m.model !== BASELINE)
         .map((m) => ({ m, p: paired(summary, m.model) }))
         .filter(({ p }) => !includesZero(p))
         .map(({ m, p }) => `${m.label} ${range(p)}`);
       return `  - ${label}: ${excluded.join("; ") || "none"}`;
     });
-    has(`Points-per-dollar greedy is below zero in every run and is left out:\n\n${block(lines)}\n`, "list of ranges that exclude zero");
+    has(
+      `Lineup ranges against the trailing mean that exclude zero (descriptive bootstrap; greedy-by-projection kept when it excludes zero):\n\n${block(lines)}\n`,
+      "list of ranges that exclude zero",
+    );
   });
 
   it("has the slates table", () => {

@@ -1,6 +1,5 @@
 import type { StudyRunSummary } from "@/data/types";
 import {
-  CHEAP,
   COMPUTER,
   ROLE_WORDS,
   TOP_NAMES,
@@ -30,7 +29,6 @@ export function DidItHelp({
   label: string;
 }) {
   const top = computerOver(summary, TOP_NAMES);
-  const cheap = computerOver(summary, CHEAP);
   const answer = top.low != null && top.low > 0 ? "Yes." : top.high != null && top.high < 0 ? "No." : "Not clearly.";
   const rows = [
     ...study.seasons.map((s) => ({ key: String(s.season), label: String(s.season), note: ROLE_WORDS[s.role], summary: s.summary, muted: false })),
@@ -56,9 +54,7 @@ export function DidItHelp({
         {fix(mean(model(summary, TOP_NAMES)), 1)}. That’s {signed(top.mean)} points a week for the
         computer. It won {top.wins} weeks, lost {top.losses} and tied {top.ties} (a tie means both
         built the same team). The 95% range for that weekly gap runs from {range(top)}; {verdict(top)}.
-        Picking “cheap production” (most projected points per dollar) averaged{" "}
-        {fix(mean(model(summary, CHEAP)), 1)}: the computer beat it by {fix(cheap.mean, 1)} a week, and{" "}
-        {verdict(cheap)}.
+        Points-per-dollar / cheap-picks baselines were dropped from the study path.
       </p>
       <div className="mt-6 overflow-x-auto rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
         <table className="w-full min-w-[36rem] text-left text-sm">
@@ -68,7 +64,6 @@ export function DidItHelp({
               <th className="py-2 text-right font-medium">Weeks</th>
               <th className="py-2 text-right font-medium">Computer</th>
               <th className="py-2 text-right font-medium">Top names</th>
-              <th className="py-2 text-right font-medium">Cheap picks</th>
               <th className="py-2 text-right font-medium">Gap (95% range)</th>
               <th className="py-2 text-right font-medium">W-L-T</th>
             </tr>
@@ -84,7 +79,6 @@ export function DidItHelp({
                   <td className="py-1.5 text-right">{r.summary.commonWeeks.length}</td>
                   <td className="py-1.5 text-right">{fix(mean(model(r.summary, COMPUTER)), 1)}</td>
                   <td className="py-1.5 text-right">{fix(mean(model(r.summary, TOP_NAMES)), 1)}</td>
-                  <td className="py-1.5 text-right text-muted">{fix(mean(model(r.summary, CHEAP)), 1)}</td>
                   <td className="py-1.5 text-right">
                     {signed(g.mean)} <span className="text-xs text-muted">({range(g)})</span>
                   </td>
@@ -118,7 +112,6 @@ export function DidItHelp({
               <th className="py-2 font-medium">Week</th>
               <th className="py-2 text-right font-medium">Computer</th>
               <th className="py-2 text-right font-medium">Top names</th>
-              <th className="py-2 text-right font-medium">Cheap picks</th>
             </tr>
           </thead>
           <tbody className="font-mono tabular-nums">
@@ -130,7 +123,6 @@ export function DidItHelp({
                   <td className="py-1.5">{w.week}</td>
                   <td className={cn("py-1.5 text-right", c > t ? "text-sage" : undefined)}>{fix(c, 1)}</td>
                   <td className="py-1.5 text-right">{fix(t, 1)}</td>
-                  <td className="py-1.5 text-right text-muted">{fix(w.lineups[CHEAP]!.actual, 1)}</td>
                 </tr>
               );
             })}
@@ -138,7 +130,6 @@ export function DidItHelp({
               <td className="py-2">Mean</td>
               <td className="py-2 text-right">{fix(mean(model(vs, COMPUTER)), 1)}</td>
               <td className="py-2 text-right">{fix(mean(model(vs, TOP_NAMES)), 1)}</td>
-              <td className="py-2 text-right text-muted">{fix(mean(model(vs, CHEAP)), 1)}</td>
             </tr>
           </tbody>
         </table>

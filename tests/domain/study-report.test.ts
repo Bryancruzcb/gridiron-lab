@@ -34,25 +34,24 @@ describe("universes", () => {
   it("build a synthetic universe from the prior season only, frozen by hash", () => {
     const prior = prepareSeason(2040, seasonTexts(2040), { scoring: RULESET_REF });
     const params = { ...defaultSyntheticParams(2040), minGames: 2, counts: { QB: 3, RB: 6, WR: 6, TE: 3, DST: 3 } };
-    const opts = { cap: 40000, sourceInputs: [{ id: "stats_player_week_2040", sha256: "0".repeat(64) }] };
+    const opts = { sourceInputs: [{ id: "stats_player_week_2040", sha256: "0".repeat(64) }] };
     const u = syntheticUniverse(prior, params, opts);
-    assert.deepEqual([u.id, u.season, u.lookAhead, u.cap], ["synthetic-prior-season@1:2041", 2041, false, 40000]);
+    assert.deepEqual([u.id, u.season, u.lookAhead, u.cap], ["synthetic-prior-season@2:2041", 2041, false, 9]);
+    assert.ok(u.players.every((p) => p.salary === 1));
+    assert.match(u.description, /placeholder/i);
+    assert.match(u.informationCutoff, /placeholder/i);
     for (const pos of ["QB", "RB", "WR", "TE", "DST"] as const) {
       const group = u.players.filter((p) => p.pos === pos);
       assert.equal(group.length, params.counts[pos], pos);
-      const [lo, hi] = params.salaryBands[pos];
-      assert.ok(group.every((p) => p.salary >= lo && p.salary <= hi && p.salary % 100 === 0), pos);
-      assert.equal(Math.max(...group.map((p) => p.salary)), hi, pos);
-      assert.equal(Math.min(...group.map((p) => p.salary)), lo, pos);
     }
-    // The top QB by 2040 points per game gets the top QB salary.
+    // Pool still ranks by prior-season PPG (top QB is included).
     const qbPpg = new Map<string, number>();
     for (const id of new Set(prior.players.filter((r) => r.position === "QB").map((r) => r.playerId))) {
       const pts = prior.players.filter((r) => r.playerId === id).map((r) => r.points!);
       qbPpg.set(id, pts.reduce((a, b) => a + b, 0) / pts.length);
     }
     const bestQb = [...qbPpg].sort((a, b) => b[1] - a[1])[0]![0];
-    assert.equal(u.players.find((p) => p.id === bestQb)!.salary, params.salaryBands.QB[1]);
+    assert.ok(u.players.some((p) => p.id === bestQb));
     assert.equal(hashJson(syntheticUniverse(prior, params, opts)), hashJson(u));
     const evaluated = prepareSeason(2041, seasonTexts(2041), { scoring: RULESET_REF });
     assert.throws(() => syntheticUniverse(evaluated, params, opts), /is not fromSeason 2040/);
@@ -99,7 +98,7 @@ describe("multi-season pooling", () => {
     assert.throws(() => buildMultiSeason([y2041, moreHistory]), /one locked configuration/);
     const prior = prepareSeason(2040, seasonTexts(2040), { scoring: RULESET_REF });
     const params = { ...defaultSyntheticParams(2040), minGames: 2, counts: { QB: 3, RB: 6, WR: 6, TE: 3, DST: 3 } };
-    const synthetic = syntheticUniverse(prior, params, { cap: 40000, sourceInputs: [] });
+    const synthetic = syntheticUniverse(prior, params, { sourceInputs: [] });
     const syntheticRun = runFixture({ universe: synthetic });
     assert.throws(() => buildMultiSeason([y2040, syntheticRun]), /universe rule/);
   });
@@ -111,6 +110,8 @@ describe("legacy study files", () => {
     const file = toBacktestFile(run);
     assert.deepEqual(file.weeks.map((w) => w.week), [2, 3, 4]);
     assert.equal(file.cap, 40000);
+    assert.equal("greedyValue" in (file.weeks[0] ?? {}), false);
+    assert.equal("greedyValueMean" in file.summary, false);
     const exact = file.weeks.map((w) => w.exact.actual);
     assert.equal(file.summary.exactMean, round(exact.reduce((a, b) => a + b, 0) / exact.length, 1));
     assert.equal(file.summary.exactBeatsProj, file.weeks.filter((w) => w.exact.actual > w.greedyProj.actual).length);
@@ -175,7 +176,10 @@ describe("model configuration", () => {
     const config = validateModelConfig({ models: [{ id: "o", method: "opp", solver: "exact-dp" }], baseline: "o" }, "cfg");
     assert.equal(config.models[0]!.definition, "opp@2");
     assert.deepEqual(MODEL_PRESETS.core!().models.map((m) => m.definition), [
-      "trail@1", "last1@1", "last3@1", "blend@1", "ewma@1", "shrink@1", "usage@1", "opp@2", "trail@1", "trail@1",
+      "trail@1", "last1@1", "last3@1", "blend@1", "ewma@1", "shrink@1", "usage@1", "opp@2", "trail@1",
+    ]);
+    assert.deepEqual(MODEL_PRESETS.core!().models.map((m) => m.id).filter((id) => id.startsWith("trail")), [
+      "trail", "trail-greedy-proj",
     ]);
   });
 });

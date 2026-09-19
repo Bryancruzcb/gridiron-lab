@@ -14,7 +14,19 @@ import { hashJson, sha256Hex } from "./hash.ts";
 import type { PreparedSeason } from "./prepare.ts";
 
 export const LEGACY_UNIVERSE_ID = "legacy-fantasy-json";
-export const SYNTHETIC_RULE = "synthetic-prior-season@1";
+/** Prior-season PPG pool selection; salaries are unit placeholders, not market prices. */
+export const SYNTHETIC_RULE = "synthetic-prior-season@2";
+/**
+ * Placeholder salary on every synthetic-pool player. Types/solver still require positive salary;
+ * these are not DraftKings (or any market) prices. Roster construction may still run but is not
+ * the scientific Result — player MAE is.
+ */
+export const SYNTHETIC_PLACEHOLDER_SALARY = 1;
+/**
+ * Non-market cap for synthetic pools: roster has 9 slots at unit salary 1, so 9 is the minimum
+ * feasible budget. Deliberately not $50k / DK-shaped.
+ */
+export const SYNTHETIC_PLACEHOLDER_CAP = 9;
 const SCHEMA = "gridiron-lab-study-universe@1";
 const POSITIONS: readonly FantasyPos[] = ["QB", "RB", "WR", "TE", "DST"];
 
@@ -105,9 +117,6 @@ export function defaultSyntheticParams(fromSeason: number): SyntheticUniversePar
     fromSeason,
     minGames: 4,
     counts: { QB: 18, RB: 28, WR: 36, TE: 16, DST: 16 },
-    // The legacy slate's per-position salary ranges.
-    salaryBands: { QB: [5000, 8200], RB: [4000, 9000], WR: [3500, 9200], TE: [2500, 6800], DST: [2000, 3200] },
-    salaryStep: 100,
     scoring: RULESET_REF,
   };
 }
@@ -117,14 +126,9 @@ type Candidate = { id: string; name: string; team: string; pos: FantasyPos; game
 function checkParams(params: SyntheticUniverseParams) {
   const where = SYNTHETIC_RULE;
   if (!Number.isInteger(params.minGames) || params.minGames < 1) throw new StudyConfigError(`${where}: minGames must be >= 1`);
-  if (!Number.isInteger(params.salaryStep) || params.salaryStep <= 0) throw new StudyConfigError(`${where}: salaryStep must be > 0`);
   for (const pos of POSITIONS) {
     const n = params.counts[pos];
     if (!Number.isInteger(n) || n < 1) throw new StudyConfigError(`${where}: counts.${pos} must be a whole number >= 1`);
-    const [lo, hi] = params.salaryBands[pos];
-    if (!(lo > 0 && lo <= hi) || lo % params.salaryStep !== 0 || hi % params.salaryStep !== 0) {
-      throw new StudyConfigError(`${where}: salaryBands.${pos} must be 0 < low <= high, both multiples of ${params.salaryStep}`);
-    }
   }
 }
 
@@ -147,15 +151,16 @@ function modalPosition(rows: readonly { position: string | null }[]): string | n
 }
 
 /**
- * synthetic-prior-season@1: from season S-1 regular-season rows only, take the top counts[pos]
+ * synthetic-prior-season@2: from season S-1 regular-season rows only, take the top counts[pos]
  * players (and team defenses) by points per game with at least minGames scored games (ties: more
- * points, then id). Salary is linear in points per game within the position band, rounded to
- * salaryStep. Team and name come from the latest S-1 row. Rookies and offseason moves are absent.
+ * points, then id). Every player gets unit placeholder salary SYNTHETIC_PLACEHOLDER_SALARY; the
+ * universe cap is SYNTHETIC_PLACEHOLDER_CAP (roster-slot scale, not a market budget). Team and name
+ * come from the latest S-1 row. Rookies and offseason moves are absent.
  */
 export function syntheticUniverse(
   prior: PreparedSeason,
   params: SyntheticUniverseParams,
-  opts: { cap: number; sourceInputs: { id: string; sha256: string }[] },
+  opts: { sourceInputs: { id: string; sha256: string }[] },
 ): StudyUniverse {
   checkParams(params);
   if (prior.season !== params.fromSeason) {
@@ -200,31 +205,27 @@ export function syntheticUniverse(
     const picked = candidates[pos]
       .sort((a, b) => b.ppg - a.ppg || b.points - a.points || byId(a, b))
       .slice(0, params.counts[pos]);
-    if (!picked.length) continue;
-    const lo = picked[picked.length - 1]!.ppg;
-    const hi = picked[0]!.ppg;
-    const [bandLo, bandHi] = params.salaryBands[pos];
-    const steps = (bandHi - bandLo) / params.salaryStep;
     for (const c of picked) {
-      const salary = hi === lo ? bandHi : bandLo + Math.round(((c.ppg - lo) / (hi - lo)) * steps) * params.salaryStep;
-      players.push({ id: c.id, name: c.name, pos, team: c.team, salary });
+      players.push({ id: c.id, name: c.name, pos, team: c.team, salary: SYNTHETIC_PLACEHOLDER_SALARY });
     }
   }
   players.sort(byId);
   const season = params.fromSeason + 1;
-  checkUniverse(players, opts.cap, `${SYNTHETIC_RULE} for ${season}`);
+  const cap = SYNTHETIC_PLACEHOLDER_CAP;
+  checkUniverse(players, cap, `${SYNTHETIC_RULE} for ${season}`);
   return {
     schemaVersion: SCHEMA,
     id: `${SYNTHETIC_RULE}:${season}`,
     rule: SYNTHETIC_RULE,
     season,
-    cap: opts.cap,
+    cap,
     description:
-      `Top players by ${params.fromSeason} regular-season points per game (at least ${params.minGames} games), ` +
-      `salaries linear in points per game within each position band, rounded to $${params.salaryStep}. Synthetic, not real salaries.`,
+      `Top players by ${params.fromSeason} regular-season points per game (at least ${params.minGames} games). ` +
+      `Salaries are unit placeholders (${SYNTHETIC_PLACEHOLDER_SALARY} each), not market or DraftKings prices; ` +
+      `cap ${cap} is roster-slot scale so the solver can still build a lineup. Player MAE is the Result, not DFS edge.`,
     informationCutoff:
       `Only ${params.fromSeason} regular-season rows scored with ${params.scoring}; frozen before ${season} week 1. ` +
-      `Rookies and offseason team changes are not reflected.`,
+      `Rookies and offseason team changes are not reflected. Salaries are placeholders, not priced from any market.`,
     lookAhead: false,
     params,
     sourceInputs: [...opts.sourceInputs].sort(byId),

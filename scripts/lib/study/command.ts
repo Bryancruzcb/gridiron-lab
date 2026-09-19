@@ -40,9 +40,6 @@ import {
   syntheticUniverse,
 } from "./universe.ts";
 
-/** Synthetic universes use the legacy slate's cap. */
-export const SYNTHETIC_CAP = 50_000;
-
 export type StudyCommandContext = {
   repoRoot: string;
   command: string[];
@@ -198,7 +195,6 @@ async function resolveUniverse(
     );
     const inputs = [...acquired.values()];
     const universe = syntheticUniverse(data, defaultSyntheticParams(prior), {
-      cap: SYNTHETIC_CAP,
       sourceInputs: inputs.map((i) => ({ id: i.identity.id, sha256: i.identity.sha256 })),
     });
     return { universe, identities: inputs.map((i) => i.identity), entries: inputs.map((i) => i.entry) };

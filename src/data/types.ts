@@ -151,7 +151,6 @@ export type StudyWeek = {
   players: number;
   exact: StudyLineupScore;
   greedyProj: StudyLineupScore;
-  greedyValue: StudyLineupScore;
 };
 
 export type StudySummary = {
@@ -159,9 +158,7 @@ export type StudySummary = {
   exactMean: number;
   exactMedian: number;
   greedyProjMean: number;
-  greedyValueMean: number;
   exactBeatsProj: number;
-  exactBeatsValue: number;
 };
 
 export type BacktestFile = {
@@ -281,21 +278,18 @@ export type SyntheticUniverseParams = {
   fromSeason: number;
   minGames: number;
   counts: Record<FantasyPos, number>;
-  /** Inclusive [lowest, highest] salary per position, mapped linearly from prior-season points per game. */
-  salaryBands: Record<FantasyPos, [number, number]>;
-  salaryStep: number;
   scoring: string;
 };
 
-/** A frozen player pool with synthetic salaries; its canonical JSON hash identifies it. */
+/** A frozen player pool; synthetic pools use placeholder salaries (not market prices). */
 export type StudyUniverse = {
   schemaVersion: "gridiron-lab-study-universe@1";
   id: string;
-  rule: "legacy-fantasy-json" | "synthetic-prior-season@1";
+  rule: "legacy-fantasy-json" | "synthetic-prior-season@2";
   season: number;
   cap: number;
   description: string;
-  /** Plain statement of the information the selection and salaries used. */
+  /** Plain statement of the information the selection used (and whether salaries are placeholders). */
   informationCutoff: string;
   /** True when selection or salaries used information from the season being evaluated. */
   lookAhead: boolean;

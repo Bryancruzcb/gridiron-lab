@@ -58,7 +58,7 @@ describe("study arguments", () => {
     const o = parseStudyArgs(base, ctx);
     assert.deepEqual(o.seasons, [2023, 2024, 2025]);
     assert.deepEqual(o.weeks, { from: 2, to: 18 });
-    assert.deepEqual([o.scoring, o.universe, o.models, o.role, o.offline, o.qbLag], [RULESET_REF, "synthetic-prior-season@1", "core", "holdout", false, false]);
+    assert.deepEqual([o.scoring, o.universe, o.models, o.role, o.offline, o.qbLag], [RULESET_REF, "synthetic-prior-season@2", "core", "holdout", false, false]);
     assert.deepEqual([o.seed, o.resamples, o.minHistoryGames], [20260912, 2000, 1]);
     assert.equal(o.inputDir, resolve("/repo", ".study-cache"));
     assert.equal(o.outDir, resolve("/repo", "artifacts", "study"));

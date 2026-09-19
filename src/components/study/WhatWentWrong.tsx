@@ -23,9 +23,9 @@ export function WhatWentWrong() {
         <li>
           The 114-player {shipped?.season ?? backtest.season} slate that ships with the Lineup page was
           picked and priced from that whole season, including weeks 14–18. That is look-ahead, so it
-          is shown here only for comparison. On it the computer averaged {s.exactMean}, top names{" "}
-          {s.greedyProjMean} and cheap picks {s.greedyValueMean}; the computer beat top names in{" "}
-          {s.exactBeatsProj} of {s.weeks} weeks.
+          is shown here only for comparison — not as clean history. On that slate, exact DP averaged{" "}
+          {s.exactMean} vs greedy-by-projection {s.greedyProjMean} (beat greedy in {s.exactBeatsProj} of{" "}
+          {s.weeks} weeks). Pts-per-dollar / cheap-picks baselines were dropped from the study path.
         </li>
         <li>
           Earlier versions of this page ruled out a bug in the picker. There was one: the old exact

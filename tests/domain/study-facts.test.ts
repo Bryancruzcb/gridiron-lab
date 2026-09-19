@@ -81,7 +81,7 @@ describe("run facts", () => {
 describe("facts file", () => {
   const prior = prepareSeason(2040, seasonTexts(2040), { scoring: RULESET_REF });
   const params = { ...defaultSyntheticParams(2040), minGames: 2, counts: { QB: 3, RB: 6, WR: 6, TE: 3, DST: 3 } };
-  const synthetic = syntheticUniverse(prior, params, { cap: 40000, sourceInputs: [] });
+  const synthetic = syntheticUniverse(prior, params, { sourceInputs: [] });
   const clean = runFixture({ universe: synthetic });
   const shipped = runFixture();
 
