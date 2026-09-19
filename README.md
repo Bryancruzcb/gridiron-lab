@@ -36,7 +36,7 @@ Eight projection methods (same pools, no future data), pooled 2023–2025 (51 we
 | Last week | 7.78 |
 
 - **Shrinkage** to position has the best player MAE in every season and on the shipped slate (6.29 there). Trailing mean is second everywhere.
-- **EWMA α=0.35** is **not** better than trailing mean on player MAE (6.30 vs 6.19 pooled). Its α is a default carried over from the first 2025 scripts, not tuned on 2023–2024. In the exploratory sweeps the best α was 0.40 in 2023, 0.30 in 2024, 0.20 in 2025 and 0.90 on the shipped slate. Do not fit α on 17 weeks.
+- **EWMA α=0.35** is **not** better than trailing mean on player MAE (6.30 vs 6.19 pooled). Its α is a default carried over from the first 2025 scripts, not tuned on 2023–2024. In the exploratory sweeps the best α was 0.40 in 2023, 0.70 in 2024, 0.25 in 2025 and 0.90 on the shipped slate. Do not fit α on 17 weeks.
 - **Opponent-adjust** scales the trailing mean by what the opponent allowed at the position over what every opponent allowed, from the same rows, clamped to 0.7–1.3. Player MAE is 6.36 pooled (worse than trailing mean 6.19). The first version divided by the pool's own position mean instead, so most skill players sat at the 0.7 floor — fixed as `opp@2`.
 
 MAE = average |projected − actual| per played slate player-week over the compared weeks. Where a 95% range appears elsewhere it is a percentile bootstrap resampling weeks (2,000 resamples, seed 20260912) — descriptive, not a significance test.
@@ -51,7 +51,7 @@ MAE = average |projected − actual| per played slate player-week over the compa
 - **The shipped 114-player 2025 slate is look-ahead.** Every offensive player's games, PPG and season points in `src/data/fantasy.json` match the full 2025 regular season. Its projection is 60% season PPG + 40% late-season PPG. Among players with enough games, the RB and WR pools are exactly the top players by that projection. Only 66 of its 114 players are in the clean 2025 pool. It stays as a comparison, never as a clean historical slate.
 - **The old study scripts** kept players on a bye on the slate, estimated DST points allowed from touchdowns, field goals and extra points (counting every extra point twice), and read opponents from postgame rows. All fixed.
 - **The first opponent adjustment compared different groups.** It divided what an opponent allowed to every player at the position, backups included, by the pool's own position mean, which covers only the top players. Most skill players got the maximum cut. Fixed as `opp@2`.
-- **Inactive means zero.** A player with no stat row in a final game counts 0. nflverse also omits active players who recorded nothing, so the two can't be told apart. Trailing-mean lineups used 49 such slots over the 51 weeks (from the retired cap runs — the scoring rule still matters).
+- **Inactive means zero.** A player with no stat row in a final game counts 0. nflverse also omits active players who recorded nothing, so the two can't be told apart. Trailing-mean lineups used 42 such slots over the 51 weeks (from the retired cap runs — the scoring rule still matters).
 - Trailing mean is a weak forecast. Three seasons is still a small sample, and 2025 was examined before. Week 1 2026 is a thin sample.
 
 ## Labs
