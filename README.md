@@ -17,9 +17,9 @@ Stack (secondary): TanStack Start (React 19), TypeScript, nflverse + ESPN. Salar
 
 ## Result (2023–2025, weeks 2–18)
 
-Each season gets its own 114-player pool and synthetic salaries built only from the season before (`synthetic-prior-season@1`). Projection = trailing mean of that season's earlier weeks. The exact solver must prove the best $50k lineup for those projections, or the week is dropped for every method. Score it on that week's actual points (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-style ruleset). 2023 and 2024 ran first and nothing was tuned on them. 2025 is **retrospective**, not a holdout: it had been studied before. No week was dropped.
+Each season gets its own 114-player pool and synthetic salaries built only from the season before (`synthetic-prior-season@1`). Projection = trailing mean of that season's earlier weeks. An exact dynamic-programming optimizer must prove the best $50k lineup under the cap for those projections, or the week is dropped for every method. Score it on that week's actual points (`gridiron-lab-ppr-dst@1`, a simplified DraftKings-style ruleset). 2023 and 2024 ran first and nothing was tuned on them. 2025 is **retrospective**, not a holdout: it had been studied before. No week was dropped.
 
-| Season | Weeks | Exact DP | Greedy by proj | Pts/$ greedy | Exact − greedy (95% range) | Exact W-L-T |
+| Season | Weeks | Exact | Greedy by proj | Pts/$ greedy | Exact − greedy (95% range) | Exact W-L-T |
 |---|---|---|---|---|---|---|
 | 2023 (development) | 17 | 131.9 | 128.5 | 112.5 | +3.5 (−10.2 to +17.6) | 10-6-1 |
 | 2024 (development) | 17 | 129.0 | 128.4 | 102.7 | +0.6 (0.0 to +1.7) | 1-0-16 |
