@@ -45,6 +45,10 @@ export function DidItHelp({
   return (
     <section className="mt-10">
       <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Did the computer help?</h2>
+      <p className="mt-2 text-xs leading-relaxed text-muted">
+        Archaeology only — not the study claim. These lineup comparisons used a demo salary cap and
+        synthetic prices (not real DraftKings). The pitch is projection MAE; see Better guesses below.
+      </p>
       <p className="mt-3 text-sm leading-relaxed">
         {answer} Over {top.n} weeks in {label} the computer averaged{" "}
         <strong className="font-medium text-fg">{fix(mean(model(summary, COMPUTER)), 1)}</strong> real

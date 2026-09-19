@@ -180,11 +180,16 @@ function OptimizerLab() {
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
           <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Lineup</h1>
+          <p className="mt-2 text-sm text-muted">
+            Demo salaries only — not part of the study claim. Prices are illustrative synthetics, not
+            real DraftKings.
+          </p>
         </header>
         <FirstLook id="lineup" title="This page">
           <p>
-            Build a $50k roster. Salary is the price. Lock forces a player in; bench keeps him out.
-            Hindsight rebuilds on this week’s actual points.
+            Demo lab only — not the study claim. Build a roster under a demo $50k cap with
+            illustrative synthetic salaries (not real DraftKings or market prices). Lock forces a
+            player in; bench keeps him out. Hindsight rebuilds on this week’s actual points.
           </p>
         </FirstLook>
 
