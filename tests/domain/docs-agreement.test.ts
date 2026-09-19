@@ -227,7 +227,7 @@ describe("README study numbers match the committed study files", () => {
     assert.equal(opp.definition, "opp@2");
     const oppMae = model(pool!.summary, "opp").playerError.mae!;
     const [low, high, oppMaeS, trailMaeS, floor] = sentence(
-      /\*\*Opponent-adjust\*\* scales the trailing mean by what the opponent allowed at the position over what every opponent allowed, from the same rows, clamped to (\d\.\d)–(\d\.\d)\. Player MAE is ([\d.]+) pooled \(worse than trailing mean's ([\d.]+)\)\. The first version divided by the pool's own position mean instead, so most skill players sat at the (\d\.\d) floor/,
+      /\*\*Opponent-adjust\*\* scales the trailing mean by what the opponent allowed at the position over what every opponent allowed, from the same rows, clamped to (\d\.\d)–(\d\.\d)\. Player MAE is ([\d.]+) pooled \(worse than trailing mean ([\d.]+)\)\. The first version divided by the pool's own position mean instead, so most skill players sat at the (\d\.\d) floor/,
     );
     assert.deepEqual(
       [low, high, oppMaeS, trailMaeS, floor],
