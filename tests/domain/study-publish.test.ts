@@ -35,7 +35,7 @@ after(() => {
 
 const prior2040 = prepareSeason(2040, seasonTexts(2040), { scoring: RULESET_REF });
 const syntheticParams = { ...defaultSyntheticParams(2040), minGames: 2, counts: { QB: 3, RB: 6, WR: 6, TE: 3, DST: 3 } };
-const synthetic = syntheticUniverse(prior2040, syntheticParams, { cap: 40000, sourceInputs: [] });
+const synthetic = syntheticUniverse(prior2040, syntheticParams, { sourceInputs: [] });
 const y2040 = runFixture({
   config: { season: 2040, weeks: { from: 1, to: 3 }, allowUniverseSeasonMismatch: true },
   universe: synthetic,
