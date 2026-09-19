@@ -2,13 +2,18 @@
 
 [![CI](https://github.com/Bryancruzcb/gridiron-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/Bryancruzcb/gridiron-lab/actions/workflows/ci.yml)
 
-**Data-science project first:** a causal, reproducible evaluation of salary-cap lineup selection on NFL player-week data (2023–2025). The web labs are instrumentation. **`/study` is the result.**
+**What this is:** a fair backtest of “build a $50k fantasy lineup” on NFL data (2023–2025). The website is just how you look at it. **`/study` is the result.**
 
-What you are evaluating: fixed pools + synthetic DraftKings-style salaries (prior season only) → causal projections (no future rows) → a proven exact DP under a $50k cap (or the week is dropped for every method) → score on that week's actuals. Numbers in this README are recomputed in CI from committed study artifacts.
+Simple rules of the study:
+1. Player pools and fake DraftKings-style salaries come from the **previous season only** (not the week you’re predicting).
+2. Projections use **only games before that week** (no peeking at the future).
+3. An exact optimizer must find the true best $50k lineup for those projections, or that week is thrown out for every method.
+4. Score the lineups on that week’s **real** points.
+5. Every number in this README is rebuilt in CI from the same saved study files — not hand-edited.
 
-Stack (secondary): TanStack Start (React 19), TypeScript, nflverse + ESPN. Salaries are frozen synthetics — not live DK prices.
+Stack (secondary): TanStack Start (React 19), TypeScript, nflverse + ESPN. Salaries are frozen fakes — not live DraftKings prices.
 
-**Interview / resume walkthrough:** [`docs/DESIGN_NOTEBOOK.md`](docs/DESIGN_NOTEBOOK.md) — DS framing, 60s/5min talk tracks, leakage controls, rubric. Prefer that over the long build diary in `docs/IMPLEMENTATION_PROGRESS.md`.
+**How to explain it:** [`docs/DESIGN_NOTEBOOK.md`](docs/DESIGN_NOTEBOOK.md) — short talk tracks and what you should / shouldn’t claim. Prefer that over the long build diary in `docs/IMPLEMENTATION_PROGRESS.md`.
 
 ## Result (2023–2025, weeks 2–18)
 
@@ -28,7 +33,7 @@ The exact lineup's pregame projection averaged 188.1 and it scored 133.5. The pr
 
 QB, ≥15 attempts, consecutive weeks: last week’s EPA/attempt vs this week **r = 0.165** (2025, 409 pairs), 0.152 (2024, 425), 0.141 (2023, 433). CPOE **r = 0.143**, 0.121, 0.109. The QB lab describes the past.
 
-Eight causal projections, same pools, pooled 2023–2025 (51 weeks, 4,517 player-weeks):
+Eight projection methods (same pools, no future data), pooled 2023–2025 (51 weeks, 4,517 player-weeks):
 
 | Projection | Player MAE | Lineup mean | vs trailing mean (95% range) |
 |---|---|---|---|
