@@ -13,7 +13,7 @@
 
 ## 60-second talk track
 
-> I built a fair backtest for fantasy lineups, not a tip sheet. For 2023–2025 I lock a 114-player pool and fake salaries from the *prior* season only, project using only earlier weeks, then require an exact optimizer to find the true best $50k lineup—or I drop that week for every method. Exact vs “pick highest projections” is about **+1.4 points/week**, but the uncertainty range includes zero, so I don’t oversell it. Exact beats “points per dollar” by a lot (~22). One old “shipped” slate used future info on purpose — I keep it only as a labelled comparison. README “What failed” lists real bugs I fixed. CI rebuilds the README numbers from saved study files.
+> I built a fair backtest for fantasy lineups, not a tip sheet. For 2023–2025 I lock a 114-player pool and fake salaries from the *prior* season only, project using only earlier weeks, then require an exact dynamic-programming optimizer to prove the true best $50k lineup under the cap—or I drop that week for every method. Exact vs “pick highest projections” is about **+1.4 points/week**, but the uncertainty range includes zero, so I don’t oversell it. Exact beats “points per dollar” by a lot (~22). One old “shipped” slate used future info on purpose — I keep it only as a labelled comparison. README “What failed” lists real bugs I fixed. CI rebuilds the README numbers from saved study files.
 
 **Ideas worth saying (plain English):** don’t peek at the future · same weeks for every method · exact best or drop the week · save inputs so anyone can rebuild · admit failures.
 
@@ -92,20 +92,12 @@ flowchart TB
 | **runner** | One common slate per week; every model must solve or the week is excluded for all; summaries from week records + week-level bootstrap. | Strictness drops weeks under incomplete actuals; small *n* → wide intervals. |
 | **publish** | Page never hand-edits numbers; publish verifies artifact hashes and refuses mixed configs / attribution-only scoring. | Two-step workflow (run → publish) before README/CI agree. |
 | **optimizer + validation** | Exact solver for DK-like roster under salary; guesses labelled; stack is a separate concern. | Exact DP does not encode QB stack; UI may hill-climb and must say so. |
-| **worker protocol** | Keeps the heavy solve off the main thread; pure `handleWorkerRequest` so Node tests = browser path. | Extra protocol validation; cancel = terminate worker. |
-| **routes / labs** | Teachability: interactive optimizer and QB lab make the study tangible. Study / optimizer / QB page sections live in `src/components/{study,optimizer,qb}/`; routes stay thin shells. | `qb.tsx` still owns URL/pin/scatter state (`QbLab`); some product surface (auth/db) is adjacent to the DS story. |
+| **UI (optional demo)** | `/study` and labs make the study tangible. | Interview time stays on pipeline + README Result — not routes or product chrome. |
 
-### App surface map (optional demo)
+### App surface (only if they ask to click around)
 
-Only if they ask to click around. Prefer the study pipeline files below. Component folders (post-split):
+Skip in a DS interview. If someone wants a demo: open `/study` first; other labs are optional. Do not spend pitch time on worker protocol, QbLab extraction, or route layout.
 
-- `src/components/study/` — DidItHelp, TooOptimistic, BetterGuesses, HotQbs, WhatWentWrong, …
-- `src/components/optimizer/` — SolvePanel, LineupResult, PlayerRows, BacktestPanel, …
-- `src/components/qb/` — WeekBars, QbDot, QbDotTip, Field
-
-Routes (`src/routes/study.tsx`, `optimizer.tsx`, `qb.tsx`) compose those pieces. Solver contract (`useLineupSolver` / proven-vs-heuristic labelling) is unchanged.
-
----
 
 ## Data flow (one study week)
 
@@ -203,7 +195,7 @@ npm run test:e2e             # after build + playwright chromium
 3. **Don't claim holdout or DFS edge** — roles and synthetic salaries are correct in docs; keep language tight in interviews.
 
 ### Should-improve (follow-up — data science, not UI chrome)
-1. **Mega-route split is done.** Further `QbLab` extraction is optional demo hygiene — skip unless a live screen-share needs it.
+1. **UI follow-ups: won’t-do for the DS pitch.** Mega-route split already landed. Further `QbLab` extraction / UI polish is out of scope unless Bryan asks — interview time stays on study rules, Result, and What failed.
 2. **If claiming market edge later:** real salaries and/or a sealed holdout season. Until then, keep calling 2025 retrospective and salaries synthetic.
 3. **Keep the diary demoted:** `IMPLEMENTATION_PROGRESS.md` is history; this notebook + README Result stay the resume path.
 
