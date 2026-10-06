@@ -138,6 +138,7 @@ async function check(name, browser, spec, fn) {
 
 /** @param {Browser} browser */
 async function run(browser) {
+  // Scoreboard status is on /live. / is the projection study and does not render that feed.
   await check("fresh: every feed live with source and coverage", browser, "fresh", async (page) => {
     await page.goto(`${BASE}/qb`);
     await page.waitForSelector(`${status("labs-qbs")}[data-source="live"][data-freshness="fresh"]`, { timeout: WAIT });
@@ -145,10 +146,9 @@ async function run(browser) {
     expect(/Live/i.test(qb) && /through week 2/i.test(qb) && /as of/i.test(qb), `labs status text: ${qb}`);
     expect((await page.locator("h2", { hasText: "By week" }).count()) === 1, "observed weekly rows render");
 
-    await page.goto(`${BASE}/`);
+    await page.goto(`${BASE}/live`);
     await page.waitForSelector(`${status("scoreboard")}[data-source="live"]`, { timeout: WAIT });
     expect((await page.getByText("Lions").count()) > 0, "scoreboard games render");
-    await page.waitForSelector(`${status("labs-qbs")}[data-source="live"]`, { timeout: WAIT });
 
     await page.goto(`${BASE}/players`);
     await page.waitForSelector(`${status("weekPpr")}[data-source="live"]`, { timeout: WAIT });
@@ -160,7 +160,7 @@ async function run(browser) {
   });
 
   await check("cached: fresh cache is labelled cached, not stale", browser, "cached", async (page) => {
-    await page.goto(`${BASE}/`);
+    await page.goto(`${BASE}/live`);
     await page.waitForSelector(`${status("scoreboard")}[data-source="cache"][data-freshness="fresh"]`, { timeout: WAIT });
     const t = await textOf(page, status("scoreboard"));
     expect(/Cached/i.test(t) && !/Stale/i.test(t), `scoreboard status: ${t}`);
@@ -191,7 +191,7 @@ async function run(browser) {
   });
 
   await check("unavailable: clear state, retry recovers the feed", browser, "scoreboard:unavailable", async (page, ctx) => {
-    await page.goto(`${BASE}/`);
+    await page.goto(`${BASE}/live`);
     const down = `${status("scoreboard")}[data-state="unavailable"]`;
     await page.waitForSelector(down, { timeout: WAIT });
     expect(/Live scores unavailable/.test(await textOf(page, down)), "unavailable copy");
@@ -234,8 +234,9 @@ async function run(browser) {
     browser,
     "scoreboard:fresh|labs:unavailable|weekPpr:fresh",
     async (page) => {
-      await page.goto(`${BASE}/`);
+      await page.goto(`${BASE}/live`);
       await page.waitForSelector(`${status("scoreboard")}[data-source="live"]`, { timeout: WAIT });
+      await page.goto(`${BASE}/qb`);
       const labs = `${status("labs-qbs")}[data-source="snapshot"]`;
       await page.waitForSelector(`${labs} >> text=/Live refresh failed/i`, { timeout: WAIT });
       expect((await page.getByText("Drake Maye").count()) > 0, "snapshot leaders still render");
@@ -249,11 +250,12 @@ async function run(browser) {
     browser,
     "labs:partial|weekPpr:partial",
     async (page) => {
-      await page.goto(`${BASE}/`);
+      await page.goto(`${BASE}/qb`);
       await page.waitForSelector(`${status("labs-qbs")}[data-source="live"]`, { timeout: WAIT });
-      await page.waitForSelector(`${status("labs-teams")}[data-source="snapshot"]`, { timeout: WAIT });
       const qbs = await textOf(page, status("labs-qbs"));
       expect(/Incomplete: team play-calling rows/.test(qbs), `partial note on the live section: ${qbs}`);
+      await page.goto(`${BASE}/play-calling`);
+      await page.waitForSelector(`${status("labs-teams")}[data-source="snapshot"]`, { timeout: WAIT });
       await page.goto(`${BASE}/players`);
       await page.waitForSelector(`${status("weekPpr")}[data-source="live"]`, { timeout: WAIT });
       const week = await textOf(page, status("weekPpr"));
@@ -266,7 +268,7 @@ async function run(browser) {
     browser,
     "scoreboard:empty|weekPpr:malformed",
     async (page) => {
-      await page.goto(`${BASE}/`);
+      await page.goto(`${BASE}/live`);
       const empty = `${status("scoreboard")}[data-state="empty"]`;
       await page.waitForSelector(empty, { timeout: WAIT });
       expect(/No games on this week's board yet/.test(await textOf(page, empty)), "empty copy");
@@ -282,7 +284,7 @@ async function run(browser) {
     browser,
     `scoreboard:recovered|nonce:${Date.now()}`,
     async (page) => {
-      await page.goto(`${BASE}/`);
+      await page.goto(`${BASE}/live`);
       const down = `${status("scoreboard")}[data-state="unavailable"]`;
       await page.waitForSelector(down, { timeout: WAIT });
       await page.locator(`${down} button`, { hasText: "Retry" }).click();
