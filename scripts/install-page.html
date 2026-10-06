@@ -12,8 +12,20 @@
     <meta name="apple-mobile-web-app-title" content="{{APP_NAME}}" />
     <title>Add {{APP_NAME}} to your Home Screen</title>
     <link rel="manifest" href="/__grok/manifest.webmanifest" />
-    <link rel="apple-touch-icon" href="/__grok/icon-180.png" />
-    <link rel="stylesheet" href="/__grok/install/styles.css" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <style>
+      body { margin: 0; font: 16px/1.5 system-ui, sans-serif; background: #000; color: #fff; }
+      .page { max-width: 36rem; margin: 0 auto; padding: 2rem 1.25rem; }
+      .content-desktop { display: none; }
+      .step-ios27, .step-ios-legacy { display: none; }
+      html.device-phone.ios-27-plus .step-ios27,
+      html.device-phone.ios-below-27 .step-ios-legacy,
+      html.device-phone:not(.ios-27-plus):not(.ios-below-27) .step-ios-legacy,
+      html.device-tablet .step-ios-legacy { display: block; }
+      html.device-desktop .content { display: none; }
+      html.device-desktop .content-desktop { display: block; }
+      a { color: inherit; }
+    </style>
     <script>
       (function () {
         var ua = navigator.userAgent || "";
@@ -59,76 +71,17 @@
   </head>
   <body>
     <div class="page">
-      <header class="powered" aria-label="Powered by Grok">
-        <span class="powered-by">Powered by</span>
-        <span class="powered-brand">
-          <img
-            class="grok-logo"
-            src="/__grok/install/assets/homescreen/logo-grok.svg"
-            width="14"
-            height="14"
-            alt=""
-          />
-          <span class="powered-grok">Grok</span>
-        </span>
-      </header>
-
       <main class="content">
-        <div class="ob" aria-hidden="true">
-          <img
-            class="ob-img ob-phone"
-            src="/__grok/install/assets/homescreen/ob-phone.png"
-            width="338"
-            height="294"
-            alt=""
-          />
-          <img
-            class="ob-img ob-ipad"
-            src="/__grok/install/assets/homescreen/ob-ipad.png"
-            width="634"
-            height="294"
-            alt=""
-          />
-        </div>
-
         <section class="copy">
           <h1>Add {{APP_NAME}} to your&nbsp;Home&nbsp;Screen</h1>
-
           <div class="steps">
             <p class="step step-tap step-ios27">
-              <span class="muted">Tap</span>
-              <span class="glass glass--icon" aria-hidden="true">
-                <img src="/__grok/install/assets/homescreen/glass-puzzle.svg" width="24" height="24" alt="" />
-              </span>
-              <span class="muted loc loc-phone">in the bottom bar, then</span>
-              <span class="muted loc loc-ipad">in the tool bar, then</span>
-              <span class="glass glass--icon" aria-hidden="true">
-                <img src="/__grok/install/assets/homescreen/glass-share.svg" width="24" height="24" alt="" />
-              </span>
+              Tap the page-menu button in the bottom bar, then Share.
             </p>
-
             <p class="step step-tap step-ios-legacy">
-              <span class="muted">Tap</span>
-              <span class="glass glass--icon" aria-hidden="true">
-                <img src="/__grok/install/assets/homescreen/glass-share.svg" width="24" height="24" alt="" />
-              </span>
-              <span class="muted loc loc-phone">in the bottom bar</span>
-              <span class="muted loc loc-ipad">in the tool bar</span>
+              Tap Share in the bottom bar.
             </p>
-
-            <p class="step step-select">
-              <span class="muted">Select</span>
-              <span class="add-label">
-                <img
-                  class="plus-icon"
-                  src="/__grok/install/assets/homescreen/plus.svg"
-                  width="16"
-                  height="16"
-                  alt=""
-                />
-                <span class="add-text">Add to Home Screen</span>
-              </span>
-            </p>
+            <p class="step step-select">Select Add to Home Screen.</p>
           </div>
         </section>
       </main>

@@ -45,7 +45,7 @@ export const METRICS = {
   },
   salary: {
     label: "Salary",
-    def: "DraftKings-style cost. The solver must keep the 9-man roster at or under $50,000.",
+    def: "Demo salary. Synthetic, not a DraftKings price. The solver keeps the 9-man roster at or under a $50,000 demo cap.",
   },
   val: {
     label: "Pts / $1k",
