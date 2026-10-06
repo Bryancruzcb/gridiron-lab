@@ -60,7 +60,7 @@ function GuidePage() {
           <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Lineup</h2>
           <dl className="mt-4 space-y-4 text-sm leading-relaxed">
             <Item term="The roster">
-              1 QB, 2 RB, 3 WR, 1 TE, 1 FLEX, 1 D/ST. Cap is $50,000.
+              1 QB, 2 RB, 3 WR, 1 TE, 1 FLEX, 1 D/ST. The $50,000 cap is a demo that uses synthetic salaries, not DraftKings prices.
             </Item>
             <Item term="Salary">
               Synthetic DraftKings-style price, frozen for the season. Not a real DraftKings salary.

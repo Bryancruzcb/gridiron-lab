@@ -144,7 +144,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : (
         <footer className="hidden border-t border-border md:block">
           <div className="mx-auto flex max-w-6xl px-4 py-6 text-xs text-subtle sm:px-6">
-            <p>ESPN box scores. nflverse EPA / CPOE. Not the NFL.</p>
+            <p>2023–2025 projection study. The $50k lineup is a demo with synthetic salaries.</p>
           </div>
         </footer>
       )}

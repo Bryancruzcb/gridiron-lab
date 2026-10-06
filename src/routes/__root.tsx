@@ -17,7 +17,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "QB, lineup, play-calling, and live box scores on nflverse play-by-play.",
+          "Leakage-controlled study of fantasy-point projections on NFL player-weeks, 2023–2025. The $50k lineup is a demo that uses synthetic salaries.",
       },
       { name: "theme-color", content: "#0A0B0D" },
     ],
@@ -25,7 +25,7 @@ export const Route = createRootRoute({
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "stylesheet", href: appCss },
       { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
