@@ -1,135 +1,139 @@
-import { useState } from "react";
+import { FileWarning, Inbox, TriangleAlert } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { AppShell } from "@/components/layout/AppShell";
-import {
-  BetterGuesses,
-  DidItHelp,
-  EwmaSweep,
-  HotQbs,
-  TooOptimistic,
-  WhatWentWrong,
-  developmentSeasons,
-  lag,
-  lastSeasonYear,
-  lookBackSeasons,
-  main,
-  mainLabel,
-  seasonList,
-  study,
-  views,
-} from "@/components/study";
+import { BetterGuesses } from "./BetterGuesses";
+import { DidItHelp } from "./DidItHelp";
+import { EwmaSweep } from "./EwmaSweep";
+import { FairRules } from "./FairRules";
+import { Hero } from "./Hero";
+import { HotQbs } from "./HotQbs";
+import { buildStudyHome, type StudyHome } from "./home.ts";
+import { Block, Eyebrow, SectionTitle } from "./parts";
+import { lastSeasonYear, main, mainLabel, study, views } from "./shared";
+import { TooOptimistic } from "./TooOptimistic";
+import { WhatWentWrong } from "./WhatWentWrong";
+
+/** Computed once: the study files ship with the page, so there is nothing to fetch. */
+const homeState = buildStudyHome(study);
 
 /** Published projection study. This is the first screen and `/study`. */
 export function StudyPage() {
-  const [viewKey, setViewKey] = useState(views.find((v) => v.key === String(lastSeasonYear))?.key ?? views[0]?.key ?? "");
-  const view = views.find((v) => v.key === viewKey) ?? views[0];
-  const ready = Boolean(main && view && lag.n > 0);
-
   return (
     <AppShell>
-      <article className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
-        <h1 className="font-display text-5xl uppercase tracking-[0.03em]">Projection study</h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted">
-          A leakage-controlled check on past seasons: how well do pregame point projections miss
-          player by player, and does last week’s QB number predict this week? The $50k lineup is a
-          demo that uses synthetic salaries. It is not this result.
-        </p>
-
-        {!ready || !main || !view ? (
-          <p className="mt-10 text-sm text-muted">Loading the study…</p>
-        ) : (
-          <>
-            <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">What this is</h2>
-              <p className="mt-3 text-sm leading-relaxed">
-                This page publishes a leakage-controlled evaluation of{" "}
-                <strong className="font-medium text-fg">fantasy point projections</strong> on NFL
-                player-week data ({seasonList}). The science claim is projection quality — player MAE
-                and honesty about failures — not a salary cap or DraftKings result. The Lineup page is
-                a separate demo that uses illustrative synthetic salaries; those prices are{" "}
-                <strong className="font-medium text-fg">not</strong> part of this study claim.
-              </p>
-            </section>
-
-            <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Two questions</h2>
-              <ol className="mt-3 list-decimal space-y-3 pl-5 text-sm leading-relaxed">
-                <li>
-                  Which projection methods miss less player by player (MAE), and do “smarter” guesses
-                  actually help on the same weeks and pools?
-                </li>
-                <li>
-                  If a quarterback looked good last week (EPA or CPOE), did he look good this week
-                  too?
-                </li>
-              </ol>
-            </section>
-
-            <section className="mt-10">
-              <h2 className="font-display text-2xl uppercase tracking-[0.04em]">How we tested</h2>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-relaxed">
-                <li>
-                  Weeks {view.row.weeks.from}–{view.row.weeks.to} of each season. Week 1 is skipped:
-                  nobody has a game to average yet.
-                </li>
-                <li>
-                  Each season gets its own pool of players built only from the season before (top
-                  players by points per game, frozen before week 1). Rookies and offseason trades are
-                  missing. Older committed runs may still carry synthetic salary bands for
-                  archaeology; those prices are not real DraftKings salaries and are not part of the
-                  study claim.
-                </li>
-                <li>
-                  A player’s guess uses only games before that week. His opponent comes from the
-                  schedule, not from the box score after the game.
-                </li>
-                <li>
-                  The computer must prove its team is the best one for the guesses. If it can’t, or
-                  a picked player’s score is missing, that week is thrown out for every method.
-                  {main.excludedWeeks.length === 0 ? " No week was thrown out." : ` ${main.excludedWeeks.length} weeks were thrown out.`}
-                </li>
-                <li>
-                  {developmentSeasons.length ? `${developmentSeasons.join(" and ")} came first. ` : ""}
-                  We changed no setting after seeing them.{" "}
-                  {lookBackSeasons.length
-                    ? `${lookBackSeasons.join(" and ")} is a look back, not a fresh test: we had already studied it.`
-                    : ""}
-                </li>
-                <li>
-                  Scoring is our simplified DraftKings-style PPR. A defense’s points allowed is the
-                  other team’s final score.
-                </li>
-              </ul>
-              <p className="mt-3 text-sm leading-relaxed text-muted">
-                Three kinds of numbers show up in this app. A <em>forecast</em> is the guess before
-                kickoff. A <em>look back</em> (this page) scores those guesses after the fact.{" "}
-                <em>Hindsight</em> on the Lineup demo rebuilds a team from points already scored, so
-                it is not a forecast at all — and that demo’s salaries are not the study claim.
-              </p>
-            </section>
-
-            <DidItHelp view={view} setViewKey={setViewKey} summary={main} label={mainLabel} />
-
-            <TooOptimistic view={view} summary={main} label={mainLabel} />
-
-            <BetterGuesses summary={main} label={mainLabel} />
-
-            <EwmaSweep />
-
-            <HotQbs />
-
-            <WhatWentWrong />
-
-            <p className="mt-10 text-xs leading-relaxed text-muted">
-              Every number on this page is read from files the study pipeline writes: runs{" "}
-              {[...study.seasons, ...(study.shippedSlate ? [study.shippedSlate] : [])]
-                .map((s) => `${s.season}${s.universe.lookAhead ? " shipped" : ""} ${s.runId}`)
-                .join(", ")}
-              . The README lists the commands. docs/study/REGENERATION_REPORT.md explains how these
-              numbers differ from earlier versions of this page.
-            </p>
-          </>
-        )}
-      </article>
+      {homeState.kind === "ready" ? (
+        <StudyHomeView home={homeState.home} />
+      ) : homeState.kind === "empty" ? (
+        <StateBox icon={<Inbox />} title="No study runs published yet">
+          <p>The results appear here once the study pipeline writes its season files. The README lists the commands that build them.</p>
+        </StateBox>
+      ) : (
+        <StateBox icon={<FileWarning />} title="The study files could not be read" alert>
+          <p>Error: {homeState.message}. No numbers are shown, and nothing on this page is guessed in their place.</p>
+        </StateBox>
+      )}
     </AppShell>
+  );
+}
+
+function StateBox({ icon, title, alert, children }: { icon: ReactNode; title: string; alert?: boolean; children: ReactNode }) {
+  return (
+    <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      <div
+        role={alert ? "alert" : undefined}
+        className="mx-auto my-16 max-w-[560px] rounded-[24px] bg-surface px-7 py-10 text-center shadow-[var(--shadow-border)] sm:my-[72px]"
+      >
+        <span
+          className={
+            alert
+              ? "inline-grid size-[52px] place-items-center rounded-2xl bg-rust-soft text-rust [&_svg]:size-6"
+              : "inline-grid size-[52px] place-items-center rounded-2xl bg-panel [&_svg]:size-6"
+          }
+          aria-hidden
+        >
+          {icon}
+        </span>
+        <h1 className="mt-[18px] font-display text-[32px] leading-[1.1]">{title}</h1>
+        <div className="mt-2.5 space-y-2.5 text-muted">
+          {children}
+          <p>The $50k lineup in this app is a demo with synthetic salaries. It is not part of this study.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StudyHomeView({ home }: { home: StudyHome }) {
+  const [viewKey, setViewKey] = useState(views.find((v) => v.key === String(lastSeasonYear))?.key ?? views[0]?.key ?? "");
+  const view = views.find((v) => v.key === viewKey) ?? views[0];
+  const shrinkK = study.models.find((m) => m.method === "shrink")?.params.k;
+  const ewmaLabel = study.models.find((m) => m.method === "ewma")?.label ?? "EWMA";
+
+  return (
+    <>
+      <Hero home={home} />
+      <FairRules />
+      <BetterGuesses home={home} />
+      <HotQbs />
+
+      <Block id="archive">
+        <Eyebrow>Archive</Eyebrow>
+        <SectionTitle>The old lineup experiment, kept for the record.</SectionTitle>
+        <div className="mt-2 rounded-[22px] bg-panel-2 px-4 py-6 sm:rounded-[28px] sm:p-10">
+          <p className="flex max-w-[52em] items-start gap-2.5 rounded-[14px] bg-surface px-4 py-3.5 text-[15px] shadow-[var(--shadow-border)]">
+            <TriangleAlert className="mt-0.5 size-[18px] shrink-0 text-warn" aria-hidden />
+            <span>
+              <b className="font-semibold">Not the study claim.</b> These lineup comparisons used a demo $50k salary cap
+              and synthetic prices, not real DraftKings salaries. The pitch is projection miss per player, above.
+            </span>
+          </p>
+          {main ? <DidItHelp summary={main} label={mainLabel} /> : null}
+          {main && view ? <TooOptimistic view={view} setViewKey={setViewKey} summary={main} label={mainLabel} /> : null}
+          <EwmaSweep />
+        </div>
+      </Block>
+
+      <WhatWentWrong />
+
+      <Block id="words">
+        <Eyebrow>Words used on this page</Eyebrow>
+        <dl className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+          <Term name="Miss per player (MAE)">
+            Mean absolute error: the average of |guess − real points| over every played player-week.
+          </Term>
+          <Term name="Shrink to position">
+            A player’s average so far, pulled toward the pool’s average for his position
+            {shrinkK != null ? ` as if he had ${shrinkK} extra average games` : ""}.
+          </Term>
+          <Term name="Trailing mean">
+            The player’s average over every earlier week this season. “The computer” on this page uses it.
+          </Term>
+          <Term name={ewmaLabel.replace(/=.*$/, "").trim() + " α"}>
+            A weighted average where α sets how much last week counts. α near 1 means mostly last week.
+          </Term>
+          <Term name="EPA per throw">Expected points added: how much each pass changed the team’s expected score.</Term>
+          <Term name="CPOE">Completion percentage over expected, given how hard each throw was.</Term>
+        </dl>
+      </Block>
+
+      <div className="border-t border-border">
+        <p className="mx-auto max-w-6xl px-4 pt-8 pb-2 text-sm break-words text-muted sm:px-6">
+          Every number on this page is read from files the study pipeline writes: runs{" "}
+          {[...study.seasons, ...(study.shippedSlate ? [study.shippedSlate] : [])]
+            .map((s) => `${s.season}${s.universe.lookAhead ? " shipped" : ""} ${s.runId}`)
+            .join(", ")}
+          . The README lists the commands. docs/study/REGENERATION_REPORT.md explains how these numbers differ from
+          earlier versions of this page.
+        </p>
+      </div>
+    </>
+  );
+}
+
+function Term({ name, children }: { name: string; children: ReactNode }) {
+  return (
+    <div>
+      <dt className="text-[15px] font-semibold">{name}</dt>
+      <dd className="mt-1 text-sm text-muted">{children}</dd>
+    </div>
   );
 }
