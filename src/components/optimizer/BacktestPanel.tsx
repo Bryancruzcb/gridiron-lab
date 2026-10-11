@@ -38,7 +38,7 @@ export function BacktestPanel({
       data-current={String(compareCurrent)}
       className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]"
     >
-      <h2 className="font-display text-lg uppercase tracking-[0.06em]">Backtest</h2>
+      <h2 className="font-display text-lg">Backtest</h2>
       <p className="mt-1 text-xs text-muted">
         Whole slate, no locks. Solved on projections, scored on this week's actuals.
       </p>
@@ -53,7 +53,7 @@ export function BacktestPanel({
       )}
       {cmp && (
         <table className={cn("mt-3 w-full text-left text-sm", !compareCurrent && "opacity-60")}>
-          <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+          <thead className="text-xs tracking-[0.12em] text-subtle uppercase">
             <tr>
               <th className="py-1 font-medium"> </th>
               <th className="py-1 text-right font-medium">Proj</th>

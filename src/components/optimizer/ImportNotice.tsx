@@ -5,7 +5,7 @@ import { names } from "./helpers";
 export function ImportNotice({ report, onDismiss }: { report: ImportReport; onDismiss: () => void }) {
   const fromLink = report.source !== "memory";
   return (
-    <div className={cn("rounded-md p-3 text-sm", report.applied ? "bg-elevated text-muted" : "bg-rust/10 text-rust")} data-import-source={report.source}>
+    <div className={cn("rounded-md p-3 text-sm", report.applied ? "bg-elevated text-muted" : "bg-rust-soft text-rust")} data-import-source={report.source}>
       <p className="font-medium">
         {report.applied
           ? fromLink

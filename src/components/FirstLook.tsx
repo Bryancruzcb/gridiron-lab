@@ -21,9 +21,9 @@ export function FirstLook({
   if (!open) return null;
 
   return (
-    <aside className="mt-6 rounded-xl bg-elevated p-4 shadow-[var(--shadow-border)] sm:p-5">
-      <p className="font-display text-xl uppercase tracking-[0.04em]">{title}</p>
-      <div className="mt-2 space-y-2 text-sm leading-relaxed text-fg/90">{children}</div>
+    <aside className="mt-6 rounded-[18px] bg-panel p-4 sm:p-5">
+      <p className="font-display text-xl">{title}</p>
+      <div className="mt-2 space-y-2 text-sm leading-relaxed text-fg">{children}</div>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
           type="button"

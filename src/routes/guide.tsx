@@ -14,7 +14,7 @@ function GuidePage() {
             Home
           </Link>
         </p>
-        <h1 className="mt-3 font-display text-5xl uppercase tracking-[0.03em]">Guide</h1>
+        <h1 className="mt-3 font-display text-5xl">Guide</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Short definitions. The 2023–2025 lineup study is on{" "}
           <Link to="/study" className="text-fg">
@@ -24,7 +24,7 @@ function GuidePage() {
         </p>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">QB lab</h2>
+          <h2 className="font-display text-2xl">QB lab</h2>
           <dl className="mt-4 space-y-4 text-sm leading-relaxed">
             <Item term="EPA">
               Expected points added per dropback versus a typical play in that down, distance, and
@@ -57,7 +57,7 @@ function GuidePage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Lineup</h2>
+          <h2 className="font-display text-2xl">Lineup</h2>
           <dl className="mt-4 space-y-4 text-sm leading-relaxed">
             <Item term="The roster">
               1 QB, 2 RB, 3 WR, 1 TE, 1 FLEX, 1 D/ST. The $50,000 cap is a demo that uses synthetic salaries, not DraftKings prices.
@@ -103,7 +103,7 @@ function GuidePage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Play-calling</h2>
+          <h2 className="font-display text-2xl">Play-calling</h2>
           <dl className="mt-4 space-y-4 text-sm leading-relaxed">
             <Item term="The list">
               All teams, ranked. It scrolls. Tap a row for the heatmap.
@@ -118,7 +118,7 @@ function GuidePage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Live</h2>
+          <h2 className="font-display text-2xl">Live</h2>
           <dl className="mt-4 space-y-4 text-sm leading-relaxed">
             <Item term="Live / final">ESPN box: yards, TDs, PPR, 4th-down goes.</Item>
             <Item term="Advanced">
@@ -128,7 +128,7 @@ function GuidePage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Data status</h2>
+          <h2 className="font-display text-2xl">Data status</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             The line above live numbers on Home, QB, Lineup, Play-calling, Live and Players.
           </p>
@@ -155,7 +155,7 @@ function GuidePage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">Share and save</h2>
+          <h2 className="font-display text-2xl">Share and save</h2>
           <dl className="mt-4 space-y-4 text-sm leading-relaxed">
             <Item term="Copy link">
               On QB the link keeps the season, down or situation, distance, min dropbacks, sort and pins,
@@ -177,7 +177,7 @@ function GuidePage() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-display text-2xl uppercase tracking-[0.04em]">First-visit tips</h2>
+          <h2 className="font-display text-2xl">First-visit tips</h2>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             Each lab shows a one-time card the first time you open it. That flag lives in this
             browser only — no account.

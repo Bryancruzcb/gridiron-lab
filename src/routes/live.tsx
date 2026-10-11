@@ -109,7 +109,7 @@ function LiveLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Live</h1>
+          <h1 className="font-display text-5xl sm:text-6xl">Live</h1>
         </header>
         <FirstLook id="live" title="This page">
           <p>
@@ -124,7 +124,7 @@ function LiveLab() {
         )}
 
         {board && board.games.length > 0 && (
-          <p className="mt-3 text-[11px] tracking-[0.14em] text-subtle uppercase">
+          <p className="mt-3 text-xs tracking-[0.14em] text-subtle uppercase">
             {board.anyLive ? "Checking every 15s" : "Checking every minute"} ·{" "}
             {board.games.filter((g) => g.stage === "advanced").length} with advanced
           </p>
@@ -151,7 +151,7 @@ function LiveLab() {
 function StageBadge({ stage }: { stage: GameStage }) {
   if (stage === "live") {
     return (
-      <span className="inline-flex items-center gap-1.5 text-[11px] font-medium tracking-wide text-sage uppercase">
+      <span className="inline-flex items-center gap-1.5 text-xs font-medium tracking-wide text-sage uppercase">
         <span className="live-dot" />
         Live
       </span>
@@ -180,10 +180,10 @@ function GamePanel({
     <section className="mt-8 rounded-xl bg-surface p-5 shadow-[var(--shadow-border)] sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] tracking-[0.14em] text-subtle uppercase">
+          <p className="text-xs tracking-[0.14em] text-subtle uppercase">
             {game.broadcast ?? "NFL"} · {game.venue ?? "Week " + game.week}
           </p>
-          <h2 className="mt-1 font-display text-3xl uppercase tracking-[0.04em]">
+          <h2 className="mt-1 font-display text-3xl">
             {game.away.nick} {game.away.score} · {game.home.nick} {game.home.score}
           </h2>
           <p className="mt-1 text-sm text-muted">{game.statusText}</p>
@@ -203,7 +203,7 @@ function GamePanel({
                 current ? "bg-elevated shadow-[var(--shadow-border)]" : "bg-elevated/40",
               )}
             >
-              <p className={cn("text-[11px] tracking-[0.14em] uppercase", done ? "text-sage" : "text-subtle")}>
+              <p className={cn("text-xs tracking-[0.14em] uppercase", done ? "text-sage" : "text-subtle")}>
                 {s.label}
               </p>
               <p className="mt-1 text-xs text-muted">{s.blurb}</p>
@@ -214,7 +214,7 @@ function GamePanel({
 
       {game.lastPlay && (
         <p className="mt-5 text-sm text-muted">
-          <span className="text-[11px] tracking-[0.14em] text-subtle uppercase">Last play </span>
+          <span className="text-xs tracking-[0.14em] text-subtle uppercase">Last play </span>
           {game.lastPlay}
         </p>
       )}
@@ -237,7 +237,7 @@ function GamePanel({
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             {detail.teamBox.map((t) => (
               <div key={t.abbr} className="rounded-lg bg-elevated p-4">
-                <p className="font-display text-xl uppercase tracking-[0.04em]">{teamNick(t.abbr)}</p>
+                <p className="font-display text-xl">{teamNick(t.abbr)}</p>
                 <dl className="mt-3 grid grid-cols-2 gap-2 text-sm">
                   <Stat label="Yards" value={t.yards == null ? "—" : String(t.yards)} />
                   <Stat label="Plays" value={t.plays == null ? "—" : String(t.plays)} />
@@ -248,7 +248,7 @@ function GamePanel({
             ))}
           </div>
 
-          <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Quarterbacks</h3>
+          <h3 className="mt-8 font-display text-xl">Quarterbacks</h3>
           <p className="mt-1 text-xs text-subtle">Box line now. EPA / CPOE when Advanced is in.</p>
           <ul className="mt-3 divide-y divide-border">
             {qbs.map((p) => {
@@ -281,7 +281,7 @@ function GamePanel({
             </p>
           )}
 
-          <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Live PPR</h3>
+          <h3 className="mt-8 font-display text-xl">Live PPR</h3>
           <ul className="mt-3 divide-y divide-border">
             {skill.map((p) => (
               <li key={p.id} className="flex items-center justify-between gap-2 py-2">
@@ -299,13 +299,13 @@ function GamePanel({
             ))}
           </ul>
 
-          <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Play-calling</h3>
+          <h3 className="mt-8 font-display text-xl">Play-calling</h3>
           <p className="mt-1 text-xs text-subtle">
             From the play list at the whistle. PROE / EPA fill in on Advanced.
           </p>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[480px] text-left text-sm">
-              <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+              <thead className="text-xs tracking-[0.12em] text-subtle uppercase">
                 <tr className="border-y border-border">
                   <th className="px-2 py-2 font-medium">Team</th>
                   <th className="px-2 py-2 text-right font-medium">Pass%</th>
@@ -357,7 +357,7 @@ function GamePanel({
 
           {detail.scoring.length > 0 && (
             <>
-              <h3 className="mt-8 font-display text-xl uppercase tracking-[0.06em]">Scoring</h3>
+              <h3 className="mt-8 font-display text-xl">Scoring</h3>
               <ul className="mt-3 space-y-2">
                 {detail.scoring.map((s, i) => (
                   <li key={`${s.q}-${s.clock}-${i}`} className="text-sm text-muted">
@@ -378,7 +378,7 @@ function GamePanel({
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] tracking-[0.12em] text-subtle uppercase">{label}</dt>
+      <dt className="text-xs tracking-[0.12em] text-subtle uppercase">{label}</dt>
       <dd className="mt-0.5 font-mono tabular-nums">{value}</dd>
     </div>
   );

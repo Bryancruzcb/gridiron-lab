@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router"
 import { useCallback, useMemo, useState } from "react";
 import fantasyFile from "@/data/fantasy.json";
 import { FeedStatus } from "@/components/DataStatus";
+import { DemoNote } from "@/components/DemoNote";
 import { AppShell } from "@/components/layout/AppShell";
 import {
   BacktestPanel,
@@ -179,11 +180,10 @@ function OptimizerLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Lineup</h1>
-          <p className="mt-2 text-sm text-muted">
-            Demo salaries only — not part of the study claim. Prices are illustrative synthetics, not
-            real DraftKings.
-          </p>
+          <h1 className="font-display text-5xl sm:text-6xl">Lineup</h1>
+          <DemoNote className="mt-3">
+            Not part of the study claim. Prices are illustrative synthetics, not real DraftKings.
+          </DemoNote>
         </header>
         <FirstLook id="lineup" title="This page">
           <p>
@@ -196,7 +196,7 @@ function OptimizerLab() {
         {week && (
           <div className="mt-6 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)]">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">
+              <p className="text-xs tracking-[0.16em] text-subtle uppercase">
                 2026 week {week.week} · {week.gamesFinal} final
                 {week.gamesLive ? ` · ${week.gamesLive} live` : ""}
               </p>
@@ -225,6 +225,7 @@ function OptimizerLab() {
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
                 placeholder="Search player or team"
+                aria-label="Search players by name or team"
                 className="sm:max-w-[220px]"
               />
             </div>
@@ -241,7 +242,7 @@ function OptimizerLab() {
               />
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[620px] text-left text-sm">
-                  <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+                  <thead className="text-xs tracking-[0.12em] text-subtle uppercase">
                     <tr className="border-y border-border">
                       <th className="px-4 py-2 font-medium">Player</th>
                       <th className="px-2 py-2 font-medium">Pos</th>
@@ -258,7 +259,7 @@ function OptimizerLab() {
                         <StatTip metric="val" />
                       </th>
                       <th className="px-3 py-2 text-right font-medium">
-                        <span className="text-[10px] tracking-wide text-subtle uppercase">Lock / bench</span>
+                        <span className="text-xs tracking-wide text-subtle uppercase">Lock / bench</span>
                       </th>
                     </tr>
                   </thead>

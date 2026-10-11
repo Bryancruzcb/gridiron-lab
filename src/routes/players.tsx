@@ -138,7 +138,7 @@ function PlayersPage() {
   return (
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
-        <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">Players</h1>
+        <h1 className="font-display text-5xl sm:text-6xl">Players</h1>
         <FirstLook id="players" title="This page">
           <p>
             This week’s box from ESPN, 2025 season line from the slate. Tap a name for the full
@@ -156,9 +156,10 @@ function PlayersPage() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search name or team"
+            aria-label="Search players by name or team"
             className="h-11"
           />
-          <p className="text-[11px] tracking-[0.14em] text-subtle uppercase">
+          <p className="text-xs tracking-[0.14em] text-subtle uppercase">
             {filtered.length} players
             {weekPpr ? ` · week ${weekPpr.week}` : ""}
           </p>
@@ -200,9 +201,9 @@ function PlayersPage() {
                       {r.pos} · {teamNick(r.team)}
                     </p>
                     {r.week ? (
-                      <p className="mt-0.5 font-mono text-[11px] text-muted tabular-nums">{weekLine(r.week)}</p>
+                      <p className="mt-0.5 font-mono text-xs text-muted tabular-nums">{weekLine(r.week)}</p>
                     ) : (
-                      <p className="mt-0.5 text-[11px] text-subtle">
+                      <p className="mt-0.5 text-xs text-subtle">
                         {weekPpr ? "No box this week" : "This week's box not loaded"}
                       </p>
                     )}
@@ -212,7 +213,7 @@ function PlayersPage() {
                   <span className="block font-mono text-sm tabular-nums">
                     {r.week ? r.week.ppr.toFixed(1) : "—"}
                   </span>
-                  <span className="text-[11px] text-muted">
+                  <span className="text-xs text-muted">
                     {r.season ? `${r.season.ppg.toFixed(1)} PPG` : "this week"}
                   </span>
                 </span>
@@ -266,7 +267,7 @@ function PlayerSheet({ row, weekLoaded }: { row: Row; weekLoaded: boolean }) {
         </div>
       </div>
 
-      <p className="mt-6 text-[11px] tracking-[0.16em] text-subtle uppercase">
+      <p className="mt-6 text-xs tracking-[0.16em] text-subtle uppercase">
         This week{w ? ` · ${weekSource(w)}` : ""}
       </p>
       {w && w.score.status === "partial" ? (
@@ -305,7 +306,7 @@ function PlayerSheet({ row, weekLoaded }: { row: Row; weekLoaded: boolean }) {
         </p>
       )}
 
-      <p className="mt-6 text-[11px] tracking-[0.16em] text-subtle uppercase">2025 season</p>
+      <p className="mt-6 text-xs tracking-[0.16em] text-subtle uppercase">2025 season</p>
       {s ? (
         <dl className="mt-2 grid grid-cols-3 gap-2">
           <Cell label="Games" value={String(s.games)} />
@@ -341,7 +342,7 @@ function PlayerSheet({ row, weekLoaded }: { row: Row; weekLoaded: boolean }) {
 function Cell({ label, value }: { label: string; value: string }) {
   return (
     <div className={cn("rounded-lg bg-elevated px-3 py-2")}>
-      <p className="text-[10px] tracking-wide text-subtle uppercase">{label}</p>
+      <p className="text-xs tracking-wide text-subtle uppercase">{label}</p>
       <p className="mt-0.5 font-mono text-sm tabular-nums">{value}</p>
     </div>
   );

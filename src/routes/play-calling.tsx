@@ -116,7 +116,7 @@ function PlayLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">
+          <h1 className="font-display text-5xl sm:text-6xl">
             Play-calling
           </h1>
         </header>
@@ -142,7 +142,7 @@ function PlayLab() {
               { value: "proe", label: "PROE" },
             ]}
           />
-          <span className="text-[11px] tracking-[0.14em] text-subtle uppercase">{teams.length} teams</span>
+          <span className="text-xs tracking-[0.14em] text-subtle uppercase">{teams.length} teams</span>
         </div>
         {season >= 2026 ? <FeedStatus feed="labs" section="teams" className="mt-3" /> : null}
 
@@ -172,7 +172,7 @@ function PlayLab() {
           <div className="rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             {metric === "fourth" && (
               <>
-                <h2 className="font-display text-xl uppercase tracking-[0.06em]">
+                <h2 className="font-display text-xl">
                   <StatTip metric="fourthGo">4th-down go rate</StatTip>
                 </h2>
                 <p className="mt-1 text-xs text-muted">
@@ -193,7 +193,7 @@ function PlayLab() {
             )}
             {metric === "second" && (
               <>
-                <h2 className="font-display text-xl uppercase tracking-[0.06em]">
+                <h2 className="font-display text-xl">
                   <StatTip metric="secondShort">2nd-and-short pass rate</StatTip>
                 </h2>
                 <p className="mt-1 text-xs text-muted">
@@ -215,7 +215,7 @@ function PlayLab() {
             )}
             {metric === "proe" && (
               <>
-                <h2 className="font-display text-xl uppercase tracking-[0.06em]">
+                <h2 className="font-display text-xl">
                   <StatTip metric="proe">PROE</StatTip>
                   <span className="text-muted"> vs </span>
                   <StatTip metric="epa">EPA</StatTip>
@@ -252,8 +252,8 @@ function PlayLab() {
           >
             {selectedTeam ? (
               <>
-                <p className="text-[11px] tracking-[0.16em] text-sage uppercase">Now viewing</p>
-                <h2 className="mt-1 font-display text-3xl uppercase tracking-[0.04em]">
+                <p className="text-xs tracking-[0.16em] text-sage uppercase">Now viewing</p>
+                <h2 className="mt-1 font-display text-3xl">
                   {teamNick(selectedTeam.team)}
                 </h2>
                 {selectedTeam.coach ? <p className="mt-1 text-sm text-muted">{selectedTeam.coach}</p> : null}
@@ -274,12 +274,12 @@ function PlayLab() {
                     value={`${formatPct(selectedTeam.fourthDown.goRate)} · ${formatPct(selectedTeam.fourthDown.convertRate)}`}
                   />
                 </dl>
-                <p className="mt-6 text-[11px] tracking-[0.14em] text-subtle uppercase">
+                <p className="mt-6 text-xs tracking-[0.14em] text-subtle uppercase">
                   Pass rate by down × distance
                 </p>
                 <div className="mt-3 overflow-x-auto">
                   <table className="w-full min-w-[280px] text-center text-sm">
-                    <thead className="text-[11px] tracking-[0.12em] text-subtle uppercase">
+                    <thead className="text-xs tracking-[0.12em] text-subtle uppercase">
                       <tr>
                         <th className="px-2 py-2 text-left font-medium">Down</th>
                         <th className="px-2 py-2 font-medium">Short</th>
@@ -304,7 +304,8 @@ function PlayLab() {
                                 </td>
                               );
                             }
-                            const bg = `color-mix(in oklab, var(--color-sage) ${v}%, transparent)`;
+                            // Capped tint, so the cell text keeps its contrast in both themes.
+                            const bg = `color-mix(in oklab, var(--color-sage) ${Math.round(v * 0.45)}%, transparent)`;
                             return (
                               <td key={d} className="px-2 py-3">
                                 <span
@@ -316,7 +317,7 @@ function PlayLab() {
                                   style={{ background: bg }}
                                 >
                                   <span>{v}%</span>
-                                  <span className={cn("mt-0.5 block text-[10px]", isThin(plays) ? "text-muted" : "text-fg/70")}>
+                                  <span className={cn("mt-0.5 block text-xs", isThin(plays) ? "text-muted" : "text-fg/70")}>
                                     {plays} play{plays === 1 ? "" : "s"}
                                   </span>
                                 </span>
@@ -331,7 +332,7 @@ function PlayLab() {
               </>
             ) : (
               <div className="flex min-h-[200px] flex-col justify-center">
-                <p className="font-display text-2xl uppercase tracking-[0.04em]">Heatmap</p>
+                <p className="font-display text-2xl">Heatmap</p>
                 <p className="mt-2 text-sm text-muted">Tap a team in the list.</p>
               </div>
             )}
@@ -363,24 +364,25 @@ function RankBars({
             onClick={() => onPick(r.team)}
             className={cn(
               "flex min-h-11 w-full items-center gap-2 rounded-sm px-1.5 text-left",
-              r.selected ? "bg-sage/15" : "hover:bg-elevated",
-              r.n != null && isThin(r.n) && "opacity-70",
+              r.selected ? "bg-sage-soft" : "hover:bg-elevated",
             )}
           >
-            <span className="w-5 shrink-0 font-mono text-[10px] text-subtle tabular-nums">{i + 1}</span>
+            <span className="w-5 shrink-0 font-mono text-xs text-subtle tabular-nums">{i + 1}</span>
             <span className="w-8 shrink-0 font-mono text-xs">{r.team}</span>
             <span className="relative h-2 min-w-0 flex-1 rounded-full bg-elevated">
               <span
                 className={cn(
                   "absolute inset-y-0 left-0 rounded-full",
                   r.selected ? "bg-sage" : "bg-accent",
+                  // A thin sample fades its bar; the text keeps full contrast.
+                  r.n != null && isThin(r.n) && "opacity-50",
                 )}
                 style={{ width: `${Math.max(4, (r.value / max) * 100)}%` }}
               />
             </span>
-            <span className="w-16 shrink-0 text-right">
+            <span className="w-24 shrink-0 text-right">
               <span className="block font-mono text-xs tabular-nums">{format(r.value)}</span>
-              {r.n != null ? <SampleN n={r.n} unit={unit} className="text-[10px]" /> : null}
+              {r.n != null ? <SampleN n={r.n} unit={unit} className="text-xs" /> : null}
             </span>
           </button>
         </li>
@@ -392,8 +394,8 @@ function RankBars({
 function Insight({ kicker, title, body }: { kicker: string; title: string; body: string }) {
   return (
     <div className="rounded-lg bg-surface p-4 shadow-[var(--shadow-border)]">
-      <p className="text-[11px] tracking-[0.14em] text-subtle uppercase">{kicker}</p>
-      <p className="mt-2 font-display text-2xl uppercase tracking-[0.04em]">{title}</p>
+      <p className="text-xs tracking-[0.14em] text-subtle uppercase">{kicker}</p>
+      <p className="mt-2 font-display text-2xl">{title}</p>
       <p className="mt-1 text-sm text-muted">{body}</p>
     </div>
   );
@@ -402,7 +404,7 @@ function Insight({ kicker, title, body }: { kicker: string; title: string; body:
 function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-[11px] tracking-[0.12em] text-subtle uppercase">{label}</dt>
+      <dt className="text-xs tracking-[0.12em] text-subtle uppercase">{label}</dt>
       <dd className="mt-1 font-mono text-sm tabular-nums">{value}</dd>
     </div>
   );
