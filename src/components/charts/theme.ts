@@ -11,7 +11,7 @@ export const tooltipStyle: CSSProperties = {
 
 export const axisProps = {
   stroke: CHART.axis,
-  tick: { fill: CHART.tick, fontSize: 11 },
+  tick: { fill: CHART.tick, fontSize: 12 },
   tickLine: false as const,
 };
 

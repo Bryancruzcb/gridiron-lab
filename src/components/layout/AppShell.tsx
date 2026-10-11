@@ -1,10 +1,9 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Binary, House, LayoutDashboard, Menu, Radio, Users } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/button";
-import { LiquidChrome } from "@/components/LiquidChrome";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "./ThemeToggle";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -47,7 +46,7 @@ function useStandaloneApp() {
 function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolean }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <nav className={cn("flex", stacked ? "flex-col gap-1" : "items-center gap-1")}>
+    <nav aria-label="Labs" className={cn("flex", stacked ? "flex-col gap-1" : "items-center gap-0.5")}>
       {NAV.map((item) => {
         const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
         return (
@@ -55,10 +54,11 @@ function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolea
             key={item.to}
             to={item.to}
             onClick={onClick}
+            aria-current={active ? "page" : undefined}
             className={cn(
-              "hit-shine rounded-sm px-3 py-2 text-[13px] font-medium tracking-wide uppercase transition-colors duration-150",
-              stacked ? "flex h-12 items-center" : "h-10",
-              active ? "bg-fg/10 text-fg" : "text-muted hover:text-fg",
+              "hit-shine rounded-full px-2.5 text-sm transition-colors duration-150",
+              stacked ? "flex h-12 items-center px-4 text-base" : "inline-flex h-9 items-center",
+              active ? "bg-surface text-fg shadow-[var(--shadow-border)]" : "text-muted hover:text-fg",
             )}
           >
             {item.label}
@@ -75,31 +75,30 @@ export function AppShell({ children }: { children: ReactNode }) {
   const app = useStandaloneApp();
 
   return (
-    <div className="relative z-10 flex min-h-dvh flex-col bg-transparent text-fg">
-      <LiquidChrome as="header" className="glass-bar sticky top-0 z-40 w-full">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <Link to="/" className="flex items-center gap-3">
-            <span className="grid size-8 place-items-center rounded-[6px] bg-elevated shadow-[var(--shadow-border)]">
-              <span className="block h-4 w-[3px] bg-sage" />
-            </span>
-            <span className="font-display text-lg uppercase tracking-[0.18em]">Gridiron Lab</span>
+    <div className="relative flex min-h-dvh flex-col bg-bg text-fg">
+      <header className="sticky top-0 z-40 w-full border-b border-border bg-bg/95 backdrop-blur-sm">
+        <div className="mx-auto flex min-h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
+          <Link to="/" className="mr-auto rounded-sm font-display text-[22px] font-semibold tracking-normal">
+            Gridiron Lab
           </Link>
-          <div className={cn(app ? "hidden" : "hidden md:block")}>
+          <div className={cn(app ? "hidden" : "hidden lg:block")}>
             <NavLinks />
           </div>
           {!app ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-fg md:hidden"
-              aria-label="Open menu"
+            <button
+              type="button"
+              aria-haspopup="dialog"
+              aria-expanded={open}
               onClick={() => setOpen(true)}
+              className="hit-shine inline-flex h-10 items-center gap-2 rounded-full px-3.5 text-sm text-fg shadow-[var(--shadow-border)] lg:hidden"
             >
-              <Menu />
-            </Button>
+              <Menu className="size-4" aria-hidden />
+              Labs
+            </button>
           ) : null}
+          <ThemeToggle />
         </div>
-      </LiquidChrome>
+      </header>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[280px]">
           <SheetHeader>
@@ -116,34 +115,35 @@ export function AppShell({ children }: { children: ReactNode }) {
           className="pointer-events-none fixed inset-x-0 bottom-0 z-40 pb-[max(1rem,env(safe-area-inset-bottom))]"
           aria-label="Primary"
         >
-        <div className="pointer-events-auto mx-auto max-w-sm px-4">
-          <LiquidChrome className="rounded-full px-3 py-2">
-            <ul className="flex items-center justify-center gap-3">
-            {DOCK.map((item) => {
-              const Icon = item.icon;
-              const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
-              return (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    aria-label={item.label}
-                    className={cn(
-                      "hit-shine grid size-14 place-items-center rounded-full transition-colors duration-150",
-                      active ? "bg-fg text-bg" : "text-fg/80 hover:bg-fg/10",
-                    )}
-                  >
-                    <Icon className="size-6" />
-                  </Link>
-                </li>
-              );
-            })}
-            </ul>
-          </LiquidChrome>
-        </div>
+          <div className="pointer-events-auto mx-auto max-w-sm px-4">
+            <div className="rounded-full bg-surface px-3 py-2 shadow-[var(--shadow-border),var(--shadow-float)]">
+              <ul className="flex items-center justify-center gap-3">
+                {DOCK.map((item) => {
+                  const Icon = item.icon;
+                  const active = pathname === item.to || (item.to !== "/" && pathname.startsWith(item.to));
+                  return (
+                    <li key={item.to}>
+                      <Link
+                        to={item.to}
+                        aria-label={item.label}
+                        aria-current={active ? "page" : undefined}
+                        className={cn(
+                          "hit-shine grid size-14 place-items-center rounded-full transition-colors duration-150",
+                          active ? "bg-fg text-bg" : "text-fg/80 hover:bg-fg/10",
+                        )}
+                      >
+                        <Icon className="size-6" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
         </nav>
       ) : (
-        <footer className="hidden border-t border-border md:block">
-          <div className="mx-auto flex max-w-6xl px-4 py-6 text-xs text-subtle sm:px-6">
+        <footer className="border-t border-border">
+          <div className="mx-auto flex max-w-6xl px-4 py-8 text-sm text-muted sm:px-6">
             <p>2023–2025 projection study. The $50k lineup is a demo with synthetic salaries.</p>
           </div>
         </footer>

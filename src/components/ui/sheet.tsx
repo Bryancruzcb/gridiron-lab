@@ -17,10 +17,10 @@ export function SheetContent({
 }) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-bg/70 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-fg/30 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 flex flex-col bg-surface text-fg shadow-[var(--shadow-border)]",
+          "fixed z-50 flex flex-col bg-bg text-fg shadow-[var(--shadow-float)]",
           "data-[state=open]:animate-in data-[state=closed]:animate-out",
           side === "right" &&
             "inset-y-0 right-0 h-full w-[min(100%,420px)] data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
@@ -49,7 +49,7 @@ export function SheetHeader({ className, ...props }: HTMLAttributes<HTMLDivEleme
 export function SheetTitle({ className, ...props }: ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
-      className={cn("font-display text-2xl uppercase tracking-[0.06em]", className)}
+      className={cn("font-display text-2xl", className)}
       {...props}
     />
   );

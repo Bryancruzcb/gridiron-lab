@@ -14,7 +14,7 @@ export function Segmented<T extends string>({
   return (
     <div
       className={cn(
-        "inline-flex max-w-full flex-wrap rounded-md bg-elevated p-1 shadow-[var(--shadow-border)]",
+        "inline-flex max-w-full flex-wrap gap-0.5 rounded-full bg-surface p-1 shadow-[var(--shadow-border)]",
         className,
       )}
     >
@@ -26,7 +26,7 @@ export function Segmented<T extends string>({
             type="button"
             onClick={() => onChange(o.value)}
             className={cn(
-              "h-9 min-h-9 rounded-sm px-3 text-[13px] font-medium transition-colors duration-150",
+              "h-9 min-h-9 rounded-full px-3.5 text-sm font-medium transition-colors duration-150",
               active ? "bg-accent text-accent-fg" : "text-muted hover:text-fg",
             )}
           >
