@@ -19,7 +19,7 @@ export function QbDot(props: unknown) {
             </clipPath>
           </defs>
           <circle cx={cx} cy={cy} r={d.r + 2} fill={d.pinned ? CHART.fg : INK_QUIET} />
-          <circle cx={cx} cy={cy} r={d.r} fill="#1A1D24" />
+          <circle cx={cx} cy={cy} r={d.r} fill="var(--color-elevated)" />
           <image
             href={d.headshot}
             x={cx - d.r}
@@ -35,8 +35,8 @@ export function QbDot(props: unknown) {
           cx={cx}
           cy={cy}
           r={d.r}
-          fill={d.pinned ? CHART.fg : "#0A0B0D"}
-          stroke={d.pinned ? "#0A0B0D" : INK_QUIET}
+          fill={d.pinned ? CHART.fg : "var(--color-surface)"}
+          stroke={d.pinned ? "var(--color-surface)" : INK_QUIET}
           strokeWidth={2}
         />
       )}

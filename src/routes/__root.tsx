@@ -2,8 +2,8 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { SeasonProvider } from "@/lib/season-provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
-import { GlassLight } from "@/components/GlassLight";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "Gridiron Lab";
@@ -19,7 +19,8 @@ export const Route = createRootRoute({
         content:
           "Leakage-controlled study of fantasy-point projections on NFL player-weeks, 2023–2025. The $50k lineup is a demo that uses synthetic salaries.",
       },
-      { name: "theme-color", content: "#0A0B0D" },
+      { name: "theme-color", content: "#F5F2EC", media: "(prefers-color-scheme: light)" },
+      { name: "theme-color", content: "#191816", media: "(prefers-color-scheme: dark)" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -30,18 +31,19 @@ export const Route = createRootRoute({
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Figtree:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap",
       },
     ],
   }),
   component: () => (
     <html lang="en" className="antialiased" suppressHydrationWarning>
       <head>
+        {/* Applies a stored light/dark pick before the first paint (see src/lib/theme.ts). */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <HeadContent />
       </head>
       <body className="bg-bg text-fg">
         <PreviewHostBridge />
-        <GlassLight />
         <AuthProvider>
           <SeasonProvider>
             <TooltipProvider delayDuration={200}>

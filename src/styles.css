@@ -1,27 +1,44 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@theme {
-  --font-sans: "Figtree", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Barlow Condensed", "Figtree", sans-serif;
+/* Friendly research: warm off-white, serif headings, one green accent. Light first; dark follows the
+   system or the header toggle (data-theme on <html>). DESIGN.md lists every token and where it goes. */
+@theme static {
+  --font-sans: "Instrument Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Newsreader", Georgia, "Times New Roman", serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
 
-  --color-bg: #0a0b0d;
-  --color-surface: #13151a;
-  --color-elevated: #1a1d24;
-  --color-fg: #f1f0ea;
-  --color-muted: #c2c4be;
-  --color-subtle: #9a9c96;
-  --color-border: #2a2d34;
-  --color-accent: #c5ccd6;
-  --color-accent-fg: #0a0b0d;
-  --color-navy: #1e4e8c;
-  --color-rust: #c47868;
-  --color-sage: #7a9a7a;
-  /* Good and bad stat values: sage and rust lifted so numbers stay readable on dark glass. */
-  --color-up: #9fcb9f;
-  --color-down: #ee9784;
-  --color-ring: #c5ccd6;
+  /* Light values. The dark set below overrides the same names. */
+  --color-bg: #f5f2ec;
+  --color-surface: #ffffff;
+  --color-elevated: #f1ede5;
+  --color-fg: #1c1b19;
+  --color-muted: #5b5852;
+  --color-subtle: #635f57;
+  --color-border: #ddd7cc;
+  /* Main buttons and active toggles: filled green with white text. */
+  --color-accent: #1a6d3d;
+  --color-accent-fg: #ffffff;
+  /* Info notices (the old navy). */
+  --color-navy: #2b5797;
+  /* Danger and "worse" values. */
+  --color-rust: #a3392a;
+  --color-rust-soft: #f8e1dc;
+  /* Success, "better" values and green text. */
+  --color-sage: #1a6d3d;
+  --color-sage-soft: #dcefe2;
+  --color-up: #1a6d3d;
+  --color-down: #a3392a;
+  --color-warn: #8a5300;
+  --color-warn-soft: #fbefd6;
+  --color-ring: #1a6d3d;
+  /* Soft color panels (Craft) and chart ink. */
+  --color-panel: #e6ebf6;
+  --color-panel-2: #f7e8dc;
+  --color-track: #e9e4da;
+  --color-data: #33415c;
+  --color-data-soft: #8d97ad;
+  --color-skeleton: #e7e2d8;
 
   --radius-xs: 4px;
   --radius-sm: 8px;
@@ -29,12 +46,82 @@
   --radius-lg: 18px;
   --radius-xl: 28px;
 
-  --shadow-border: inset 0 1px 0 rgb(255 255 255 / 0.22), 0 0 0 1px rgb(255 255 255 / 0.08),
-    0 10px 32px rgb(0 0 0 / 0.28);
-  --shadow-border-hover: inset 0 1px 0 rgb(255 255 255 / 0.32), 0 0 0 1px rgb(255 255 255 / 0.14),
-    0 14px 40px rgb(0 0 0 / 0.34);
+  /* A hairline ring for cards and controls; the hover version adds one soft lift. */
+  --shadow-border: inset 0 0 0 1px var(--color-border);
+  --shadow-border-hover: inset 0 0 0 1px color-mix(in oklab, var(--color-fg) 28%, var(--color-border)),
+    0 6px 18px rgb(28 27 25 / 0.08);
+  --shadow-float: 0 1px 2px rgb(28 27 25 / 0.06), 0 8px 24px rgb(28 27 25 / 0.06);
 
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Dark set. Unlayered, so it wins over the @theme defaults above. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-bg: #191816;
+    --color-surface: #23221f;
+    --color-elevated: #2c2a26;
+    --color-fg: #f1eee8;
+    --color-muted: #b7b1a7;
+    --color-subtle: #a39d93;
+    --color-border: #3a3832;
+    --color-accent: #5bc489;
+    --color-accent-fg: #0d1a12;
+    --color-navy: #9cbcf0;
+    --color-rust: #f19a88;
+    --color-rust-soft: #3c2420;
+    --color-sage: #6fcf97;
+    --color-sage-soft: #1f3a2a;
+    --color-up: #6fcf97;
+    --color-down: #f19a88;
+    --color-warn: #f0b75c;
+    --color-warn-soft: #3a2e17;
+    --color-ring: #6fcf97;
+    --color-panel: #222737;
+    --color-panel-2: #2d2520;
+    --color-track: #34322d;
+    --color-data: #c9d2e6;
+    --color-data-soft: #8a93a8;
+    --color-skeleton: #2c2b27;
+    --shadow-border-hover: inset 0 0 0 1px color-mix(in oklab, var(--color-fg) 28%, var(--color-border)),
+      0 6px 18px rgb(0 0 0 / 0.3);
+    --shadow-float: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #191816;
+  --color-surface: #23221f;
+  --color-elevated: #2c2a26;
+  --color-fg: #f1eee8;
+  --color-muted: #b7b1a7;
+  --color-subtle: #a39d93;
+  --color-border: #3a3832;
+  --color-accent: #5bc489;
+  --color-accent-fg: #0d1a12;
+  --color-navy: #9cbcf0;
+  --color-rust: #f19a88;
+  --color-rust-soft: #3c2420;
+  --color-sage: #6fcf97;
+  --color-sage-soft: #1f3a2a;
+  --color-up: #6fcf97;
+  --color-down: #f19a88;
+  --color-warn: #f0b75c;
+  --color-warn-soft: #3a2e17;
+  --color-ring: #6fcf97;
+  --color-panel: #222737;
+  --color-panel-2: #2d2520;
+  --color-track: #34322d;
+  --color-data: #c9d2e6;
+  --color-data-soft: #8a93a8;
+  --color-skeleton: #2c2b27;
+  --shadow-border-hover: inset 0 0 0 1px color-mix(in oklab, var(--color-fg) 28%, var(--color-border)),
+    0 6px 18px rgb(0 0 0 / 0.3);
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px rgb(0 0 0 / 0.25);
+}
+:root {
+  color-scheme: light;
 }
 
 @layer base {
@@ -43,10 +130,6 @@
     -moz-osx-font-smoothing: grayscale;
     background: var(--color-bg);
     color: var(--color-fg);
-    --spec-x: 50%;
-    --spec-y: 8%;
-    --light-x: 22%;
-    --light-y: 14%;
   }
 
   body {
@@ -72,156 +155,44 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--color-ring);
     outline-offset: 2px;
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--color-accent) 35%, transparent);
+    background: color-mix(in oklab, var(--color-accent) 25%, transparent);
     color: var(--color-fg);
   }
 }
 
+/* Serif headings (Newsreader). Sentence case: no uppercase or wide tracking. */
 @utility font-display {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
-/* Fixed wash the glass frosts. The light and specular glows sit on their own oversized layers
-   (3x the viewport, so a shift never shows an edge) and GlassLight moves them with transforms:
-   following scroll or pointer only re-composites, it never repaints the gradients. Gradient
-   centres are the old viewport positions mapped into layer space: (viewport% + 100%) / 3. */
-.atmosphere {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  background: radial-gradient(36vmax 30vmax at 86% 82%, rgb(197 204 214 / 0.12), transparent 50%);
-}
-.atmosphere-light,
-.atmosphere-spec {
-  position: absolute;
-  inset: -100%;
-  will-change: transform;
-}
-.atmosphere-light {
-  background:
-    radial-gradient(70vmax 50vmax at 40.667% 38%, rgb(30 78 140 / 0.38), transparent 58%),
-    radial-gradient(48vmax 38vmax at 53.333% 45.333%, rgb(122 154 122 / 0.18), transparent 55%),
-    radial-gradient(42vmax 34vmax at 34.667% 54%, rgb(196 80 72 / 0.16), transparent 52%);
-}
-.atmosphere-spec {
-  background: radial-gradient(32vmax 26vmax at 52.667% 38%, rgb(241 240 234 / 0.22), transparent 48%);
-}
-.atmosphere::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(to right, rgb(241 240 234 / 0.045) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(241 240 234 / 0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
+/* Chart colors, read by Recharts through var() (src/lib/nfl.ts CHART). */
+:root {
+  --chart-grid: var(--color-border);
+  --chart-axis: var(--color-border);
+  --chart-tick: var(--color-muted);
+  --chart-ink: var(--color-data);
+  --chart-ink-soft: var(--color-data-soft);
+  --chart-zero: color-mix(in oklab, var(--color-fg) 40%, transparent);
 }
 
-/* iOS material surface. Specular is --spec-*, scrolls smoothly on GPU layers. */
-.bg-surface {
-  background-color: rgb(241 240 234 / 0.055);
-  background-image: radial-gradient(
-    70vmax 50vmax at var(--spec-x) var(--spec-y),
-    rgb(255 255 255 / 0.18),
-    transparent 55%
-  );
-}
-.bg-elevated {
-  background-color: rgb(241 240 234 / 0.08);
-  background-image: radial-gradient(
-    70vmax 50vmax at var(--spec-x) var(--spec-y),
-    rgb(255 255 255 / 0.14),
-    transparent 55%
-  );
-}
-
-.glass-bar,
-.liquid-chrome {
-  background-color: rgb(241 240 234 / 0.06);
-  background-image: none;
-  overflow: hidden;
-}
-.liquid-chrome {
-  -webkit-backdrop-filter: blur(var(--lg-blur, 24px)) saturate(1.7);
-  backdrop-filter: blur(var(--lg-blur, 24px)) saturate(1.7);
-}
-
-/* One-light rim on hover; flash on press. */
+/* Controls that used the old glow: a clear focus ring, no hover glow. */
 .hit-shine {
-  transition: box-shadow 160ms var(--ease-out), background-color 160ms var(--ease-out);
+  transition:
+    box-shadow 160ms var(--ease-out),
+    background-color 160ms var(--ease-out);
 }
-.hit-shine:hover,
 .hit-shine:focus-visible {
+  outline: none;
   box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.42),
-    0 0 16px rgb(241 240 234 / 0.22);
-}
-.hit-shine:active {
-  animation: hit-shine 420ms var(--ease-out);
-}
-@keyframes hit-shine {
-  0% {
-    box-shadow:
-      0 0 0 1px rgb(255 255 255 / 0.85),
-      0 0 28px rgb(255 255 255 / 0.5);
-  }
-  100% {
-    box-shadow:
-      0 0 0 1px rgb(255 255 255 / 0.2),
-      0 0 0 rgb(255 255 255 / 0);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .hit-shine:active {
-    animation: none;
-  }
-}
-
-.field-grid {
-  background-image:
-    linear-gradient(to right, rgba(241, 240, 234, 0.04) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(241, 240, 234, 0.03) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-.hash-mark {
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent 0,
-    transparent 46px,
-    rgba(197, 204, 214, 0.07) 46px,
-    rgba(197, 204, 214, 0.07) 48px
-  );
-}
-
-.stagger-in > * {
-  animation: rise-in 500ms var(--ease-out) both;
-}
-.stagger-in > *:nth-child(1) {
-  animation-delay: 0ms;
-}
-.stagger-in > *:nth-child(2) {
-  animation-delay: 60ms;
-}
-.stagger-in > *:nth-child(3) {
-  animation-delay: 120ms;
-}
-.stagger-in > *:nth-child(4) {
-  animation-delay: 180ms;
-}
-.stagger-in > *:nth-child(5) {
-  animation-delay: 240ms;
-}
-.stagger-in > *:nth-child(6) {
-  animation-delay: 300ms;
+    0 0 0 2px var(--color-bg),
+    0 0 0 4px var(--color-ring);
 }
 
 .live-dot {
@@ -244,30 +215,38 @@
   }
 }
 
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-    filter: blur(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
 .heat-flash {
   animation: heat-flash 700ms var(--ease-out);
 }
 
 @keyframes heat-flash {
   0% {
-    box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-sage) 55%, transparent);
+    box-shadow: 0 0 0 2px color-mix(in oklab, var(--color-sage) 55%, transparent);
   }
   100% {
     box-shadow: var(--shadow-border);
   }
+}
+
+/* Skeleton blocks for content that appears after hydration (charts). */
+.skeleton {
+  background: var(--color-skeleton);
+  border-radius: 10px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton {
+    animation: skeleton-pulse 1.4s ease-in-out infinite;
+  }
+}
+@keyframes skeleton-pulse {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* The miss chart's dots slide when the season changes. */
+.dot-slide {
+  transition: left 260ms var(--ease-out);
 }
 
 .overflow-x-auto,
@@ -282,11 +261,36 @@
   height: 0;
 }
 
+/* Wide study tables keep a visible scrollbar, so phones show there is more to the right. */
+.table-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .stagger-in > *,
-  .stagger-in > *:nth-child(n),
   .live-dot,
-  .heat-flash {
+  .heat-flash,
+  .dot-slide {
     animation: none;
+    transition: none;
+  }
+}
+
+/* Header theme toggle: the sun shows in light, the moon in dark (CSS-driven, so the server render matches). */
+.theme-icon-dark {
+  display: none;
+}
+:root[data-theme="dark"] .theme-icon-light {
+  display: none;
+}
+:root[data-theme="dark"] .theme-icon-dark {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-icon-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .theme-icon-dark {
+    display: block;
   }
 }

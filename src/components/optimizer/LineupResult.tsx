@@ -62,7 +62,7 @@ export function LineupResult({
       className={cn("rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]", !isCurrent && "opacity-60")}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <h2 className="font-display text-xl uppercase tracking-[0.06em]">
+        <h2 className="font-display text-xl">
           {hindsight ? "Hindsight" : best.optimality === "proven" ? "Optimal" : "Best found"}
         </h2>
         <div className="flex items-center gap-1.5">
@@ -99,7 +99,7 @@ export function LineupResult({
           return (
             <li key={player.id} data-player-id={player.id} className="flex items-center justify-between gap-2 py-2">
               <div className="flex min-w-0 items-center gap-2">
-                <span className="w-8 font-mono text-[10px] text-subtle">{slot}</span>
+                <span className="w-8 font-mono text-xs text-subtle">{slot}</span>
                 <span className="truncate text-sm">{player.name}</span>
                 {lockedIds.has(player.id) && <Lock className="size-3 shrink-0 text-sage" aria-label="Locked" />}
               </div>
@@ -113,7 +113,7 @@ export function LineupResult({
       </ul>
       {isCurrent && (
         <div className="mt-4 border-t border-border pt-3">
-          <p data-testid="input-version" className="font-mono text-[10px] break-all text-subtle">
+          <p data-testid="input-version" className="font-mono text-xs break-all text-subtle">
             Input · slate {slate} · {actualsV ? `week scores ${actualsV}` : "no week scores loaded"}
           </p>
           <div className="mt-3 flex flex-wrap gap-2">

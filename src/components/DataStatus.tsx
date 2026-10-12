@@ -46,7 +46,7 @@ function RetryButton({ onRetry, busy }: { onRetry?: () => void; busy: boolean })
       type="button"
       onClick={onRetry}
       disabled={busy}
-      className="inline-flex h-7 items-center gap-1 rounded-sm px-2 text-[11px] font-medium tracking-wide text-fg uppercase shadow-[var(--shadow-border)] transition-colors hover:bg-elevated disabled:opacity-50"
+      className="inline-flex h-7 items-center gap-1 rounded-sm px-2 text-xs font-medium tracking-wide text-fg uppercase shadow-[var(--shadow-border)] transition-colors hover:bg-elevated disabled:opacity-50"
     >
       <RotateCw className={cn("size-3", busy && "animate-spin")} aria-hidden />
       {busy ? "Retrying" : "Retry"}
@@ -95,7 +95,7 @@ export function DataStatus<T>({
         role="status"
         data-feed-status={name}
         data-state="loading"
-        className={cn("flex items-center gap-2 text-[11px] tracking-[0.14em] text-subtle uppercase", className)}
+        className={cn("flex items-center gap-2 text-xs tracking-[0.14em] text-subtle uppercase", className)}
       >
         <span className="size-1.5 animate-pulse rounded-full bg-subtle" aria-hidden />
         Loading {upstream}
@@ -109,7 +109,7 @@ export function DataStatus<T>({
         role="status"
         data-feed-status={name}
         data-state="unavailable"
-        className={cn("flex flex-wrap items-center justify-between gap-3 rounded-lg bg-rust/10 px-3 py-2.5", className)}
+        className={cn("flex flex-wrap items-center justify-between gap-3 rounded-lg bg-rust-soft px-3 py-2.5", className)}
       >
         <div className="min-w-0">
           <p className="text-sm text-rust">{unavailableText ?? `${upstream} data unavailable`}</p>
@@ -132,7 +132,7 @@ export function DataStatus<T>({
       data-freshness={view.freshness}
       className={cn("flex flex-col gap-1", className)}
     >
-      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] tracking-[0.14em] text-subtle uppercase">
+      <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs tracking-[0.14em] text-subtle uppercase">
         <Badge variant={view.source === "live" ? "sage" : snapshot ? "outline" : "default"}>{SOURCE_LABEL[view.source]}</Badge>
         {stale && !snapshot ? <Badge variant="rust">Stale</Badge> : null}
         <span>{snapshot ? "checked-in file" : upstream}</span>

@@ -9,7 +9,7 @@ export function GuessTip({
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
+    <div className="rounded-[12px] bg-surface px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
       <p className="font-medium">Week {d.week}</p>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
         <dt className="text-muted">Thought</dt>
@@ -33,7 +33,7 @@ export function AlphaTip({
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
+    <div className="rounded-[12px] bg-surface px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
       <p className="font-medium">Last-week weight {d.alpha.toFixed(2)}</p>
       <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 font-mono text-xs tabular-nums">
         <dt className="text-muted">Team score</dt>
@@ -59,7 +59,7 @@ export function LagTip({
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-md bg-elevated px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
+    <div className="rounded-[12px] bg-surface px-3 py-2.5 text-sm text-fg shadow-[var(--shadow-border-hover)]">
       <p className="font-medium">{d.name}</p>
       <p className="text-xs text-muted">
         {d.team} · week {d.week}

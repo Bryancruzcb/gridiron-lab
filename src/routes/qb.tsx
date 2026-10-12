@@ -263,7 +263,7 @@ function QbLab() {
     <AppShell>
       <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
         <header className="max-w-2xl">
-          <h1 className="font-display text-5xl uppercase tracking-[0.03em] sm:text-6xl">QB</h1>
+          <h1 className="font-display text-5xl sm:text-6xl">QB</h1>
         </header>
         <FirstLook id="qb" title="This page">
           <p>
@@ -345,7 +345,7 @@ function QbLab() {
         </div>
 
         {issues.length > 0 && (
-          <div role="status" data-testid="link-issues" className="mt-4 rounded-xl bg-rust/10 px-4 py-3 text-sm text-rust">
+          <div role="status" data-testid="link-issues" className="mt-4 rounded-xl bg-rust-soft px-4 py-3 text-sm text-rust">
             <p className="font-medium">Some settings in this link could not be used.</p>
             <ul className="mt-1 list-disc space-y-0.5 pl-4">
               {issues.map((issue, i) => (
@@ -384,7 +384,7 @@ function QbLab() {
           <div className="mt-4 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
-                <h2 className="font-display text-2xl uppercase tracking-[0.05em]">By week</h2>
+                <h2 className="font-display text-2xl">By week</h2>
                 <p className="text-sm text-muted">EPA per dropback · week {shownWeek}</p>
               </div>
               {weeks.length > 1 && (
@@ -402,12 +402,12 @@ function QbLab() {
         <div className="mt-4 grid items-start gap-4 lg:grid-cols-[1.4fr_1fr]">
           <div className="min-w-0 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-              <h2 className="font-display text-2xl uppercase tracking-[0.05em]">EPA vs CPOE</h2>
+              <h2 className="font-display text-2xl">EPA vs CPOE</h2>
               <p className="text-sm text-muted">{few ? "Faded = not pinned" : "Photos = pinned · bigger dot = more dropbacks"}</p>
             </div>
             {rows.length === 0 ? (
               <div className="flex h-[280px] flex-col items-center justify-center rounded-md bg-elevated px-6 text-center">
-                <p className="font-display text-2xl uppercase tracking-[0.04em]">No QBs at this cut</p>
+                <p className="font-display text-2xl">No QBs at this cut</p>
                 <p className="mt-2 max-w-sm text-sm text-muted">
                   Nobody has {minPlays}+ dropbacks on {label.toLowerCase()}. The data is there — the
                   sample-size gate is too high for this slice.
@@ -463,9 +463,9 @@ function QbLab() {
                         strokeOpacity={0}
                         label={quad("STRUGGLING", "insideBottomLeft")}
                       />
-                      <CartesianGrid stroke="rgba(241,240,234,0.09)" />
-                      <ReferenceLine x={0} stroke="rgba(241,240,234,0.42)" strokeWidth={1.5} />
-                      <ReferenceLine y={0} stroke="rgba(241,240,234,0.42)" strokeWidth={1.5} />
+                      <CartesianGrid stroke={CHART.grid} />
+                      <ReferenceLine x={0} stroke={CHART.zero} strokeWidth={1.5} />
+                      <ReferenceLine y={0} stroke={CHART.zero} strokeWidth={1.5} />
                       <XAxis
                         type="number"
                         dataKey="cpoe"
@@ -532,7 +532,7 @@ function QbLab() {
 
           <div className="min-w-0 rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5">
             <div className="flex items-baseline justify-between gap-3">
-              <h2 className="font-display text-2xl uppercase tracking-[0.05em]">Pinned</h2>
+              <h2 className="font-display text-2xl">Pinned</h2>
               {pinnedRows.length > 0 && <p className="text-sm text-muted">{pinnedRows.length} pinned</p>}
             </div>
             <ul data-testid="pinned-list" className="mt-3 space-y-1">
@@ -636,7 +636,7 @@ function QbLab() {
                             {pinnedRows.map((r, i) => (
                               <td key={r.qb.id} className="px-2 py-2 text-right text-base font-semibold whitespace-nowrap tabular-nums">
                                 {best !== null && vals[i] === best ? (
-                                  <span className="-mr-2 inline-block rounded-full bg-sage/20 px-2 text-up">{row.text(r)}</span>
+                                  <span className="-mr-2 inline-block rounded-full bg-sage-soft px-2 text-up">{row.text(r)}</span>
                                 ) : (
                                   row.text(r)
                                 )}
@@ -656,7 +656,7 @@ function QbLab() {
 
         <div className="mt-6 overflow-hidden rounded-xl bg-surface shadow-[var(--shadow-border)]">
           <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-5">
-            <h2 className="font-display text-2xl uppercase tracking-[0.05em]">Board</h2>
+            <h2 className="font-display text-2xl">Board</h2>
             <div className="flex flex-wrap gap-1">
               {(["epa", "cpoe", "comp", "press"] as const).map((s) => (
                 <button
@@ -740,7 +740,7 @@ function QbLab() {
                         <span
                           className={cn(
                             "inline-block min-w-[5.5rem] rounded-full px-2.5 py-0.5 text-center font-bold",
-                            epaUp ? "bg-sage/20 text-up" : "bg-rust/20 text-down",
+                            epaUp ? "bg-sage-soft text-up" : "bg-rust-soft text-down",
                           )}
                         >
                           {formatEpa(r.stats.epa)}

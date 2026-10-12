@@ -57,7 +57,7 @@ export function SolvePanel({
 }: Props) {
   return (
     <div className="rounded-xl bg-surface p-5 shadow-[var(--shadow-border)]">
-      <p className="text-[11px] tracking-[0.16em] text-subtle uppercase">Solve</p>
+      <p className="text-xs tracking-[0.16em] text-subtle uppercase">Solve</p>
       <label className="mt-4 flex items-center gap-3 text-sm">
         <Checkbox checked={selection.stack} onCheckedChange={(v) => setStack(v === true)} />
         Stack QB with a WR/TE

@@ -119,7 +119,7 @@ export function SavedAnalyses<K extends AnalysisKind>({ kind, current, suggested
       className={cn("rounded-xl bg-surface p-4 shadow-[var(--shadow-border)] sm:p-5", className)}
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h2 className="font-display text-lg uppercase tracking-[0.06em]">Saved views</h2>
+        <h2 className="font-display text-lg">Saved views</h2>
         <p className="text-xs text-subtle">{LOCAL_ONLY_NOTE}</p>
       </div>
 
@@ -139,7 +139,7 @@ export function SavedAnalyses<K extends AnalysisKind>({ kind, current, suggested
       </form>
 
       {error && (
-        <div role="alert" className="mt-3 rounded-md bg-rust/10 p-3 text-sm text-rust" data-testid="saved-error">
+        <div role="alert" className="mt-3 rounded-md bg-rust-soft p-3 text-sm text-rust" data-testid="saved-error">
           <p>{error.message}</p>
           {recoverable && !confirmClear && (
             <button type="button" onClick={() => setConfirmClear(true)} className="mt-2 text-xs underline underline-offset-2">

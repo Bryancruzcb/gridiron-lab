@@ -80,9 +80,9 @@ export const PlayerRows = memo(function PlayerRows({ rows, lockedIds, excludedId
                   className={cn(
                     "grid size-9 place-items-center rounded-sm",
                     lockUnusable
-                      ? "bg-rust/20 text-rust"
+                      ? "bg-rust-soft text-rust"
                       : isL
-                        ? "bg-sage/20 text-sage"
+                        ? "bg-sage-soft text-sage"
                         : "text-subtle hover:bg-elevated hover:text-fg",
                   )}
                 >
@@ -96,7 +96,7 @@ export const PlayerRows = memo(function PlayerRows({ rows, lockedIds, excludedId
                   onClick={() => onBench(p.id)}
                   className={cn(
                     "grid size-9 place-items-center rounded-sm",
-                    isX ? "bg-rust/20 text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
+                    isX ? "bg-rust-soft text-rust" : "text-subtle hover:bg-elevated hover:text-fg",
                   )}
                 >
                   <Ban className="size-3.5" />

@@ -24,18 +24,27 @@ export function teamLogo(abbr: string) {
   return `https://a.espncdn.com/i/teamlogos/nfl/500/${espn}.png`;
 }
 
+/** Chart colors as CSS variables (src/styles.css), so Recharts follows the light and dark themes. */
 export const CHART = {
-  grid: "rgba(241,240,234,0.08)",
-  axis: "#93958F",
-  tick: "#93958F",
-  tooltipBg: "#1A1D24",
-  tooltipBorder: "rgba(241,240,234,0.12)",
-  paper: "#C5CCD6",
-  sage: "#7A9A7A",
-  rust: "#C47868",
-  fg: "#F1F0EA",
-  muted: "#93958F",
-  series: ["#C5CCD6", "#7A9A7A", "#E8E4D9", "#8A9BB0", "#C47868", "#A3B18A", "#D4C4A8", "#6E7F91"],
+  grid: "var(--chart-grid)",
+  axis: "var(--chart-axis)",
+  tick: "var(--chart-tick)",
+  tooltipBg: "var(--color-surface)",
+  tooltipBorder: "var(--color-border)",
+  paper: "var(--chart-ink)",
+  sage: "var(--color-sage)",
+  rust: "var(--color-rust)",
+  fg: "var(--color-fg)",
+  muted: "var(--color-muted)",
+  zero: "var(--chart-zero)",
+  series: [
+    "var(--chart-ink)",
+    "var(--color-sage)",
+    "var(--color-navy)",
+    "var(--color-rust)",
+    "var(--color-warn)",
+    "var(--chart-ink-soft)",
+  ],
 };
 
 export function initials(name: string) {

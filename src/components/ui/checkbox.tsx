@@ -10,7 +10,7 @@ export function Checkbox({
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        "peer size-5 shrink-0 rounded-[4px] bg-elevated shadow-[var(--shadow-border)]",
+        "peer size-5 shrink-0 rounded-[4px] bg-surface shadow-[inset_0_0_0_1.5px_var(--color-subtle)]",
         "data-[state=checked]:bg-accent data-[state=checked]:text-accent-fg",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/70",
         "disabled:cursor-not-allowed disabled:opacity-50",

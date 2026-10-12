@@ -1,8 +1,9 @@
 import { cn, views } from "./shared";
 
+/** Season pills for the archive's week-by-week views. */
 export function ViewPicker({ viewKey, setViewKey }: { viewKey: string; setViewKey: (key: string) => void }) {
   return (
-    <div className="mt-4 flex flex-wrap gap-2" role="group" aria-label="Season">
+    <div className="mt-4 flex flex-wrap gap-1.5" role="group" aria-label="Season for the week-by-week views">
       {views.map((v) => (
         <button
           key={v.key}
@@ -10,21 +11,13 @@ export function ViewPicker({ viewKey, setViewKey }: { viewKey: string; setViewKe
           aria-pressed={v.key === viewKey}
           onClick={() => setViewKey(v.key)}
           className={cn(
-            "rounded-md px-3 py-1.5 text-xs uppercase tracking-[0.08em] shadow-[var(--shadow-border)] transition-colors",
-            v.key === viewKey ? "bg-elevated text-fg" : "text-muted hover:text-fg",
+            "min-h-9 rounded-full px-3.5 text-sm font-medium",
+            v.key === viewKey ? "bg-fg text-bg" : "text-muted shadow-[var(--shadow-border)] hover:text-fg",
           )}
         >
           {v.label}
         </button>
       ))}
     </div>
-  );
-}
-
-export function ViewPickerLabel({ view }: { view: { label: string } }) {
-  return (
-    <p className="mt-4 text-xs text-muted">
-      Showing {view.label}. Pick a season in the week-by-week table above.
-    </p>
   );
 }

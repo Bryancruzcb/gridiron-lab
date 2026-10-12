@@ -18,10 +18,10 @@ export function Headshot({
     return (
       <div
         className={cn(
-          "grid shrink-0 place-items-center rounded-full text-[10px] font-semibold text-fg",
+          "grid shrink-0 place-items-center rounded-full text-xs font-semibold text-fg",
           className ?? "size-9",
         )}
-        style={{ background: teamColor(team) }}
+        style={{ background: `color-mix(in oklab, ${teamColor(team)} 28%, var(--color-surface))` }}
         aria-hidden
       >
         {initials(name)}

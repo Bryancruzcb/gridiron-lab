@@ -13,11 +13,11 @@ export function MethodNote({
   return (
     <aside
       className={cn(
-        "rounded-lg bg-elevated/80 p-4 text-sm leading-relaxed text-muted shadow-[var(--shadow-border)]",
+        "rounded-[14px] bg-panel p-4 text-sm leading-relaxed text-muted",
         className,
       )}
     >
-      <p className="mb-1.5 text-[11px] font-medium tracking-[0.16em] text-subtle uppercase">
+      <p className="mb-1.5 text-sm font-semibold text-fg">
         {title}
       </p>
       <div className="space-y-2">{children}</div>

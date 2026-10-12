@@ -1,11 +1,11 @@
 import type { SplitStats } from "@/data/types";
 import type { QbSeason } from "@/data/types";
 
-/** Chart text and the good/bad colours (the --color-up / --color-down tokens), bright enough to read on the plot. */
-export const INK = "#D3D5CF";
-export const INK_QUIET = "#A5A7A1";
-export const UP = "#9FCB9F";
-export const DOWN = "#EE9784";
+/** Chart text and the good/bad colours: the theme tokens, so the plot follows light and dark. */
+export const INK = "var(--color-fg)";
+export const INK_QUIET = "var(--color-muted)";
+export const UP = "var(--color-up)";
+export const DOWN = "var(--color-down)";
 /** Up to this many quarterbacks in the slice, every one is drawn as a photo with a name. */
 export const LABEL_ALL = 12;
 
