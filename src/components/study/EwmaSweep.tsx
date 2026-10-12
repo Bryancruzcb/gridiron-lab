@@ -21,10 +21,6 @@ export function EwmaSweep() {
       <div className="mt-8 grid items-start gap-10 lg:grid-cols-2">
         <div className="min-w-0 space-y-3 text-base">
           <p>
-            Far left = mostly the season so far. Far right = only last week. The dashed line is “just use their average
-            so far.”
-          </p>
-          <p>
             This sweep runs on the shipped {ewma.season} slate, after we had already studied {ewma.season}, so it is a
             look back, not a result. The best-looking setting was {ewma.bestLineup.alpha} ({ewma.bestLineup.lineupMean})
             against {ewma.trail.lineupMean} for the average. Neighbouring settings differ by up to {fix(step, 1)} points.{" "}
@@ -63,8 +59,7 @@ export function EwmaSweep() {
           </ChartFrame>
           <figcaption>
             <Caption>
-              Shipped {ewma.season} slate. Team’s real points against how hard we weight last week. Dashed = season
-              average so far ({ewma.trail.lineupMean}).
+              Shipped {ewma.season} slate. Dashed line = the season average so far ({ewma.trail.lineupMean}).
             </Caption>
           </figcaption>
         </figure>

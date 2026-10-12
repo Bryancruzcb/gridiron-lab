@@ -16,7 +16,7 @@ function GuidePage() {
         </p>
         <h1 className="mt-3 font-display text-5xl">Guide</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Short definitions. The 2023–2025 lineup study is on{" "}
+          The 2023–2025 projection study is on{" "}
           <Link to="/study" className="text-fg">
             Study
           </Link>

@@ -9,7 +9,7 @@ export function DemoNote({ className, children }: { className?: string; children
       <Info className="mt-0.5 size-[18px] shrink-0 text-navy" aria-hidden />
       <span>
         <b className="font-semibold text-fg">The $50k lineup is a demo with synthetic salaries.</b>{" "}
-        {children ?? "It is not part of this result. The claim here is projection quality: how far each player’s guess missed."}
+        {children ?? "It is not part of this result."}
       </span>
     </p>
   );

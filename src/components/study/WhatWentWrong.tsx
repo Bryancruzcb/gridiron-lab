@@ -1,7 +1,7 @@
 import { CircleCheck, TriangleAlert } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { Block, Eyebrow, SectionTitle } from "./parts";
+import { Block, SectionTitle } from "./parts";
 import { backtest, firstSeason, lastSeasonYear, lookBackSeasons, study } from "./shared";
 
 type Item = { kind: "fixed" | "limit"; status: string; title: string; body: ReactNode };
@@ -32,7 +32,7 @@ export function WhatWentWrong() {
       kind: "limit",
       status: "Removed from the claim",
       title: "Synthetic salaries.",
-      body: "Synthetic demo salaries (not real DraftKings) were used in older salary-cap lineup comparisons. Those prices are frozen all season, miss rookies and offseason moves, and are not part of the study claim: the pitch is projection miss, not a $50k result.",
+      body: "Synthetic demo salaries (not real DraftKings) were used in older salary-cap lineup comparisons. Those prices are frozen all season and miss rookies and offseason moves.",
     },
     {
       kind: "limit",
@@ -81,7 +81,6 @@ export function WhatWentWrong() {
   ];
   return (
     <Block id="wrong">
-      <Eyebrow>What went wrong</Eyebrow>
       <SectionTitle>Mistakes we found, fixed, or still live with.</SectionTitle>
       <ul className="mt-7 grid gap-x-10 gap-y-3.5 md:grid-cols-2">
         {items.map((item) => (

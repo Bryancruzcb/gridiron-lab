@@ -1,5 +1,5 @@
 import type { StudyRunSummary } from "@/data/types";
-import { Caption, TableCard, Tag } from "./parts";
+import { TableCard, Tag } from "./parts";
 import { td, tdR, th, thR } from "./table";
 import {
   COMPUTER,
@@ -37,8 +37,7 @@ export function DidItHelp({ summary, label }: { summary: StudyRunSummary; label:
         {fix(mean(model(summary, COMPUTER)), 1)} real points a week. Grabbing the top projected names that still fit
         averaged {fix(mean(model(summary, TOP_NAMES)), 1)}. That’s {signed(top.mean)} points a week for the computer.
         It won {top.wins} weeks, lost {top.losses} and tied {top.ties} (a tie means both built the same team). The 95%
-        range for that weekly gap runs from {range(top)}; {verdict(top)}. Points-per-dollar and cheap-picks baselines
-        were dropped from the study path.
+        range for that weekly gap runs from {range(top)}; {verdict(top)}.
       </p>
       <TableCard className="mt-[18px]">
         <table className="w-full min-w-[560px] border-collapse text-[15px]">
@@ -75,13 +74,15 @@ export function DidItHelp({ summary, label }: { summary: StudyRunSummary; label:
           </tbody>
         </table>
       </TableCard>
-      <Caption>
-        Gap = computer minus top names, per week. 95% range: we resampled the weeks{" "}
-        {study.uncertainty.resamples.toLocaleString("en-US")} times and kept the middle 95% of the average gap. Each
-        week counts once, because nine players in one lineup are not nine separate tests. It is a rough guide, not a
-        significance test. The shipped slate row uses the fixed 114-player {study.shippedSlate?.season ?? ""} pool, which
-        was picked and priced with that whole season’s numbers.
-      </Caption>
+      <details className="mt-2.5 text-sm text-muted">
+        <summary className="cursor-pointer py-1 font-medium text-fg">How the gap is counted</summary>
+        <p className="mt-2 max-w-[52em]">
+          Gap = computer minus top names, per week. 95% range: we resampled the weeks{" "}
+          {study.uncertainty.resamples.toLocaleString("en-US")} times and kept the middle 95% of the average gap. Each
+          week counts once, because nine players in one lineup are not nine separate tests. It is a rough guide, not a
+          significance test.
+        </p>
+      </details>
     </>
   );
 }

@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { StudyHome } from "./home.ts";
-import { Block, Caption, Eyebrow, SectionTitle, TableCard, Tag } from "./parts";
+import { Block, Caption, SectionTitle, TableCard, Tag } from "./parts";
 import { td, tdR, th, thR } from "./table";
 import {
   COMPUTER,
@@ -22,8 +22,6 @@ import {
 export function BetterGuesses({ home }: { home: StudyHome }) {
   const rows = home.methods;
   const best = home.best;
-  const second = rows[1];
-  const worst = rows[rows.length - 1];
   const bestTeam = [...rows].sort((a, b) => b.team - a.team)[0]!;
   const ewmaRow = rows.find((r) => r.id === EWMA);
   const ewmaSeasons = study.seasons.filter((s) => overComputer(s.summary, EWMA).mean > 0).length;
@@ -34,16 +32,13 @@ export function BetterGuesses({ home }: { home: StudyHome }) {
 
   return (
     <Block id="methods">
-      <Eyebrow>Question 1, in detail</Eyebrow>
       <SectionTitle>
         {countWord(rows.length).replace(/^./, (c) => c.toUpperCase())} ways to guess next week, ranked by how far
         they missed.
       </SectionTitle>
       <p className="mt-3.5 max-w-[44em] text-[17px] text-muted">
-        Same <span className="tabular-nums">{home.weeks}</span> weeks, same pools,{" "}
-        <span className="tabular-nums">{thousands(home.playerWeeks)}</span> player-weeks. We only changed how we
-        guess next week’s points. The miss per player is the study claim. Team score comes from an older salary-cap
-        demo with synthetic prices and is not the pitch.
+        Same weeks and pools; only the guess changed. Team score comes from the retired salary-cap demo with
+        synthetic prices and is not the claim.
       </p>
       <TableCard className="mt-8">
         <table className="w-full min-w-[560px] border-collapse text-[15px]">
@@ -83,18 +78,14 @@ export function BetterGuesses({ home }: { home: StudyHome }) {
         </table>
       </TableCard>
       <Caption>
-        Sorted by miss per player, best first. “vs trailing mean” is the weekly team-score gap to the trailing mean,
-        with its 95% range.
+        “vs trailing mean”: the weekly team-score gap to the trailing mean, with its 95% range.
       </Caption>
       <div className="mt-6 gap-10 text-base md:columns-2 [&>p]:mb-3 [&>p]:break-inside-avoid">
-        <p>
-          <b className="font-semibold">
-            {best.label} missed least per player ({fix(best.mae, 2)}).
-          </b>{" "}
-          {home.bestEverywhere ? "It was best in every season and on the shipped slate. " : ""}
-          {second ? `${second.label} was second (${fix(second.mae, 2)}). ` : ""}
-          {worst && worst.id !== best.id ? `${worst.label} was worst (${fix(worst.mae, 2)}).` : ""}
-        </p>
+        {home.bestEverywhere ? (
+          <p>
+            <b className="font-semibold">{best.label} was best in every season and on the shipped slate.</b>
+          </p>
+        ) : null}
         <p>
           Player by player the trailing mean is not biased: over {thousands(home.playerWeeks)} player-weeks its average
           miss was {signed(home.trailBias, 2)} points. That does not make it a strong forecast.

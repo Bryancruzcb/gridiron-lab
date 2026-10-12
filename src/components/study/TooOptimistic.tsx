@@ -13,7 +13,6 @@ import {
   guessHigh,
   mean,
   model,
-  signed,
   ticks,
   type View,
 } from "./shared";
@@ -52,9 +51,7 @@ export function TooOptimistic({
             Before kickoff the computer expected its team to score about {fix(computer.lineupProjMean ?? Number.NaN, 0)}{" "}
             ({label}). It actually scored about {fix(mean(computer), 0)}. Its guess was too high in {guessHigh} of{" "}
             {computerWeeks.length} weeks
-            {every ? ", every single one" : ""}. The guesses were not high player by player: over{" "}
-            {computer.playerError.n.toLocaleString("en-US")} player-weeks the average miss was{" "}
-            {signed(computer.playerError.bias ?? Number.NaN, 2)} points. The team guess runs high because the computer
+            {every ? ", every single one" : ""}. The guesses were not high player by player (see the bias above). The team guess runs high because the computer
             hunts for the players whose averages ran hottest so far, and hot streaks cool off. The old solver did have a
             bug (see What went wrong), but the fixed one proves its teams are the best for the guesses and still
             overshoots, so the bug was not the reason.
@@ -102,9 +99,8 @@ export function TooOptimistic({
             </ChartFrame>
             <figcaption>
               <Caption>
-                {view.label} ({view.note}). Each dot is a week. Perfect guesses would sit on the dashed line. {under} of{" "}
-                {dots.length} dots are under it
-                {under === dots.length ? ": the computer always thought it would score more than it did" : ""}.
+                {view.label} ({view.note}). Each dot is a week; the dashed line is a perfect guess. {under} of{" "}
+                {dots.length} weeks fell under it.
               </Caption>
             </figcaption>
           </figure>
@@ -143,8 +139,7 @@ export function TooOptimistic({
             </table>
           </TableCard>
           <Caption>
-            {view.label}: real team points per week. Green “(won)” marks a week the computer beat the top-names pick (
-            {wins} of {weekly.length}).
+            {view.label}: the computer beat the top-names pick in {wins} of {weekly.length} weeks.
           </Caption>
         </div>
       </div>

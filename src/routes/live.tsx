@@ -249,7 +249,6 @@ function GamePanel({
           </div>
 
           <h3 className="mt-8 font-display text-xl">Quarterbacks</h3>
-          <p className="mt-1 text-xs text-subtle">Box line now. EPA / CPOE when Advanced is in.</p>
           <ul className="mt-3 divide-y divide-border">
             {qbs.map((p) => {
               const adv = detail.advanced?.qbs.find((q) => prettyQb(q.name, detail) === p.name)
@@ -300,9 +299,6 @@ function GamePanel({
           </ul>
 
           <h3 className="mt-8 font-display text-xl">Play-calling</h3>
-          <p className="mt-1 text-xs text-subtle">
-            From the play list at the whistle. PROE / EPA fill in on Advanced.
-          </p>
           <div className="mt-3 overflow-x-auto">
             <table className="w-full min-w-[480px] text-left text-sm">
               <thead className="text-xs tracking-[0.12em] text-subtle uppercase">

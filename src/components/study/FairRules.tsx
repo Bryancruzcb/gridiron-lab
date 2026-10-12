@@ -1,6 +1,6 @@
 import { CalendarDays, Check, Database, Lock, Scale, Users } from "lucide-react";
 import type { ReactNode } from "react";
-import { Block, Eyebrow, SectionTitle } from "./parts";
+import { Block, SectionTitle } from "./parts";
 import { developmentSeasons, lookBackSeasons, main, study, views } from "./shared";
 
 function Rule({ icon, title, children }: { icon: ReactNode; title: ReactNode; children: ReactNode }) {
@@ -22,7 +22,6 @@ export function FairRules() {
   const excluded = main?.excludedWeeks.length ?? 0;
   return (
     <Block id="fair">
-      <Eyebrow>Why the number is fair</Eyebrow>
       <SectionTitle>No method got to see the future, and every method faced the same test.</SectionTitle>
       <p className="mt-3.5 max-w-[44em] text-[17px] text-muted">
         Two questions drive the study:{" "}
@@ -37,9 +36,7 @@ export function FairRules() {
         <Rule icon={<Users />} title="Player pools from last season">
           Each season gets its own pool
           {poolSizes.length === 1 ? ` of ${poolSizes[0]} players` : ""}, built only from the season before (the top
-          players by points per game, frozen before week 1). Rookies and offseason trades are missing. Older
-          committed runs may still carry synthetic salary bands for archaeology; those prices are not real
-          DraftKings salaries and are not part of the study claim.
+          players by points per game, frozen before week 1). Rookies and offseason trades are missing.
         </Rule>
         <Rule icon={<Lock />} title="Only earlier games">
           A player’s guess uses only games before that week. His opponent comes from the schedule, not from the box
@@ -61,12 +58,6 @@ export function FairRules() {
           Scoring is our simplified DraftKings-style PPR. A defense’s points allowed is the other team’s final score.
         </Rule>
       </ul>
-      <p className="mt-5 max-w-[52em] text-[15px] text-muted">
-        Three kinds of numbers show up in this app. A <em>forecast</em> is the guess before kickoff. A{" "}
-        <em>look back</em> (this page) scores those guesses after the fact. <em>Hindsight</em> on the Lineup demo
-        rebuilds a team from points already scored, so it is not a forecast at all, and that demo’s salaries are not
-        the study claim.
-      </p>
     </Block>
   );
 }

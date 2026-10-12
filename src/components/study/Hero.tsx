@@ -68,13 +68,12 @@ export function Hero({ home }: { home: StudyHome }) {
 export function MissChart({ home }: { home: StudyHome }) {
   const [key, setKey] = useState(home.views[0]!.key);
   const view = home.views.find((v) => v.key === key) ?? home.views[0]!;
-  const bestLabel = home.methods.find((m) => m.id === view.bestId)?.label ?? view.bestId;
   return (
     <figure aria-labelledby="miss-title" className="m-0 rounded-[20px] bg-surface p-[18px] shadow-[var(--shadow-float)] sm:p-6">
       <h2 id="miss-title" className="text-base font-semibold">
         Average miss per player-week
       </h2>
-      <p className="mt-0.5 text-sm text-muted">Fantasy points, lower is better. Pick a season.</p>
+      <p className="mt-0.5 text-sm text-muted">Fantasy points, lower is better.</p>
       <div className="mt-4 flex flex-wrap gap-1.5" role="group" aria-label="Season for the miss chart">
         {home.views.map((v) => (
           <button
@@ -138,8 +137,7 @@ export function MissChart({ home }: { home: StudyHome }) {
         <span />
       </div>
       <p className="mt-3.5 border-t border-border pt-3.5 text-sm text-muted">
-        {view.title} ({view.note}): {view.weeks} weeks, {thousands(view.playerWeeks)} player-weeks. {bestLabel} missed
-        least.
+        {view.title} ({view.note}): {view.weeks} weeks, {thousands(view.playerWeeks)} player-weeks.
       </p>
     </figure>
   );

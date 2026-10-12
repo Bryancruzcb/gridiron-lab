@@ -69,7 +69,8 @@ function NavLinks({ onClick, stacked }: { onClick?: () => void; stacked?: boolea
   );
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+/** demoNoteInPage: the page already shows the $50k demo note at the top, so the footer leaves it out. */
+export function AppShell({ children, demoNoteInPage = false }: { children: ReactNode; demoNoteInPage?: boolean }) {
   const [open, setOpen] = useState(false);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const app = useStandaloneApp();
@@ -144,7 +145,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       ) : (
         <footer className="border-t border-border">
           <div className="mx-auto flex max-w-6xl px-4 py-8 text-sm text-muted sm:px-6">
-            <p>2023–2025 projection study. The $50k lineup is a demo with synthetic salaries.</p>
+            <p>
+              2023–2025 projection study.
+              {demoNoteInPage ? "" : " The $50k lineup is a demo with synthetic salaries."}
+            </p>
           </div>
         </footer>
       )}

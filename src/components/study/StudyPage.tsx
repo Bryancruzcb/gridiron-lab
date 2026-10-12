@@ -19,7 +19,7 @@ const homeState = buildStudyHome(study);
 /** Published projection study. This is the first screen and `/study`. */
 export function StudyPage() {
   return (
-    <AppShell>
+    <AppShell demoNoteInPage={homeState.kind === "ready"}>
       {homeState.kind === "ready" ? (
         <StudyHomeView home={homeState.home} />
       ) : homeState.kind === "empty" ? (
@@ -76,14 +76,13 @@ function StudyHomeView({ home }: { home: StudyHome }) {
       <HotQbs />
 
       <Block id="archive">
-        <Eyebrow>Archive</Eyebrow>
         <SectionTitle>The old lineup experiment, kept for the record.</SectionTitle>
         <div className="mt-2 rounded-[22px] bg-panel-2 px-4 py-6 sm:rounded-[28px] sm:p-10">
           <p className="flex max-w-[52em] items-start gap-2.5 rounded-[14px] bg-surface px-4 py-3.5 text-[15px] shadow-[var(--shadow-border)]">
             <TriangleAlert className="mt-0.5 size-[18px] shrink-0 text-warn" aria-hidden />
             <span>
-              <b className="font-semibold">Not the study claim.</b> These lineup comparisons used a demo $50k salary cap
-              and synthetic prices, not real DraftKings salaries. The pitch is projection miss per player, above.
+              <b className="font-semibold">Not the study claim.</b> These lineup comparisons used the demo $50k cap with
+              synthetic prices, not real DraftKings salaries.
             </span>
           </p>
           {main ? <DidItHelp summary={main} label={mainLabel} /> : null}
@@ -107,16 +106,22 @@ function StudyHomeView({ home }: { home: StudyHome }) {
           <Term name="Trailing mean">
             The player’s average over every earlier week this season. “The computer” on this page uses it.
           </Term>
-          <Term name={ewmaLabel.replace(/=.*$/, "").trim() + " α"}>
+          <Term name={ewmaLabel.replace(/=.*$/, "").trim()}>
             A weighted average where α sets how much last week counts. α near 1 means mostly last week.
           </Term>
           <Term name="EPA per throw">Expected points added: how much each pass changed the team’s expected score.</Term>
           <Term name="CPOE">Completion percentage over expected, given how hard each throw was.</Term>
+          <Term name="r">How closely two numbers move together. Near 0 means no link; 1 means a perfect one.</Term>
+          <Term name="Forecast, look back, hindsight">
+            A forecast is the guess before kickoff. A look back (this page) scores those guesses after the fact.
+            Hindsight, on the Lineup demo, rebuilds a team from points already scored, so it is not a forecast.
+          </Term>
         </dl>
       </Block>
 
-      <div className="border-t border-border">
-        <p className="mx-auto max-w-6xl px-4 pt-8 pb-2 text-sm break-words text-muted sm:px-6">
+      <details className="mx-auto max-w-6xl px-4 pt-2 pb-8 text-sm text-muted sm:px-6">
+        <summary className="cursor-pointer py-1 font-medium text-fg">Where these numbers come from</summary>
+        <p className="mt-2 break-words">
           Every number on this page is read from files the study pipeline writes: runs{" "}
           {[...study.seasons, ...(study.shippedSlate ? [study.shippedSlate] : [])]
             .map((s) => `${s.season}${s.universe.lookAhead ? " shipped" : ""} ${s.runId}`)
@@ -124,7 +129,7 @@ function StudyHomeView({ home }: { home: StudyHome }) {
           . The README lists the commands. docs/study/REGENERATION_REPORT.md explains how these numbers differ from
           earlier versions of this page.
         </p>
-      </div>
+      </details>
     </>
   );
 }
